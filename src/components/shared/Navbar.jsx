@@ -30,8 +30,8 @@ export default function Navbar() {
   if (!mounted) return null;
 
   return (
-    <nav className="fixed top-0 w-full z-50 transition-all glass-effect">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="fixed top-0 w-full z-50 transition-all bg-[var(--surface)] border-b border-[var(--border)]">
+      <div className="container mx-auto px-4 md:px-6 ">
         <div className="flex justify-between items-center h-16">
           
           {/* Logo Section */}

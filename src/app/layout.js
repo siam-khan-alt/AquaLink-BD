@@ -25,7 +25,7 @@ export const metadata = {
     "AquaLink BD", "আকুয়ালিংক বিডি", "মাছের পোনা", "পুকুর ভাড়া", "মৎস্য চাষ", 
     "Fish Fry Market BD", "Pond Rental Bangladesh", "Fishery Expert Advice"
   ],
-  metadataBase: new URL('https://aqualinkbd.com'),
+  metadataBase: new URL('https://aqualinkbd.vercel.app'),
   openGraph: {
     title: "AquaLink BD | Modern Fishery Ecosystem",
     description: "চাষি, বিশেষজ্ঞ এবং বাজারের ডিজিটাল সেতুবন্ধন।",
