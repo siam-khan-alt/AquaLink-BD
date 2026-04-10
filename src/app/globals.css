@@ -1,26 +1,71 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --text: #041113;
+  --background: #f0f9fa;
+  --surface: #ffffff;
+  --primary: #0891b2;
+  --secondary: #d1fae5;
+  --accent: #10b981;
+  --border: #e2f2f3;
+  --glass: rgba(255, 255, 255, 0.4);
+  --brand-gradient: linear-gradient(135deg, var(--primary), var(--accent));
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+[data-theme='dark'] {
+  --text: #ecfbfc;
+  --background: #030f11;
+  --surface: #061b1e;
+  --primary: #22d3ee;
+  --secondary: #064e3b;
+  --accent: #34d399;
+  --border: #0a2529;
+  --glass: rgba(6, 27, 30, 0.6);
+  --brand-gradient: linear-gradient(135deg, var(--primary), var(--accent));
 }
 
 body {
+  font-family: var(--font-inter), var(--font-hind-siliguri), Arial, sans-serif;
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
 }
+
+.glass-effect {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+.brand-text {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.nav-link {
+  @apply relative flex items-center px-4 py-2 text-sm font-bold transition-all duration-300 rounded-lg;
+}
+
+.active-link {
+  @apply text-[var(--primary)] ;
+}
+
+.active-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px; 
+  left: 15%;
+  right: 15%;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(8, 145, 178, 0.4);
+  animation: borderSlide 0.3s ease-out;
+}
+@keyframes slideIn {
+  from { width: 0; left: 50%; right: 50%; }
+  to { width: 60%; left: 20%; right: 20%; }
+}
+* { @apply transition-colors duration-200; }
