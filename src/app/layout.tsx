@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist,  Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import Providers from "@/shared/components/providers/ThemeProvider";
+import Navbar from "@/shared/components/navigation/Navbar";
+import ChatModule from "@/modules/ai-assistant/ChatModule";
 
 const geistSans = Geist({ 
   variable: "--font-geist-sans", 
@@ -50,9 +52,16 @@ export default function RootLayout({
       className={`${geistSans.variable} ${hindSiliguri.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--text)]">
+
         <Providers>
-        {children}
+        <Navbar />
+          
+          {/* Main Content Area */}
+          <main className="flex-grow pt-16">
+            {children}
+            <ChatModule />  
+          </main>
         </Providers>
       </body>
     </html>

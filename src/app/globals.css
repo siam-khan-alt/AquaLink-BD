@@ -1,11 +1,28 @@
 @import "tailwindcss";
+@layer utilities {
+  @keyframes slow-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-slow-spin {
+    animation: slow-spin 30s linear infinite;
+  }
+}
 :root {
   --background: #ffffff;
   --surface: #f8fafc;
   --text: #0f172a;
-  --primary: #0066cc;    
-  --secondary: #e0f2fe; 
-  --border: #e2e8f0;
+  --primary: #2dd4bf;    
+ --secondary: rgba(45, 212, 191, 0.1);
+  --border: rgba(255, 255, 255, 0.1);
+ --hero-bg-start: #0b2545; 
+  --hero-bg-mid: #134074;
+  --hero-bg-end: #13678a;
 }
 
 .dark {
@@ -15,6 +32,9 @@
   --primary: #38bdf8;    
   --secondary: #1e293b;
   --border: #1e293b;
+ --hero-bg-start: #000000; 
+  --hero-bg-mid: #020617; 
+  --hero-bg-end: #0f172a;
 }
 
 body {

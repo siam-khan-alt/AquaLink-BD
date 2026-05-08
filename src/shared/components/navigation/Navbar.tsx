@@ -20,7 +20,7 @@ interface MobileMenuProps {
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   const handleLogout = (): void => {
     setIsLoggedIn(false);
