@@ -24,7 +24,7 @@ export const Logo = ({ showText = true, className = "" }: LogoProps) => {
 
       {showText && (
         <div className="flex flex-col">
-          <span className="text-lg sm:text-xl font-black leading-tight tracking-tighter">
+          <span className="text-lg sm:text-xl text-[var(--primary)] font-bold leading-tight tracking-tighter">
             মৎস্য বন্ধু
           </span>
           <span className="text-[10px] opacity-60 font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">

@@ -3,16 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronRight, Loader2 } from "lucide-react";
 import { NAV_LINKS, AUTH_LINKS } from "@/config/navigation";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { Logo } from "../ui/Logo";
 import { Button } from "../ui/Button";
+import { signOut, useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 interface MobileMenuProps {
   isOpen: boolean;
   pathname: string;
-  isLoggedIn: boolean;
+  status: "authenticated" | "loading" | "unauthenticated";
   onClose: () => void;
   onLogout: () => void;
 }
@@ -20,10 +22,22 @@ interface MobileMenuProps {
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-
+const { status } = useSession();
   const handleLogout = (): void => {
-    setIsLoggedIn(false);
+    toast("আপনি কি এখন বের হতে চান?", {
+    description: "আবার ফিরে আসতে চাইলে আপনাকে লগইন করতে হবে।",
+    action: {
+      label: "হ্যাঁ, বের হন",
+      onClick: () => {
+        signOut({ callbackUrl: "/login" });
+        toast.success("সফলভাবে বের হয়েছেন!");
+      },
+    },
+    cancel: {
+      label: "না",
+      onClick: () => toast.dismiss(),
+    },
+  });
     setIsOpen(false);
   };
 
@@ -54,7 +68,9 @@ export default function Navbar() {
           <ThemeToggle />
 
           <div className="hidden sm:flex items-center gap-2">
-            {!isLoggedIn ? (
+            {status === "loading" ? (
+              <Loader2 className="animate-spin text-[var(--primary)]" size={20} />
+            ) :status !== "authenticated" ? (
               <Link href={AUTH_LINKS.login.href}>
                 <Button variant="primary">
                   <AUTH_LINKS.login.icon size={18} />
@@ -88,7 +104,7 @@ export default function Navbar() {
       <MobileMenu 
         isOpen={isOpen} 
         pathname={pathname} 
-        isLoggedIn={isLoggedIn} 
+        status={status} 
         onClose={() => setIsOpen(false)} 
         onLogout={handleLogout} 
       />
@@ -96,7 +112,7 @@ export default function Navbar() {
   );
 }
 
-const MobileMenu = ({ isOpen, pathname, isLoggedIn, onClose, onLogout }: MobileMenuProps) => (
+const MobileMenu = ({ isOpen, pathname, status, onClose, onLogout }: MobileMenuProps) => (
   <div className={`md:hidden absolute w-full bg-[var(--surface)] transition-all duration-300 ease-in-out shadow-xl ${
     isOpen ? "min-h-screen border-b border-[var(--border)] opacity-100" : "h-0 opacity-0 overflow-hidden"
   }`}>
@@ -119,7 +135,9 @@ const MobileMenu = ({ isOpen, pathname, isLoggedIn, onClose, onLogout }: MobileM
       ))}
 
       <div className="mt-4 pt-4 border-t border-[var(--border)]">
-        {!isLoggedIn ? (
+        {status === "loading" ? (
+          <div className="flex justify-center p-4"><Loader2 className="animate-spin text-[var(--primary)]" /></div>
+        ) : status !== "authenticated" ? (
           <Link href={AUTH_LINKS.login.href} onClick={onClose}>
             <Button variant="primary" className="w-full py-4 text-lg">
               <AUTH_LINKS.login.icon size={20} />
