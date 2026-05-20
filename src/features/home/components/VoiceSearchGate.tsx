@@ -51,37 +51,34 @@ export default function VoiceSearchGate() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
-      const ctor = (window as Window).webkitSpeechRecognition as unknown as
-        | { new (): SpeechRecognition }
-        | undefined;
-      if (!ctor) return;
-      const recognition = new ctor();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "bn-BD";
+    const supported = typeof window !== "undefined" && "webkitSpeechRecognition" in window;
+    
+    if (supported) {
+      setTimeout(() => {
+        setIsSpeechSupported(true);
+      }, 0);
 
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
+      const ctor = (window as Window).webkitSpeechRecognition;
+      if (ctor) {
+        const recognition = new ctor();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "bn-BD";
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const text = event.results[0][0].transcript;
-        setTranscript(text);
-        setIsListening(false);
-      };
+        recognition.onstart = () => setIsListening(true);
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          const text = event.results[0][0].transcript;
+          setTranscript(text);
+          setIsListening(false);
+        };
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+          console.error("Speech recognition error:", event.error);
+          setIsListening(false);
+        };
+        recognition.onend = () => setIsListening(false);
 
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error("Speech recognition error:", event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-      setIsSpeechSupported(true);
+        recognitionRef.current = recognition;
+      }
     }
 
     return () => {
@@ -107,9 +104,7 @@ export default function VoiceSearchGate() {
 
   const handleSearch = () => {
     if (transcript.trim()) {
-      window.location.href = `/market-prices?q=${encodeURIComponent(
-        transcript
-      )}`;
+      window.location.href = `/market-prices?q=${encodeURIComponent(transcript)}`;
     }
   };
 
@@ -121,9 +116,7 @@ export default function VoiceSearchGate() {
         </div>
         <div>
           <h3 className="text-xl font-black text-[var(--text)]">ভয়েস সার্চ</h3>
-          <p className="text-xs font-bold text-[var(--text)]/50">
-            কথা বলে খুঁজুন
-          </p>
+          <p className="text-xs font-bold text-[var(--text)]/50">কথা বলে খুঁজুন</p>
         </div>
       </div>
 
@@ -152,12 +145,8 @@ export default function VoiceSearchGate() {
 
         {transcript && (
           <div className="p-4 bg-[var(--background)] rounded-xl border border-[var(--border)]">
-            <p className="text-sm font-bold text-[var(--text)]/70 mb-2">
-              আপনি বলেছেন:
-            </p>
-            <p className="text-lg font-black text-[var(--text)]">
-              {transcript}
-            </p>
+            <p className="text-sm font-bold text-[var(--text)]/70 mb-2">আপনি বলেছেন:</p>
+            <p className="text-lg font-black text-[var(--text)]">{transcript}</p>
             <button
               onClick={handleSearch}
               className="mt-3 w-full py-2 bg-[var(--primary)] text-[#020617] rounded-lg font-bold hover:scale-105 active:scale-95 transition-all"
