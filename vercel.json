@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/market-update?secret=CRON_SECRET",
+      "path": "/api/cron/update-market",
       "schedule": "0 6 * * *"
     }
   ]

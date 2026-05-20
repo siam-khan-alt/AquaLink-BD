@@ -1,95 +1,105 @@
 "use client";
 
-import { IMarketPrice } from "@/shared/types/market";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Info, Activity } from "lucide-react";
+import type { IMarketPrice } from "@/shared/types/market";
+import { getFilteredHistory } from "../utils";
+import { CalendarClock, MapPin } from "lucide-react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-export default function MarketDetails({ fish }: { fish: IMarketPrice }) {
-  const chartData = fish.history.map((h) => ({
-    date: new Date(h.date).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short' }),
-    price: h.price
-  }));
+type HistoryRange = "week" | "month";
 
-  const isUp = fish.trend === 'up';
+function formatBnDate(input: string | Date): string {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return d.toLocaleString("bn-BD", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export default function MarketDetails({
+  fish,
+  range,
+}: {
+  fish: IMarketPrice | null;
+  range: HistoryRange;
+}) {
+  if (!fish) {
+    return (
+      <div className="h-full bg-[var(--surface)]/30 border border-[var(--border)]/60 rounded-2xl p-10 flex items-center justify-center">
+        <p className="font-black opacity-40">ডিটেইলস দেখতে একটি মাছ নির্বাচন করুন</p>
+      </div>
+    );
+  }
+
+  const chartData = getFilteredHistory(fish.history ?? [], range);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="bg-[var(--surface)] p-6 md:p-10 rounded-2xl border border-[var(--border)] shadow-xl relative overflow-hidden"
-    >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--primary)] to-transparent opacity-50" />
+    <div className="bg-[var(--surface)]/30 border border-[var(--border)]/60 rounded-2xl overflow-hidden">
+      <header className="p-5 border-b border-[var(--border)]/60">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-2xl md:text-3xl font-black tracking-tight">{fish.fishName}</h3>
+            <div className="flex flex-wrap items-center gap-3 text-xs font-bold opacity-60">
+              <span className="inline-flex items-center gap-2">
+                <MapPin size={14} className="text-[var(--primary)]" />
+                {fish.location}
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <CalendarClock size={14} className="text-[var(--primary)]" />
+                সর্বশেষ: {formatBnDate(fish.lastUpdated)}
+              </span>
+            </div>
+          </div>
 
-      <div className="flex justify-between items-center mb-10">
-        <div className="space-y-1">
-          <h2 className="text-4xl md:text-5xl font-black text-[var(--text)] tracking-tighter uppercase">{fish.fishName}</h2>
-          <p className="text-[10px] font-black text-[var(--primary)] tracking-[0.3em] uppercase opacity-60 flex items-center gap-2">
-            <Activity size={12} /> Real-time Market Pulse
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] font-bold opacity-40 uppercase mb-1">সর্বশেষ মূল্য</p>
-          <div className="text-4xl font-black text-[var(--primary)] tracking-tighter">৳{fish.currentPrice}</div>
-        </div>
-      </div>
-
-      <div className="h-[380px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ left: -20 }}>
-            <defs>
-              <linearGradient id="glowGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.1} />
-            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: 'var(--text)', opacity: 0.3, fontSize: 12}} dy={15} />
-            <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
-            <Tooltip 
-              cursor={{ stroke: 'var(--primary)', strokeWidth: 1 }}
-              content={({ active, payload }) => (
-                active && payload ? (
-                  <div className="bg-[var(--surface)] border border-[var(--primary)]/40 p-4 rounded-2xl shadow-2xl backdrop-blur-md">
-                    <p className="text-[10px] font-bold opacity-50 mb-1">{payload[0].payload.date}</p>
-                    <p className="text-lg font-black text-[var(--primary)]">৳{payload[0].value}</p>
-                  </div>
-                ) : null
-              )}
-            />
-            <Area type="stepAfter" dataKey="price" stroke="none" fill="url(#glowGradient)" animationDuration={2000} />
-            <Area 
-              type="monotone" 
-              dataKey="price" 
-              stroke="var(--primary)" 
-              strokeWidth={5} 
-              fill="none"
-              animationDuration={1500}
-              activeDot={{ r: 8, fill: "var(--primary)", stroke: "white", strokeWidth: 3 }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex gap-4 items-center">
-          <div className="p-3 bg-[var(--primary)]/10 rounded-2xl text-[var(--primary)]"><Info size={20} /></div>
-          <div>
-            <p className="text-[10px] font-black opacity-40 uppercase">পরামর্শ</p>
-            <p className="text-sm font-bold leading-tight">বাজার বর্তমানে {isUp ? 'উর্ধ্বমুখী' : 'স্থিতিশীল'}। সঠিক সিদ্ধান্ত নিতে বাজার পর্যবেক্ষণ করুন।</p>
+          <div className="text-right">
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">বর্তমান দর</p>
+            <p className="text-4xl font-black tracking-tighter">
+              <span className="text-sm text-[var(--primary)] font-black">৳</span> {fish.currentPrice}
+              <span className="text-sm font-black opacity-40">/{fish.unit}</span>
+            </p>
           </div>
         </div>
-        <div className={`p-5 rounded-2xl border flex gap-4 items-center ${isUp ? 'border-red-500/20 bg-red-500/5' : 'border-green-500/20 bg-green-500/5'}`}>
-          <div className={`p-3 rounded-2xl ${isUp ? 'text-red-500 bg-red-500/10' : 'text-green-500 bg-green-500/10'}`}>
-            {isUp ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-          </div>
-          <div>
-            <p className="text-[10px] font-black opacity-40 uppercase">ট্রেন্ড</p>
-            <p className="text-sm font-bold leading-tight">{isUp ? 'বিক্রি করার জন্য ভালো সময় হতে পারে' : 'ক্রয় করার সুযোগ তৈরি হতে পারে'}</p>
-          </div>
+      </header>
+
+      <section className="p-5">
+        <div className="h-[320px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="rgba(148,163,184,0.15)" strokeDasharray="4 6" />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fontWeight: 700, fill: "rgba(148,163,184,0.9)" }} />
+              <YAxis tick={{ fontSize: 12, fontWeight: 700, fill: "rgba(148,163,184,0.9)" }} />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 12,
+                  fontWeight: 800,
+                }}
+                labelStyle={{ fontWeight: 900 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke="var(--primary)"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 6, stroke: "var(--primary)", strokeWidth: 2, fill: "var(--background)" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-      </div>
-    </motion.div>
+      </section>
+    </div>
   );
 }
+
