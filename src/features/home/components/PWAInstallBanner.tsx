@@ -3,8 +3,14 @@
 import { useState, useEffect } from "react";
 import { Download, X, Smartphone } from "lucide-react";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 export default function PWAInstallBanner() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState<boolean>(false);
 
   useEffect(() => {
@@ -17,7 +23,10 @@ export default function PWAInstallBanner() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
     };
   }, []);
 
@@ -38,13 +47,6 @@ export default function PWAInstallBanner() {
     setShowBanner(false);
     localStorage.setItem("pwa-banner-dismissed", "true");
   };
-
-  useEffect(() => {
-    const isDismissed = localStorage.getItem("pwa-banner-dismissed");
-    if (isDismissed) {
-      setShowBanner(false);
-    }
-  }, []);
 
   if (!showBanner || !deferredPrompt) return null;
 

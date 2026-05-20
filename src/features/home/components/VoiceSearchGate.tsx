@@ -5,7 +5,7 @@ import { Mic, MicOff, Search } from "lucide-react";
 
 declare global {
   interface Window {
-    webkitSpeechRecognition: any;
+    webkitSpeechRecognition?: { new (): SpeechRecognition };
   }
 }
 
@@ -51,7 +51,11 @@ export default function VoiceSearchGate() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
-      const recognition = new (window as any).webkitSpeechRecognition();
+      const ctor = (window as Window).webkitSpeechRecognition as unknown as
+        | { new (): SpeechRecognition }
+        | undefined;
+      if (!ctor) return;
+      const recognition = new ctor();
       recognition.continuous = false;
       recognition.interimResults = false;
       recognition.lang = "bn-BD";
@@ -76,6 +80,7 @@ export default function VoiceSearchGate() {
       };
 
       recognitionRef.current = recognition;
+      setIsSpeechSupported(true);
     }
 
     return () => {
@@ -101,7 +106,9 @@ export default function VoiceSearchGate() {
 
   const handleSearch = () => {
     if (transcript.trim()) {
-      window.location.href = `/market-prices?q=${encodeURIComponent(transcript)}`;
+      window.location.href = `/market-prices?q=${encodeURIComponent(
+        transcript
+      )}`;
     }
   };
 
@@ -113,19 +120,21 @@ export default function VoiceSearchGate() {
         </div>
         <div>
           <h3 className="text-xl font-black text-[var(--text)]">ভয়েস সার্চ</h3>
-          <p className="text-xs font-bold text-[var(--text)]/50">কথা বলে খুঁজুন</p>
+          <p className="text-xs font-bold text-[var(--text)]/50">
+            কথা বলে খুঁজুন
+          </p>
         </div>
       </div>
 
       <div className="space-y-4">
         <button
           onClick={toggleListening}
-          disabled={!recognitionRef.current}
+          disabled={!isSpeechSupported}
           className={`w-full h-16 rounded-xl flex items-center justify-center gap-3 font-bold transition-all ${
             isListening
               ? "bg-red-500 text-white animate-pulse"
               : "bg-[var(--primary)] text-[#020617] hover:scale-105 active:scale-95"
-          } ${!recognitionRef.current ? "opacity-50 cursor-not-allowed" : ""}`}
+          } ${!isSpeechSupported ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           {isListening ? (
             <>
@@ -142,8 +151,12 @@ export default function VoiceSearchGate() {
 
         {transcript && (
           <div className="p-4 bg-[var(--background)] rounded-xl border border-[var(--border)]">
-            <p className="text-sm font-bold text-[var(--text)]/70 mb-2">আপনি বলেছেন:</p>
-            <p className="text-lg font-black text-[var(--text)]">{transcript}</p>
+            <p className="text-sm font-bold text-[var(--text)]/70 mb-2">
+              আপনি বলেছেন:
+            </p>
+            <p className="text-lg font-black text-[var(--text)]">
+              {transcript}
+            </p>
             <button
               onClick={handleSearch}
               className="mt-3 w-full py-2 bg-[var(--primary)] text-[#020617] rounded-lg font-bold hover:scale-105 active:scale-95 transition-all"
@@ -153,7 +166,7 @@ export default function VoiceSearchGate() {
           </div>
         )}
 
-        {!recognitionRef.current && (
+        {!isSpeechSupported && (
           <p className="text-xs font-bold text-red-500 text-center">
             আপনার ব্রাউজার ভয়েস সার্চ সাপোর্ট করে না। Chrome ব্যবহার করুন।
           </p>

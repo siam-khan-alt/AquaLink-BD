@@ -27,37 +27,50 @@
   }
 
   .ticker-mask {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
   }
 }
 :root {
   --background: #ffffff;
   --surface: #f8fafc;
   --text: #0f172a;
-  --primary: #2dd4bf;    
- --secondary: rgba(45, 212, 191, 0.1);
+  --primary: #2dd4bf;
+  --secondary: rgba(45, 212, 191, 0.1);
   --border: rgba(255, 255, 255, 0.1);
- --hero-bg-start: #0b2545; 
+  --hero-bg-start: #0b2545;
   --hero-bg-mid: #134074;
   --hero-bg-end: #13678a;
+  --font-hind-siliguri: ui-sans-serif, system-ui, sans-serif;
 }
 
 .dark {
   --background: #020617;
   --surface: #0f172a;
   --text: #f8fafc;
-  --primary: #38bdf8;    
+  --primary: #38bdf8;
   --secondary: #1e293b;
   --border: #1e293b;
- --hero-bg-start: #000000; 
-  --hero-bg-mid: #020617; 
+  --hero-bg-start: #000000;
+  --hero-bg-mid: #020617;
   --hero-bg-end: #0f172a;
 }
 
 body {
   background-color: var(--background);
   color: var(--text);
-  font-family: var(--font-hind-siliguri), sans-serif;
+  font-family: var(--font-hind-siliguri);
   transition: background-color 0.3s ease, color 0.3s ease;
 }

@@ -16,10 +16,15 @@ export const useAIAgent = () => {
 
   const processAI = async (text: string) => {
     if (!text.trim()) return;
-    
+
     setIsProcessing(true);
-    const userMsg: IChatMessage = { id: Date.now().toString(), role: "user", text, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMsg]);
+    const userMsg: IChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      text,
+      timestamp: Date.now(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
 
     try {
       const res = await fetch("/api/ai/chat", {
@@ -27,14 +32,19 @@ export const useAIAgent = () => {
         body: JSON.stringify({ prompt: text }),
       });
       const data: IAIResponse = await res.json();
-      
+
       if (data.text) {
-        const aiMsg: IChatMessage = { id: (Date.now()+1).toString(), role: "model", text: data.text, timestamp: Date.now() };
-        setMessages(prev => [...prev, aiMsg]);
+        const aiMsg: IChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "model",
+          text: data.text,
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
         speak(data.text);
       }
     } catch (err) {
-      console.error("AI Agent Error");
+      console.error("AI Agent Error", err);
     } finally {
       setIsProcessing(false);
     }

@@ -5,10 +5,14 @@ import { useMemo } from "react";
 import { MessageSquareText, MoveRight, Sparkles } from "lucide-react";
 import MarketTickerStream from "./MarketTickerStream";
 import type { IMarketPrice } from "@/shared/types/market";
-import { Button } from "@/shared/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { useAIStore } from "@/shared/store/useUIStore";
 
-export default function HeroSection({ tickerData }: { tickerData: IMarketPrice[] }) {
+export default function HeroSection({
+  tickerData,
+}: {
+  tickerData: IMarketPrice[];
+}) {
   const { toggleChat } = useAIStore();
 
   const heroStyles = useMemo(
@@ -19,7 +23,10 @@ export default function HeroSection({ tickerData }: { tickerData: IMarketPrice[]
   );
 
   return (
-    <section style={heroStyles} className="relative overflow-hidden pt-20 pb-12">
+    <section
+      style={heroStyles}
+      className="relative overflow-hidden pt-20 pb-12"
+    >
       <div className="container mx-auto px-6 grid lg:grid-cols-12 gap-10 items-center">
         <header className="lg:col-span-7 space-y-8">
           <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/10 border border-white/15 text-white/90 text-sm font-semibold backdrop-blur-md">
@@ -33,8 +40,8 @@ export default function HeroSection({ tickerData }: { tickerData: IMarketPrice[]
           </h1>
 
           <p className="text-lg md:text-xl text-white/70 max-w-2xl font-medium leading-relaxed">
-            বাজার দর, রোগ গাইড, এবং স্মার্ট পরামর্শ — সবকিছু এক প্ল্যাটফর্মে। দ্রুত সিদ্ধান্ত নিন,
-            অপচয় কমান, উৎপাদন বাড়ান।
+            বাজার দর, রোগ গাইড, এবং স্মার্ট পরামর্শ — সবকিছু এক প্ল্যাটফর্মে।
+            দ্রুত সিদ্ধান্ত নিন, অপচয় কমান, উৎপাদন বাড়ান।
           </p>
 
           <nav className="flex flex-wrap gap-4 pt-2">
@@ -61,7 +68,13 @@ export default function HeroSection({ tickerData }: { tickerData: IMarketPrice[]
         <aside className="lg:col-span-5 relative hidden lg:block min-h-[380px]">
           <div className="absolute inset-0 rounded-3xl border border-white/10 bg-black/20 backdrop-blur-sm shadow-2xl overflow-hidden">
             <div className="absolute inset-0 opacity-30">
-              <Image src="/logo.png" alt="MatshoBondhu" fill className="object-contain p-12" priority />
+              <Image
+                src="/logo.png"
+                alt="MatshoBondhu"
+                fill
+                className="object-contain p-12"
+                priority
+              />
             </div>
             <div className="absolute inset-x-0 bottom-0 p-6">
               <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
@@ -86,4 +99,3 @@ export default function HeroSection({ tickerData }: { tickerData: IMarketPrice[]
     </section>
   );
 }
-

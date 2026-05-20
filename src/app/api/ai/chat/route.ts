@@ -11,16 +11,16 @@ interface ChatMessage {
   parts: ChatPart[];
 }
 
-interface GeminiError extends Error {
-  status?: number;
-}
-
 const promptSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
-  history: z.array(z.object({
-    role: z.enum(["user", "model"]),
-    parts: z.array(z.object({ text: z.string() }))
-  })).optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "model"]),
+        parts: z.array(z.object({ text: z.string() })),
+      })
+    )
+    .optional(),
 });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { prompt, history } = promptSchema.parse(body);
 
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: "gemini-3-flash-preview",
     });
 
@@ -47,34 +47,50 @@ export async function POST(req: Request) {
 
     const chatContents: ChatMessage[] = [
       { role: "user", parts: [{ text: systemInstruction }] },
-      { role: "model", parts: [{ text: "জি, আমি বুঝেছি। আমি এখন থেকে মাছ চাষ ও বাজার দর বিশেষজ্ঞ হিসেবে কাজ করব।" }] },
-      ...(history as ChatMessage[] || []), 
-      { role: "user", parts: [{ text: prompt }] }
+      {
+        role: "model",
+        parts: [
+          {
+            text: "জি, আমি বুঝেছি। আমি এখন থেকে মাছ চাষ ও বাজার দর বিশেষজ্ঞ হিসেবে কাজ করব।",
+          },
+        ],
+      },
+      ...((history as ChatMessage[]) || []),
+      { role: "user", parts: [{ text: prompt }] },
     ];
 
     const result = await model.generateContent({
       contents: chatContents,
       generationConfig: {
-        maxOutputTokens: 500, 
-        temperature: 0.7,  
+        maxOutputTokens: 500,
+        temperature: 0.7,
       },
     });
 
     return NextResponse.json({ text: result.response.text() });
-
-  } catch (error: Error | GeminiError | unknown) {
-    if (error && typeof error === "object" && "status" in error && error.status === 429) {
-      return NextResponse.json(
-        { error: "আজকের জন্য মৎস্য বন্ধুর লিমিট শেষ হয়ে গেছে। দয়া করে আগামীকাল আবার চেষ্টা করুন।" }, 
-        { status: 429 }
-      );
+  } catch (error: unknown) {
+    if (error && typeof error === "object" && "status" in error) {
+      const maybeStatus = (error as Record<string, unknown>)["status"];
+      if (maybeStatus === 429) {
+        return NextResponse.json(
+          {
+            error:
+              "আজকের জন্য মৎস্য বন্ধুর লিমিট শেষ হয়ে গেছে। দয়া করে আগামীকাল আবার চেষ্টা করুন।",
+          },
+          { status: 429 }
+        );
+      }
     }
 
-    const errorMessage = error instanceof Error ? error.message : "Internal Error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal Error";
     console.error("AI Server Error:", errorMessage);
-    
+
     return NextResponse.json(
-      { error: "সার্ভারে সমস্যা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।" }, 
+      {
+        error:
+          "সার্ভারে সমস্যা হচ্ছে, অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।",
+      },
       { status: 500 }
     );
   }

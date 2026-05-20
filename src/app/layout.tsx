@@ -1,22 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import Providers from "@/shared/components/providers/ThemeProvider";
 import Navbar from "@/shared/components/navigation/Navbar";
 import ChatModule from "@/modules/ai-assistant/ChatModule";
 import { Toaster } from "sonner";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-const hindSiliguri = Hind_Siliguri({
-  variable: "--font-hind-siliguri",
-  subsets: ["bengali"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 export const viewport: Viewport = {
   themeColor: [
@@ -57,11 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="bn"
-      className={`${geistSans.variable} ${hindSiliguri.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
+    <html lang="bn" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--text)]">
         <Providers>
           <Navbar />

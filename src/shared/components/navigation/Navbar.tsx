@@ -7,7 +7,7 @@ import { Menu, X, ChevronRight, Loader2 } from "lucide-react";
 import { NAV_LINKS, AUTH_LINKS } from "@/config/navigation";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { Logo } from "../ui/Logo";
-import { Button } from "../ui/Button";
+import { Button } from "@/components/ui/Button";
 import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -22,22 +22,22 @@ interface MobileMenuProps {
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState<boolean>(false);
-const { status } = useSession();
+  const { status } = useSession();
   const handleLogout = (): void => {
     toast("আপনি কি এখন বের হতে চান?", {
-    description: "আবার ফিরে আসতে চাইলে আপনাকে লগইন করতে হবে।",
-    action: {
-      label: "হ্যাঁ, বের হন",
-      onClick: () => {
-        signOut({ callbackUrl: "/login" });
-        toast.success("সফলভাবে বের হয়েছেন!");
+      description: "আবার ফিরে আসতে চাইলে আপনাকে লগইন করতে হবে।",
+      action: {
+        label: "হ্যাঁ, বের হন",
+        onClick: () => {
+          signOut({ callbackUrl: "/login" });
+          toast.success("সফলভাবে বের হয়েছেন!");
+        },
       },
-    },
-    cancel: {
-      label: "না",
-      onClick: () => toast.dismiss(),
-    },
-  });
+      cancel: {
+        label: "না",
+        onClick: () => toast.dismiss(),
+      },
+    });
     setIsOpen(false);
   };
 
@@ -53,8 +53,8 @@ const { status } = useSession();
               <Link
                 href={link.href}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href 
-                    ? "bg-[var(--secondary)] text-[var(--primary)]" 
+                  pathname === link.href
+                    ? "bg-[var(--secondary)] text-[var(--primary)]"
                     : "text-[var(--text)]/80 hover:bg-[var(--background)]"
                 }`}
               >
@@ -69,8 +69,11 @@ const { status } = useSession();
 
           <div className="hidden sm:flex items-center gap-2">
             {status === "loading" ? (
-              <Loader2 className="animate-spin text-[var(--primary)]" size={20} />
-            ) :status !== "authenticated" ? (
+              <Loader2
+                className="animate-spin text-[var(--primary)]"
+                size={20}
+              />
+            ) : status !== "authenticated" ? (
               <Link href={AUTH_LINKS.login.href}>
                 <Button variant="primary">
                   <AUTH_LINKS.login.icon size={18} />
@@ -85,15 +88,19 @@ const { status } = useSession();
                     <span>{AUTH_LINKS.dashboard.name}</span>
                   </Button>
                 </Link>
-                <Button variant="ghost" onClick={handleLogout} className="text-red-500">
+                <Button
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className="text-red-500"
+                >
                   <AUTH_LINKS.logout.icon size={18} />
                 </Button>
               </>
             )}
           </div>
 
-          <button 
-            className="md:hidden p-2.5 rounded-xl bg-[var(--primary)] text-white active:scale-95 transition-transform" 
+          <button
+            className="md:hidden p-2.5 rounded-xl bg-[var(--primary)] text-white active:scale-95 transition-transform"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -101,29 +108,41 @@ const { status } = useSession();
         </div>
       </div>
 
-      <MobileMenu 
-        isOpen={isOpen} 
-        pathname={pathname} 
-        status={status} 
-        onClose={() => setIsOpen(false)} 
-        onLogout={handleLogout} 
+      <MobileMenu
+        isOpen={isOpen}
+        pathname={pathname}
+        status={status}
+        onClose={() => setIsOpen(false)}
+        onLogout={handleLogout}
       />
     </nav>
   );
 }
 
-const MobileMenu = ({ isOpen, pathname, status, onClose, onLogout }: MobileMenuProps) => (
-  <div className={`md:hidden absolute w-full bg-[var(--surface)] transition-all duration-300 ease-in-out shadow-xl ${
-    isOpen ? "min-h-screen border-b border-[var(--border)] opacity-100" : "h-0 opacity-0 overflow-hidden"
-  }`}>
+const MobileMenu = ({
+  isOpen,
+  pathname,
+  status,
+  onClose,
+  onLogout,
+}: MobileMenuProps) => (
+  <div
+    className={`md:hidden absolute w-full bg-[var(--surface)] transition-all duration-300 ease-in-out shadow-xl ${
+      isOpen
+        ? "min-h-screen border-b border-[var(--border)] opacity-100"
+        : "h-0 opacity-0 overflow-hidden"
+    }`}
+  >
     <div className="p-4 flex flex-col gap-2">
       {NAV_LINKS.map((link) => (
-        <Link 
-          key={link.href} 
-          href={link.href} 
+        <Link
+          key={link.href}
+          href={link.href}
           onClick={onClose}
           className={`flex justify-between items-center p-4 rounded-2xl font-bold transition-all ${
-            pathname === link.href ? "bg-[var(--secondary)] text-[var(--primary)]" : "hover:bg-[var(--background)]"
+            pathname === link.href
+              ? "bg-[var(--secondary)] text-[var(--primary)]"
+              : "hover:bg-[var(--background)]"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -136,7 +155,9 @@ const MobileMenu = ({ isOpen, pathname, status, onClose, onLogout }: MobileMenuP
 
       <div className="mt-4 pt-4 border-t border-[var(--border)]">
         {status === "loading" ? (
-          <div className="flex justify-center p-4"><Loader2 className="animate-spin text-[var(--primary)]" /></div>
+          <div className="flex justify-center p-4">
+            <Loader2 className="animate-spin text-[var(--primary)]" />
+          </div>
         ) : status !== "authenticated" ? (
           <Link href={AUTH_LINKS.login.href} onClick={onClose}>
             <Button variant="primary" className="w-full py-4 text-lg">
@@ -152,7 +173,11 @@ const MobileMenu = ({ isOpen, pathname, status, onClose, onLogout }: MobileMenuP
                 <span>{AUTH_LINKS.dashboard.name}</span>
               </Button>
             </Link>
-            <Button variant="ghost" onClick={onLogout} className="w-full py-4 text-red-500">
+            <Button
+              variant="ghost"
+              onClick={onLogout}
+              className="w-full py-4 text-red-500"
+            >
               <AUTH_LINKS.logout.icon size={20} />
               <span>{AUTH_LINKS.logout.name}</span>
             </Button>

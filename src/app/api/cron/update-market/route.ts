@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 
   try {
     await connectDB();
-    
+
     const newData: ScrapedFishData[] = await fetchMarketDataWithAI();
 
     if (!newData || newData.length === 0) {
@@ -30,30 +30,33 @@ export async function GET(req: Request) {
       updateOne: {
         filter: { fishName: item.fishName, location: item.location },
         update: {
-          $set: { 
-            currentPrice: item.price, 
-            category: item.category, 
-            lastUpdated: new Date() 
+          $set: {
+            currentPrice: item.price,
+            category: item.category,
+            lastUpdated: new Date(),
           },
-          $push: { 
-            history: { 
-              $each: [{ date: new Date(), price: item.price }], 
-              $slice: -30 
-            } 
-          }
+          $push: {
+            history: {
+              $each: [{ date: new Date(), price: item.price }],
+              $slice: -30,
+            },
+          },
         },
-        upsert: true
-      }
+        upsert: true,
+      },
     }));
 
     await MarketPrice.bulkWrite(bulkOps);
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       count: newData.length,
-      source: "Gemini-3-Flash Intelligence"
+      source: "Gemini-3-Flash Intelligence",
     });
-  } catch (error: unknown) {
-    return NextResponse.json({ error: "AI Automation failed" }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "AI Automation failed" },
+      { status: 500 }
+    );
   }
 }
