@@ -47,6 +47,7 @@ interface SpeechRecognitionAlternative {
 export default function VoiceSearchGate() {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
+  const [isSpeechSupported, setIsSpeechSupported] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
