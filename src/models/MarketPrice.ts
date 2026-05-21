@@ -18,8 +18,8 @@ const MarketPriceSchema = new Schema<MarketPriceDoc>({
 }, { timestamps: true });
 
 MarketPriceSchema.index({ location: 1, lastUpdated: -1 });
+MarketPriceSchema.index({ fishName: 1, category: 1 });
+MarketPriceSchema.index({ lastUpdated: -1 });
 
 export const MarketPrice: Model<MarketPriceDoc> = 
   mongoose.models.MarketPrice || mongoose.model<MarketPriceDoc>("MarketPrice", MarketPriceSchema);
-  MarketPriceSchema.index({ fishName: 1, category: 1 });
-MarketPriceSchema.index({ lastUpdated: -1 });
