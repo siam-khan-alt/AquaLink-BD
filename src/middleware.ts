@@ -37,13 +37,7 @@ export async function middleware(request: NextRequest) {
   const userRole = token.role as string;
 
   if (pathname.startsWith('/dashboard/farmer')) {
-    if (userRole !== 'farmer' && userRole !== 'admin') {
-      return NextResponse.redirect(new URL('/unauthorized', request.url));
-    }
-  }
-
-  if (pathname.startsWith('/dashboard/expert')) {
-    if (userRole !== 'expert' && userRole !== 'admin') {
+    if (userRole !== 'farmer') {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
   }

@@ -1,8 +1,8 @@
-import { Schema, model, models, Document, Model } from "mongoose";
+import { Schema, model, models, Document, Model, Types } from "mongoose";
 
 export interface IMessage extends Document {
-  chatId: Schema.Types.ObjectId;
-  sender: Schema.Types.ObjectId;
+  chatId: Types.ObjectId;
+  sender: Types.ObjectId;
   text: string;
   createdAt: Date;
 }

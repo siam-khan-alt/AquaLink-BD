@@ -1,4 +1,4 @@
-import { Schema, model, models, Document, Model } from "mongoose";
+import { Schema, model, models, Document, Model, Types } from "mongoose";
 
 export interface IExpense {
   type: string;
@@ -14,7 +14,7 @@ export interface IWaterQuality {
 }
 
 export interface IPond extends Document {
-  owner: Schema.Types.ObjectId;
+  owner: Types.ObjectId;
   name: string;
   area: number;
   fishType: string[];

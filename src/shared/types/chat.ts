@@ -25,7 +25,7 @@ export interface Contact {
   email?: string;
   phone?: string;
   image?: string;
-  role: "farmer" | "expert" | "business" | "admin";
+  role: "farmer" | "admin";
   isOnline?: boolean;
 }
 

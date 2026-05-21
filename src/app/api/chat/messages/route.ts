@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { Message } from "@/models/Message";
 import { getToken } from "next-auth/jwt";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     

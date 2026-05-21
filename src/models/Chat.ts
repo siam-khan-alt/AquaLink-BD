@@ -1,10 +1,10 @@
-import { Schema, model, models, Document, Model } from "mongoose";
+import { Schema, model, models, Document, Model, Types } from "mongoose";
 
 export interface IChat extends Document {
   isGroup: boolean;
   groupName?: string;
-  groupAdmin?: Schema.Types.ObjectId;
-  participants: Schema.Types.ObjectId[];
+  groupAdmin?: Types.ObjectId;
+  participants: Types.ObjectId[];
   isAdminSupport: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -34,7 +34,7 @@ const ChatSchema = new Schema<IChat>({
     ref: "User",
     required: true,
     validate: {
-      validator: function(v: Schema.Types.ObjectId[]) {
+      validator: function(v: Types.ObjectId[]) {
         return v && v.length >= 2;
       },
       message: "Chat must have at least 2 participants",

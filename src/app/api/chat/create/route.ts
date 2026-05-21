@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { Chat } from "@/models/Chat";
 import { getToken } from "next-auth/jwt";
 import { Types } from "mongoose";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     
