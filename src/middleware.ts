@@ -42,6 +42,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith('/dashboard/expert')) {
+    if (userRole !== 'expert' && userRole !== 'admin') {
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+  }
+
   if (pathname.startsWith('/dashboard/admin')) {
     if (userRole !== 'admin') {
       return NextResponse.redirect(new URL('/unauthorized', request.url));

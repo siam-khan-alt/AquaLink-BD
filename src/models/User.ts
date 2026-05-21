@@ -8,7 +8,7 @@ export interface IUser extends Document {
   password?: string;
   image?: string;
   firebaseUid?: string; 
-  role: "farmer" | "admin";
+  role: "farmer" | "expert" | "business" | "admin";
   isVerified: boolean;
   createdAt: Date;
 }
@@ -41,7 +41,7 @@ const UserSchema = new Schema<IUser>({
   },
   role: { 
     type: String, 
-    enum: ["farmer", "admin"], 
+    enum: ["farmer", "expert", "business", "admin"], 
     default: "farmer" 
   },
   isVerified: { type: Boolean, default: false },
