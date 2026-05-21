@@ -8,7 +8,7 @@ import SuccessfulFarmerStories from "@/features/home/components/SuccessfulFarmer
 import PWAInstallBanner from "@/features/home/components/PWAInstallBanner";
 import AIChatbotCTA from "@/features/home/components/AIChatbotCTA";
 import { getTickerMarketPrices } from "@/features/home/services/marketQueries";
-
+export const dynamic = "force-dynamic";
 export default async function Home() {
   const tickerData = await getTickerMarketPrices(12);
 
