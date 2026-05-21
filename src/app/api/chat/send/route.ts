@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     const senderId = token.id as string;
     const isParticipant = chat.participants.some(
-      (participant: any) => participant.toString() === senderId
+      (participant: Types.ObjectId | string | unknown) => String(participant) === senderId
     );
 
     if (!isParticipant) {
