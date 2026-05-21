@@ -14,11 +14,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "মৎস্য বন্ধু (AquaLink BD) - মাছ চাষিদের ডিজিটাল সাথী",
+    default: "মৎস্য বন্ধু - আধুনিক মাছ চাষের ডিজিটাল প্ল্যাটফর্ম",
     template: "%s | মৎস্য বন্ধু",
   },
   description:
-    "AquaLink BD - মৎস্য বন্ধু অ্যাপের মাধ্যমে মাছের বাজার দর জানুন, পুকুর ব্যবস্থাপনা করুন এবং মাছের রোগের সঠিক সমাধান পান দ্রুত।",
+    "মৎস্য বন্ধু - আধুনিক মাছ চাষের ডিজিটাল প্ল্যাটফর্ম। মাছের বাজার দর জানুন, পুকুর ব্যবস্থাপনা করুন এবং মাছের রোগের সঠিক সমাধান পান দ্রুত। বাংলাদেশের মাছ চাষিদের জন্য সেরা ডিজিটাল সমাধান।",
   keywords: [
     "মৎস্য বন্ধু",
     "AquaLink BD",
@@ -26,15 +26,52 @@ export const metadata: Metadata = {
     "মাছের বাজার দর",
     "মাছের রোগ সমাধান",
     "Fish Farming Solution",
+    "পুকুর ব্যবস্থাপনা",
+    "মাছ চাষ টিপস",
+    "বাংলাদেশ মাছ চাষ",
+    "ডিজিটাল কৃষি",
   ],
+  authors: [{ name: "AquaLink BD" }],
+  creator: "AquaLink BD",
+  publisher: "AquaLink BD",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
-    title: "মৎস্য বন্ধু - আপনার মাছ চাষের ডিজিটাল সহকারী",
+    title: "মৎস্য বন্ধু - আধুনিক মাছ চাষের ডিজিটাল প্ল্যাটফর্ম",
     description:
-      "আধুনিক প্রযুক্তিতে মাছ চাষ করুন লাভজনকভাবে। আজই যুক্ত হোন মৎস্য বন্ধু (AquaLink BD) প্ল্যাটফর্মে।",
+      "আধুনিক প্রযুক্তিতে মাছ চাষ করুন লাভজনকভাবে। বাংলাদেশের মাছ চাষিদের জন্য সেরা ডিজিটাল সমাধান। আজই যুক্ত হোন মৎস্য বন্ধু প্ল্যাটফর্মে।",
     url: "https://aqualinkbd.vercel.app",
     siteName: "মৎস্য বন্ধু",
     locale: "bn_BD",
     type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "মৎস্য বন্ধু - মাছ চাষের ডিজিটাল প্ল্যাটফর্ম",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "মৎস্য বন্ধু - আধুনিক মাছ চাষের ডিজিটাল প্ল্যাটফর্ম",
+    description:
+      "আধুনিক প্রযুক্তিতে মাছ চাষ করুন লাভজনকভাবে। বাংলাদেশের মাছ চাষিদের জন্য সেরা ডিজিটাল সমাধান।",
+    images: ["/logo.png"],
+    creator: "@AquaLinkBD",
+  },
+  verification: {
+    google: "your-google-verification-code",
   },
 };
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button";
+import { toast } from "sonner";
 
 interface NavItem {
   label: string;
@@ -45,11 +47,6 @@ const adminNavItems: NavItem[] = [
   { label: "সাপোর্ট ইনবক্স", href: "/dashboard/chat", icon: <MessageSquare size={20} /> },
 ];
 
-const mockNotifications = [
-  { id: 1, message: "আজ পুকুর ১ এ চুন দেওয়ার দিন", time: "২ ঘন্টা আগে" },
-  { id: 2, message: "পুকুর ২ এর pH মান স্বাভাবিক আছে", time: "৫ ঘন্টা আগে" },
-  { id: 3, message: "নতুন কোর্স উপলব্ধ: মাছ চাষের আধুনিক কৌশল", time: "১ দিন আগে" },
-];
 
 export default function DashboardLayout({
   children,
@@ -59,9 +56,31 @@ export default function DashboardLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const { data: notificationsData } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const res = await fetch("/api/notifications");
+      if (!res.ok) throw new Error("নোটিফিকেশন লোড করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
+    enabled: status === "authenticated",
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/notifications", { method: "PATCH" });
+      if (!res.ok) throw new Error("নোটিফিকেশন পড়া হিসেবে চিহ্নিত করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
 
   const handleLogout = async () => {
     await fetch("/api/auth/signout", { method: "POST" });
@@ -198,26 +217,40 @@ export default function DashboardLayout({
                         </h3>
                       </div>
                       <div className="max-h-96 overflow-y-auto">
-                        {mockNotifications.map((notification) => (
-                          <div
-                            key={notification.id}
-                            className="p-4 border-b border-[var(--border)] hover:bg-[var(--border)] transition-colors cursor-pointer"
-                          >
-                            <p className="text-sm text-[var(--text)] font-hind">
-                              {notification.message}
-                            </p>
-                            <p className="text-xs text-[var(--text)]/50 mt-1 font-hind">
-                              {notification.time}
+                        {notificationsData?.notifications && notificationsData.notifications.length > 0 ? (
+                          notificationsData.notifications.map((notification: any) => (
+                            <div
+                              key={notification._id}
+                              className="p-4 border-b border-[var(--border)] hover:bg-[var(--border)] transition-colors cursor-pointer"
+                            >
+                              <p className="text-sm text-[var(--text)] font-hind">
+                                {notification.title}
+                              </p>
+                              <p className="text-xs text-[var(--text)]/60 mt-1 font-hind">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-[var(--text)]/40 mt-1 font-hind">
+                                {new Date(notification.createdAt).toLocaleString("bn-BD")}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-8 text-center">
+                            <p className="text-sm text-[var(--text)]/60 font-hind">
+                              কোনো নতুন নোটিফিকেশন নেই
                             </p>
                           </div>
-                        ))}
+                        )}
                       </div>
                       <div className="p-3 border-t border-[var(--border)]">
                         <button
-                          onClick={() => setNotificationOpen(false)}
+                          onClick={() => {
+                            markAsReadMutation.mutate();
+                            setNotificationOpen(false);
+                          }}
                           className="w-full text-center text-sm font-semibold text-[var(--primary)] hover:underline font-hind"
                         >
-                          সব দেখুন
+                          সব পড়া হিসেবে চিহ্নিত করুন
                         </button>
                       </div>
                     </div>

@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { Chat } from "@/models/Chat";
 import { Message } from "@/models/Message";
+import { User } from "@/models/User";
 import { getToken } from "next-auth/jwt";
 import { Document, Types } from "mongoose";
 
@@ -52,38 +53,77 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     const userId = token.id as string;
+    const userRole = token.role as string;
     let chats: IChatDocument[];
 
-    if (type === "direct") {
-      chats = await Chat.find({
-        isGroup: false,
-        isAdminSupport: false,
-        participants: userId,
-      })
-        .populate("participants", "name email phone image role")
-        .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
-    } else if (type === "groups") {
-      chats = await Chat.find({
-        isGroup: true,
-        participants: userId,
-      })
-        .populate("participants", "name email phone image role")
-        .populate("groupAdmin", "name email phone image role")
-        .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
-    } else if (type === "support") {
-      chats = await Chat.find({
-        isAdminSupport: true,
-        participants: userId,
-      })
-        .populate("participants", "name email phone image role")
-        .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+    if (userRole === "admin") {
+      if (type === "support") {
+        chats = await Chat.find({
+          isAdminSupport: true,
+        })
+          .populate("participants", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      } else if (type === "direct") {
+        const farmers = await User.find({ role: "farmer" }).select("_id");
+        const farmerIds = farmers.map((f) => f._id);
+        
+        chats = await Chat.find({
+          isGroup: false,
+          isAdminSupport: false,
+          participants: { $in: farmerIds },
+        })
+          .populate("participants", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      } else {
+        const farmers = await User.find({ role: "farmer" }).select("_id");
+        const farmerIds = farmers.map((f) => f._id);
+        
+        chats = await Chat.find({
+          $or: [
+            { isAdminSupport: true },
+            { 
+              isGroup: false, 
+              isAdminSupport: false,
+              participants: { $in: farmerIds },
+            },
+          ],
+        })
+          .populate("participants", "name email phone image role")
+          .populate("groupAdmin", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      }
     } else {
-      chats = await Chat.find({
-        participants: userId,
-      })
-        .populate("participants", "name email phone image role")
-        .populate("groupAdmin", "name email phone image role")
-        .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      if (type === "direct") {
+        chats = await Chat.find({
+          isGroup: false,
+          isAdminSupport: false,
+          participants: userId,
+        })
+          .populate("participants", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      } else if (type === "groups") {
+        chats = await Chat.find({
+          isGroup: true,
+          participants: userId,
+        })
+          .populate("participants", "name email phone image role")
+          .populate("groupAdmin", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      } else if (type === "support") {
+        chats = await Chat.find({
+          isAdminSupport: true,
+          participants: userId,
+        })
+          .populate("participants", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      } else {
+        chats = await Chat.find({
+          participants: userId,
+        })
+          .populate("participants", "name email phone image role")
+          .populate("groupAdmin", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      }
     }
 
     const chatsWithLastMessage: ChatResponseObject[] = await Promise.all(
