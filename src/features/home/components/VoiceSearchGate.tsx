@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, Search } from "lucide-react";
+import { toast } from "sonner";
 
 declare global {
   interface Window {
@@ -90,7 +91,7 @@ export default function VoiceSearchGate() {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert("আপনার ব্রাউজার ভয়েস সার্চ সাপোর্ট করে না।");
+     toast.error("আপনার ব্রাউজার ভয়েস সার্চ সাপোর্ট করে না।");
       return;
     }
 
