@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
-  Layers,
   CircleDollarSign,
   Fish,
   Activity,
@@ -14,7 +13,6 @@ import {
   Loader2,
   Waves,
   Calendar,
-  ArrowUpRight,
   Info,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -31,7 +29,62 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
-// Helper for BDT currency formatting in Bengali locale
+interface IExpense {
+  _id: string;
+  type: string;
+  amount: number;
+  date: string;
+}
+
+interface IWaterQuality {
+  pH: number;
+  dissolvedO2?: number;
+  lastTested?: string;
+}
+
+interface IPond {
+  _id: string;
+  name: string;
+  area: number;
+  fishType: string[];
+  waterQuality?: IWaterQuality;
+  expenses?: IExpense[];
+  createdAt: string;
+}
+
+interface IPondsResponse {
+  ponds: IPond[];
+}
+
+interface IDashboardStats {
+  totalPonds: number;
+  totalActiveSpecies: number;
+  totalExpenses: number;
+  averagePH: number;
+}
+
+interface IStatsResponse {
+  stats: IDashboardStats;
+}
+
+interface IChartMonth {
+  key: string;
+  name: string;
+}
+
+interface IMonthExpenseAccumulator {
+  Feed: number;
+  Fertilizer: number;
+  Other: number;
+}
+
+interface IChartDataRow {
+  name: string;
+  "খাদ্য (Feed)": number;
+  "সার (Fertilizer)": number;
+  "অন্যান্য (Other)": number;
+}
+
 const formatBDT = (val: number): string => {
   return "৳ " + new Intl.NumberFormat("bn-BD", {
     minimumFractionDigits: 0,
@@ -39,9 +92,8 @@ const formatBDT = (val: number): string => {
   }).format(val);
 };
 
-// Map months for chart formatting
 const MONTHS_BN = [
-  "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+  "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
   "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
 ];
 
@@ -51,7 +103,6 @@ export default function FarmerDashboard() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Modal form states
   const [formData, setFormData] = useState({
     name: "",
     area: "",
@@ -60,29 +111,26 @@ export default function FarmerDashboard() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // 1. Fetch dashboard stats
-  const { data: statsData, isLoading: isStatsLoading } = useQuery({
+  const { data: statsData, isLoading: isStatsLoading } = useQuery<IStatsResponse>({
     queryKey: ["ponds-stats"],
     queryFn: async () => {
       const res = await fetch("/api/ponds/stats");
-      if (!res.ok) throw new Error("পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে");
+      if (!res.ok) throw new Error("পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে");
       return res.json();
     },
     enabled: status === "authenticated",
   });
 
-  // 2. Fetch all registered ponds
-  const { data: pondsData, isLoading: isPondsLoading } = useQuery({
+  const { data: pondsData, isLoading: isPondsLoading } = useQuery<IPondsResponse>({
     queryKey: ["ponds-list"],
     queryFn: async () => {
       const res = await fetch("/api/ponds");
-      if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
+      if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
       return res.json();
     },
     enabled: status === "authenticated",
   });
 
-  // 3. Add new pond mutation
   const addPondMutation = useMutation({
     mutationFn: async (newPondData: {
       name: string;
@@ -96,13 +144,13 @@ export default function FarmerDashboard() {
         body: JSON.stringify(newPondData),
       });
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "পুকুর যোগ করতে ব্যর্থ হয়েছে");
+        const errorData = await res.json() as { error?: string };
+        throw new Error(errorData.error || "পুকুর যোগ করতে ব্যর্থ হয়েছে");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("নতুন পুকুর সফলভাবে যোগ করা হয়েছে!");
+      toast.success("নতুন পুকুর সফলভাবে যোগ করা হয়েছে!");
       queryClient.invalidateQueries({ queryKey: ["ponds-stats"] });
       queryClient.invalidateQueries({ queryKey: ["ponds-list"] });
       setIsModalOpen(false);
@@ -114,7 +162,6 @@ export default function FarmerDashboard() {
     },
   });
 
-  // Handle Loading Session state
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
@@ -123,23 +170,20 @@ export default function FarmerDashboard() {
     );
   }
 
-  // Redirect to login if unauthenticated
   if (status === "unauthenticated") {
     router.push("/login");
     return null;
   }
 
-  // Process data for Recharts expense visualization
-  const getMonthlyExpensesData = () => {
+  const getMonthlyExpensesData = (): IChartDataRow[] => {
     if (!pondsData?.ponds || pondsData.ponds.length === 0) {
       return [];
     }
 
-    const chartDataMap: Record<string, { Feed: number; Fertilizer: number; Other: number }> = {};
-    const last6Months = [];
+    const chartDataMap: Record<string, IMonthExpenseAccumulator> = {};
+    const last6Months: IChartMonth[] = [];
     const now = new Date();
 
-    // Collect last 6 calendar months
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
@@ -148,10 +192,9 @@ export default function FarmerDashboard() {
       chartDataMap[key] = { Feed: 0, Fertilizer: 0, Other: 0 };
     }
 
-    // Accumulate monthly amounts
-    pondsData.ponds.forEach((pond: any) => {
+    pondsData.ponds.forEach((pond: IPond) => {
       if (pond.expenses) {
-        pond.expenses.forEach((expense: any) => {
+        pond.expenses.forEach((expense: IExpense) => {
           const expDate = new Date(expense.date);
           const key = `${expDate.getFullYear()}-${expDate.getMonth()}`;
           if (chartDataMap[key] !== undefined) {
@@ -178,7 +221,6 @@ export default function FarmerDashboard() {
 
   const chartData = getMonthlyExpensesData();
 
-  // Validate and submit the creation form
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
@@ -188,7 +230,7 @@ export default function FarmerDashboard() {
     }
     const areaNum = parseFloat(formData.area);
     if (isNaN(areaNum) || areaNum <= 0) {
-      errors.area = "সঠিক ইতিবাচক পুকুরের আয়তন শতাংশে লিখুন";
+      errors.area = "সঠিক ইতিবাচক পুকুরের আয়তন শতাংশে লিখুন";
     }
     if (!formData.fishTypesInput.trim()) {
       errors.fishTypes = "কমপক্ষে একটি মাছের প্রজাতি লিখুন";
@@ -216,14 +258,13 @@ export default function FarmerDashboard() {
     });
   };
 
-  const stats = statsData?.stats || {
+  const stats: IDashboardStats = statsData?.stats || {
     totalPonds: 0,
     totalActiveSpecies: 0,
     totalExpenses: 0,
     averagePH: 0,
   };
 
-  // Determine pH Status health label
   const getPHStatusLabel = (ph: number) => {
     if (ph === 0) return { label: "তথ্য নেই", color: "text-[var(--text)]/60 bg-[var(--border)]" };
     if (ph >= 6.5 && ph <= 8.5) {
@@ -243,7 +284,7 @@ export default function FarmerDashboard() {
               চাষি ড্যাশবোর্ড
             </h1>
             <p className="text-[var(--text)]/60 text-sm font-medium mt-1 font-hind">
-              আপনার খামারের মাছের বৃদ্ধি, পানির গুণমান এবং বিনিয়োগ ট্র্যাকিং
+              আপনার খামারের মাছের বৃদ্ধি, পানির গুণমান এবং বিনিয়োগ ট্র্যাকিং
             </p>
           </div>
           <Button
@@ -267,7 +308,7 @@ export default function FarmerDashboard() {
                   {isStatsLoading ? (
                     <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
                   ) : (
-                    new Intl.NumberFormat("bn-BD").format(stats.totalPonds)
+                    <TriangleDataCounter value={stats.totalPonds} />
                   )}
                 </h3>
               </div>
@@ -295,14 +336,14 @@ export default function FarmerDashboard() {
                 <CircleDollarSign size={24} />
               </div>
             </div>
-            <p className="text-xs text-[var(--text)]/40 mt-4 font-hind">খাদ্য ও সার ক্রয় বাবদ ব্যয়</p>
+            <p className="text-xs text-[var(--text)]/40 mt-4 font-hind">খাদ্য ও সার ক্রয় বাবদ ব্যয়</p>
           </Card>
 
           {/* Card 3: Active Species */}
           <Card className="hover:scale-[1.02] transition-transform duration-300">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">সক্রিয় মাছের প্রজাতি</p>
+                <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">সক্রিয় মাছের প্রজাতি</p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
                   {isStatsLoading ? (
                     <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
@@ -322,7 +363,7 @@ export default function FarmerDashboard() {
           <Card className="hover:scale-[1.02] transition-transform duration-300">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">গড় পানির pH মান</p>
+                <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">গড় পানির pH মান</p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
                   {isStatsLoading ? (
                     <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
@@ -344,7 +385,7 @@ export default function FarmerDashboard() {
                 </span>
               </div>
             ) : (
-              <p className="text-xs text-[var(--text)]/40 mt-4 font-hind">পরিমাপ লগ পাওয়া যায়নি</p>
+              <p className="text-xs text-[var(--text)]/40 mt-4 font-hind">পরিমাপ লগ পাওয়া যায়নি</p>
             )}
           </Card>
 
@@ -354,8 +395,8 @@ export default function FarmerDashboard() {
         <Card className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-[var(--border)] pb-4 mb-6">
             <div>
-              <h2 className="text-xl font-extrabold text-[var(--text)] font-hind">বিনিয়োগ বিশ্লেষণ</h2>
-              <p className="text-sm text-[var(--text)]/60 font-hind mt-1">বিগত ৬ মাসে খাদ্য ও সার বাবদ ব্যয়ের চিত্র</p>
+              <h2 className="text-xl font-extrabold text-[var(--text)] font-hind">বিনিয়োগ বিশ্লেষণ</h2>
+              <p className="text-sm text-[var(--text)]/60 font-hind mt-1">বিগত ৬ মাসে খাদ্য ও সার বাবদ ব্যয়ের চিত্র</p>
             </div>
             <div className="flex items-center gap-4 text-xs font-semibold text-[var(--text)]/60 font-hind mt-2 sm:mt-0">
               <div className="flex items-center gap-1.5">
@@ -381,8 +422,8 @@ export default function FarmerDashboard() {
             ) : chartData.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
                 <Info size={40} className="mb-2 text-[var(--text)]" />
-                <p className="font-semibold text-sm font-hind">ব্যয়ের কোনো পরিসংখ্যান এখনও পাওয়া যায়নি।</p>
-                <p className="text-xs font-hind mt-1">পুকুরে ব্যয়ের তথ্য যোগ করা হলে চার্ট প্রদর্শিত হবে।</p>
+                <p className="font-semibold text-sm font-hind">ব্যয়ের কোনো পরিসংখ্যান এখনও পাওয়া যায়নি।</p>
+                <p className="text-xs font-hind mt-1">পুকুরে ব্যয়ের তথ্য যোগ করা হলে চার্ট প্রদর্শিত হবে।</p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -466,14 +507,13 @@ export default function FarmerDashboard() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pondsData.ponds.map((pond: any) => {
+              {pondsData.ponds.map((pond: IPond) => {
                 const ph = pond.waterQuality?.pH || 0;
-                const status = getPHStatusLabel(ph);
+                const statusLabel = getPHStatusLabel(ph);
                 
                 return (
                   <Card key={pond._id} className="bg-[var(--surface)] hover:shadow-2xl hover:border-[var(--primary)]/30 transition-all duration-300 flex flex-col justify-between h-full">
                     <div className="space-y-4">
-                      {/* Name & Area */}
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg">
@@ -488,7 +528,6 @@ export default function FarmerDashboard() {
                         </span>
                       </div>
 
-                      {/* Active Species tags */}
                       <div className="space-y-1">
                         <p className="text-xs text-[var(--text)]/50 font-semibold font-hind">চাষকৃত মাছ</p>
                         <div className="flex flex-wrap gap-1.5">
@@ -500,7 +539,6 @@ export default function FarmerDashboard() {
                         </div>
                       </div>
 
-                      {/* Water parameters */}
                       <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[var(--border)]/50">
                         <div>
                           <p className="text-xs text-[var(--text)]/50 font-semibold font-hind">পানির pH মান</p>
@@ -518,8 +556,8 @@ export default function FarmerDashboard() {
                     </div>
 
                     <div className="mt-6 flex items-center justify-between gap-2 pt-3 border-t border-[var(--border)]/30 text-xs text-[var(--text)]/40 font-semibold">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full font-hind ${status.color}`}>
-                        {status.label}
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full font-hind ${statusLabel.color}`}>
+                        {statusLabel.label}
                       </span>
                       <span className="flex items-center gap-1 font-hind">
                         <Calendar size={12} />
@@ -538,7 +576,6 @@ export default function FarmerDashboard() {
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
             <Card className="bg-[var(--surface)] w-full max-w-md border border-[var(--border)] relative shadow-2xl p-6 rounded-2xl flex flex-col justify-between animate-in slide-in-from-bottom-12 duration-400">
               
-              {/* Modal Header */}
               <div className="flex items-center justify-between border-b border-[var(--border)] pb-4 mb-5">
                 <h3 className="text-xl font-bold text-[var(--text)] font-hind flex items-center gap-2">
                   <Waves className="text-[var(--primary)]" size={20} />
@@ -552,13 +589,11 @@ export default function FarmerDashboard() {
                 </button>
               </div>
 
-              {/* Modal Form */}
               <form onSubmit={handleFormSubmit} className="space-y-4">
-                
                 <Input
                   label="পুকুরের নাম"
                   id="pond-name"
-                  placeholder="যেমন: উত্তর পাড়ের বড় পুকুর"
+                  placeholder="যেমন: উত্তর পাড়ের বড় পুকুর"
                   className="font-hind"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -566,7 +601,7 @@ export default function FarmerDashboard() {
                 />
 
                 <Input
-                  label="আয়তন (শতাংশ)"
+                  label="আয়তন (শতাংশ)"
                   id="pond-area"
                   type="number"
                   step="0.01"
@@ -578,7 +613,7 @@ export default function FarmerDashboard() {
                 />
 
                 <Input
-                  label="মাছের প্রজাতি (কমা দিয়ে লিখুন)"
+                  label="মাছের প্রজাতি (কমা দিয়ে লিখুন)"
                   id="pond-fish"
                   placeholder="যেমন: রুই, কাতল, মৃগেল"
                   className="font-hind"
@@ -599,7 +634,6 @@ export default function FarmerDashboard() {
                   error={formErrors.initialPh}
                 />
 
-                {/* Form Buttons */}
                 <div className="flex gap-3 pt-4 border-t border-[var(--border)] mt-6">
                   <Button
                     type="button"
@@ -617,9 +651,7 @@ export default function FarmerDashboard() {
                     যুক্ত করুন
                   </Button>
                 </div>
-
               </form>
-
             </Card>
           </div>
         )}
@@ -627,4 +659,8 @@ export default function FarmerDashboard() {
       </div>
     </div>
   );
+}
+
+function TriangleDataCounter({ value }: { value: number }) {
+  return <>{new Intl.NumberFormat("bn-BD").format(value)}</>;
 }

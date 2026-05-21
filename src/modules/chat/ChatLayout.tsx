@@ -1,10 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, Users, HeadphonesIcon, Send, Plus, X, MoreVertical } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { MessageSquare, Users, HeadphonesIcon, Send, Plus, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Chat, ChatMessage, ChatTab } from "@/shared/types/chat";
 import { usePusherClient } from "@/shared/hooks/usePusherClient";
+
+interface Participant {
+  _id: string;
+  name: string;
+}
 
 export default function ChatLayout() {
   const { data: session } = useSession();
@@ -18,27 +23,8 @@ export default function ChatLayout() {
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  usePusherClient(selectedChat?._id || "", (newMessage: ChatMessage) => {
-    setMessages((prev) => [...prev, newMessage]);
-  });
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    fetchChats();
-  }, [activeTab, session]);
-
-  useEffect(() => {
-    if (selectedChat) {
-      fetchMessages(selectedChat._id);
-    }
-  }, [selectedChat]);
-
-  const fetchChats = async () => {
+  // এপিআই কল এবং স্টেট আপডেট এক সাথে হ্যান্ডেল করার জন্য useCallback
+  const fetchChats = useCallback(async () => {
     if (!session?.user?.id) return;
     
     try {
@@ -50,9 +36,10 @@ export default function ChatLayout() {
     } catch (error) {
       console.error("Error fetching chats:", error);
     }
-  };
+  }, [activeTab, session?.user?.id]);
 
-  const fetchMessages = async (chatId: string) => {
+  const fetchMessages = useCallback(async (chatId: string) => {
+    if (!chatId) return;
     try {
       const response = await fetch(`/api/chat/messages?chatId=${chatId}`);
       const data = await response.json();
@@ -62,7 +49,52 @@ export default function ChatLayout() {
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
-  };
+  }, []);
+
+  usePusherClient(selectedChat?._id || "", (newMessage: ChatMessage) => {
+    setMessages((prev) => [...prev, newMessage]);
+  });
+
+  // অটো স্ক্রোল ইফেক্ট
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // চ্যাট লিস্ট লোড করার ইফেক্ট
+  useEffect(() => {
+    let isMounted = true;
+    
+    const loadChats = async () => {
+      if (isMounted) {
+        await fetchChats();
+      }
+    };
+
+    loadChats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchChats]);
+
+  // মেসেজ লোড করার ইফেক্ট
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadMessages = async () => {
+      if (selectedChat?._id && isMounted) {
+        await fetchMessages(selectedChat._id);
+      }
+    };
+
+    loadMessages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedChat?._id, fetchMessages]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || !selectedChat) return;
@@ -131,28 +163,7 @@ export default function ChatLayout() {
     }
   };
 
-  const handleStartDirectMessage = async (participantId: string) => {
-    try {
-      const response = await fetch("/api/chat/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          isGroup: false,
-          participants: [participantId],
-        }),
-      });
-
-      const data = await response.json();
-      if (data.chat) {
-        setSelectedChat(data.chat);
-        fetchChats();
-      }
-    } catch (error) {
-      console.error("Error creating direct chat:", error);
-    }
-  };
-
-  if (!session) {
+  if (!session || !session.user) {
     return (
       <div className="flex items-center justify-center h-screen bg-[var(--background)]">
         <p className="text-[var(--text)]">Please log in to access chat</p>
@@ -235,7 +246,10 @@ export default function ChatLayout() {
               }`}
             >
               <div className="font-semibold">
-                {chat.isGroup ? chat.groupName : (chat.participants as any[]).find((p: any) => p._id !== session.user.id)?.name || "Unknown"}
+                {chat.isGroup 
+                  ? chat.groupName 
+                  : (chat.participants as unknown as Participant[]).find((p) => p._id !== session.user.id)?.name || "Unknown"
+                }
               </div>
               {chat.lastMessage && (
                 <div className="text-sm opacity-70 truncate">
@@ -253,7 +267,10 @@ export default function ChatLayout() {
             <div className="p-4 border-b border-[var(--border)] bg-[var(--surface)] flex items-center justify-between">
               <div>
                 <h2 className="font-bold text-[var(--text)]">
-                  {selectedChat.isGroup ? selectedChat.groupName : (selectedChat.participants as any[]).find((p: any) => p._id !== session.user.id)?.name || "Unknown"}
+                  {selectedChat.isGroup 
+                    ? selectedChat.groupName 
+                    : (selectedChat.participants as unknown as Participant[]).find((p) => p._id !== session.user.id)?.name || "Unknown"
+                  }
                 </h2>
                 <p className="text-sm text-[var(--text)] opacity-60">
                   {selectedChat.isGroup ? `${selectedChat.participants.length} members` : "Direct message"}

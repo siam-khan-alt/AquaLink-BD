@@ -5,7 +5,29 @@ import { Chat } from "@/models/Chat";
 import { getToken } from "next-auth/jwt";
 import { pusherServer } from "@/shared/lib/pusher";
 import type { NextRequest } from "next/server";
-import { Types } from "mongoose";
+import { Types, Document } from "mongoose";
+
+interface IChatSchema extends Document {
+  isGroup: boolean;
+  isAdminSupport: boolean;
+  participants: Types.ObjectId[];
+  groupAdmin?: Types.ObjectId;
+}
+
+interface IMessageSchema {
+  chatId: Types.ObjectId | string;
+  sender: Types.ObjectId;
+  text: string;
+  createdAt?: Date;
+}
+
+interface IMessageResponse {
+  _id: string;
+  chatId: string;
+  sender: string;
+  text: string;
+  createdAt: Date;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { chatId, text } = body;
+    const { chatId, text } = body as { chatId?: string; text?: string };
 
     if (!chatId || !text) {
       return NextResponse.json(
@@ -30,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId) as IChatSchema | null;
     if (!chat) {
       return NextResponse.json(
         { error: "Chat not found" },
@@ -40,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     const senderId = token.id as string;
     const isParticipant = chat.participants.some(
-      (participant: Types.ObjectId | string | unknown) => String(participant) === senderId
+      (participant: Types.ObjectId) => participant.toString() === senderId
     );
 
     if (!isParticipant) {
@@ -50,18 +72,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const message = await Message.create({
+    const messagePayload: IMessageSchema = {
       chatId,
-      sender: new Types.ObjectId(senderId) as any,
+      sender: new Types.ObjectId(senderId),
       text,
-    });
+    };
 
-    const messageData = {
-      _id: message._id.toString(),
+    const message = await Message.create(messagePayload);
+
+    const messageData: IMessageResponse = {
+      _id: (message._id as Types.ObjectId).toString(),
       chatId: message.chatId.toString(),
       sender: message.sender.toString(),
       text: message.text,
-      createdAt: message.createdAt,
+      createdAt: message.createdAt || new Date(),
     };
 
     await pusherServer.trigger(
