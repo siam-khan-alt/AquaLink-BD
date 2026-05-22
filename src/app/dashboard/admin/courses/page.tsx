@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 interface ICourse {
   _id: string;
@@ -59,6 +60,7 @@ export default function AdminCoursesPage() {
     videoUrl: "",
     price: "",
     category: "",
+    imageUrl: "",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -101,6 +103,7 @@ export default function AdminCoursesPage() {
         videoUrl: "",
         price: "",
         category: "",
+        imageUrl: "",
       });
       setFormErrors({});
     },
@@ -337,6 +340,12 @@ export default function AdminCoursesPage() {
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   error={formErrors.category}
+                />
+
+                <ImageUpload
+                  label="কোর্সের ছবি"
+                  value={formData.imageUrl}
+                  onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                 />
 
                 <div className="flex gap-3 pt-4 border-t border-[var(--border)] mt-6">

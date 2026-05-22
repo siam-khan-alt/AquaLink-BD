@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 interface IPond {
   _id: string;
@@ -53,6 +54,7 @@ export default function PondsPage() {
     area: "",
     fishTypesInput: "",
     initialPh: "",
+    imageUrl: "",
   });
 
   const { data: pondsData, isLoading: isPondsLoading } = useQuery<IPondsResponse>({
@@ -83,7 +85,7 @@ export default function PondsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ponds"] });
       setIsModalOpen(false);
-      setFormData({ name: "", area: "", fishTypesInput: "", initialPh: "" });
+      setFormData({ name: "", area: "", fishTypesInput: "", initialPh: "", imageUrl: "" });
       toast.success("পুকুর সফলভাবে তৈরি হয়েছে");
     },
     onError: (error) => {
@@ -284,6 +286,12 @@ export default function PondsPage() {
                   onChange={(e) => setFormData({ ...formData, initialPh: e.target.value })}
                   placeholder="pH মান দিন (0-14)"
                   required
+                />
+
+                <ImageUpload
+                  label="পুকুরের ছবি"
+                  value={formData.imageUrl}
+                  onChange={(url) => setFormData({ ...formData, imageUrl: url })}
                 />
 
                 <div className="flex gap-3 pt-4">
