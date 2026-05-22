@@ -1,4 +1,4 @@
-import { Home, BarChart2, Stethoscope, Mail, LogOut, User, LucideIcon, Waves } from "lucide-react";
+import { Home, BarChart2, Stethoscope, Mail, LogOut, User, LucideIcon, Waves, Info } from "lucide-react";
 
 export interface NavLink {
   name: string;
@@ -10,6 +10,7 @@ export const NAV_LINKS: NavLink[] = [
   { name: "মৎস্য বন্ধু", href: "/", icon: Home },
   { name: "বাজার দর", href: "/market-prices", icon: BarChart2 },
   { name: "রোগ সমাধান", href: "/fish-diseases", icon: Stethoscope },
+  { name: "সম্পর্কে", href: "/about", icon: Info },
   { name: "যোগাযোগ", href: "/contact", icon: Mail },
 ] as const;
 
