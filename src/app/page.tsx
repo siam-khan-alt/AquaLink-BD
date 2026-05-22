@@ -7,6 +7,10 @@ import VoiceSearchGate from "@/features/home/components/VoiceSearchGate";
 import SuccessfulFarmerStories from "@/features/home/components/SuccessfulFarmerStories";
 import PWAInstallBanner from "@/features/home/components/PWAInstallBanner";
 import AIChatbotCTA from "@/features/home/components/AIChatbotCTA";
+import MarketTrendsInsight from "@/features/home/components/MarketTrendsInsight";
+import PremiumBootcampCTA from "@/features/home/components/PremiumBootcampCTA";
+import FarmingVideoShowcase from "@/features/home/components/FarmingVideoShowcase";
+import PlatformStatsBanner from "@/features/home/components/PlatformStatsBanner";
 import { getTickerMarketPrices } from "@/features/home/services/marketQueries";
 export const dynamic = "force-dynamic";
 export default async function Home() {
@@ -18,6 +22,7 @@ export default async function Home() {
 
       <div className="container mx-auto px-4 space-y-24 py-16">
         <RealtimePriceSnapshot />
+        <MarketTrendsInsight />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-6">
             <WeatherCropAdvisory />
@@ -29,7 +34,10 @@ export default async function Home() {
           </div>
         </div>
 
+        <PremiumBootcampCTA />
+        <FarmingVideoShowcase />
         <SuccessfulFarmerStories />
+        <PlatformStatsBanner />
       </div>
 
       <PWAInstallBanner />

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "@/shared/components/providers/ThemeProvider";
 import Navbar from "@/shared/components/navigation/Navbar";
+import Footer from "@/shared/components/navigation/Footer";
 import ChatModule from "@/modules/ai-assistant/ChatModule";
 import { Toaster } from "sonner";
 
@@ -113,6 +114,8 @@ export default function RootLayout({
             />
             <ChatModule />
           </main>
+
+          <Footer />
         </Providers>
       </body>
     </html>
