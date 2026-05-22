@@ -11,26 +11,15 @@ import {
   Loader2,
   Calendar,
   TrendingDown,
-  Trash2,
-  Edit,
 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 const expenseTypes = ["Feed", "Seed/Pona", "Medicine", "Fertilizer", "Other"] as const;
 
-const expenseSchema = z.object({
-  pondId: z.string().min(1, "পুকুর নির্বাচন করতে হবে"),
-  type: z.string().refine((val) => expenseTypes.includes(val as any), {
-    message: "সঠিক খরচের ধরন নির্বাচন করুন",
-  }),
-  amount: z.number().min(0.01, "পরিমাণ ০ এর চেয়ে বেশি হতে হবে"),
-  date: z.string().min(1, "তারিখ প্রদান করতে হবে"),
-  note: z.string().optional(),
-});
+type ExpenseType = typeof expenseTypes[number];
 
 interface IExpense {
   _id: string;
@@ -71,7 +60,7 @@ const formatDate = (dateStr: string): string => {
 };
 
 export default function ExpensesPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
@@ -79,7 +68,7 @@ export default function ExpensesPage() {
 
   const [formData, setFormData] = useState({
     pondId: "",
-    type: "Feed" as const,
+    type: "Feed" as ExpenseType,
     amount: "",
     date: new Date().toISOString().split("T")[0],
     note: "",
@@ -96,7 +85,7 @@ export default function ExpensesPage() {
     enabled: status === "authenticated",
   });
 
-  const { data: pondsData, isLoading: isPondsLoading } = useQuery<IPondsResponse>({
+  const { data: pondsData } = useQuery<IPondsResponse>({
     queryKey: ["ponds-list"],
     queryFn: async () => {
       const res = await fetch("/api/ponds");
@@ -413,7 +402,7 @@ export default function ExpensesPage() {
                   </label>
                   <select
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as ExpenseType })}
                     className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] font-hind focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                   >
                     {expenseTypes.map((type) => (

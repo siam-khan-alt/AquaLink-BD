@@ -9,24 +9,14 @@ import {
   X,
   Loader2,
   Video,
-  DollarSign,
   Tag,
   Trash2,
   Edit,
 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-const courseSchema = z.object({
-  title: z.string().min(1, "কোর্সের শিরোনাম অবশ্যই দিতে হবে"),
-  description: z.string().min(1, "কোর্সের বিবরণ অবশ্যই দিতে হবে"),
-  videoUrl: z.string().url("সঠিক ভিডিও URL প্রদান করুন"),
-  price: z.number().min(0, "মূল্য ০ এর চেয়ে বেশি হতে হবে"),
-  category: z.string().min(1, "ক্যাটাগরি অবশ্যই দিতে হবে"),
-});
 
 interface ICourse {
   _id: string;
@@ -59,7 +49,7 @@ const formatDate = (dateStr: string): string => {
 };
 
 export default function AdminCoursesPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
 

@@ -16,7 +16,7 @@ const createCourseSchema = z.object({
   category: z.string().min(1, "ক্যাটাগরি অবশ্যই দিতে হবে"),
 });
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     await connectDB();

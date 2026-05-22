@@ -8,9 +8,19 @@ import { z } from "zod";
 
 const expenseTypes = ["Feed", "Seed/Pona", "Medicine", "Fertilizer", "Other"] as const;
 
+type ExpenseType = typeof expenseTypes[number];
+
+interface IExpenseDocument {
+  _id?: Types.ObjectId;
+  type: string;
+  amount: number;
+  date: Date;
+  note?: string;
+}
+
 const createExpenseSchema = z.object({
   pondId: z.string().min(1, "পুকুর আইডি প্রদান করতে হবে"),
-  type: z.string().refine((val) => expenseTypes.includes(val as any), {
+  type: z.string().refine((val): val is ExpenseType => expenseTypes.includes(val as ExpenseType), {
     message: "সঠিক খরচের ধরন নির্বাচন করুন",
   }),
   amount: z.number().min(0.01, "পরিমাণ ০ এর চেয়ে বেশি হতে হবে"),
@@ -46,15 +56,16 @@ export async function GET(req: NextRequest) {
 
     ponds.forEach((pond) => {
       if (pond.expenses && pond.expenses.length > 0) {
-        pond.expenses.forEach((expense: any) => {
+        pond.expenses.forEach((expense) => {
+          const expenseDoc = expense as IExpenseDocument;
           allExpenses.push({
-            _id: expense._id?.toString() || `${pond._id}-${expense.date?.getTime() || Date.now()}`,
+            _id: expenseDoc._id?.toString() || `${pond._id}-${expenseDoc.date?.getTime() || Date.now()}`,
             pondId: pond._id.toString(),
             pondName: pond.name,
-            type: expense.type,
-            amount: expense.amount,
-            date: expense.date,
-            note: expense.note,
+            type: expenseDoc.type,
+            amount: expenseDoc.amount,
+            date: expenseDoc.date,
+            note: expenseDoc.note,
           });
         });
       }

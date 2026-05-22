@@ -2,17 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { Enrollment } from "@/models/Enrollment";
-import crypto from "crypto";
-
-const SSLCOMMERZ_STORE_ID = process.env.SSLCOMMERZ_STORE_ID || "test";
-const SSLCOMMERZ_STORE_PASSWORD = process.env.SSLCOMMERZ_STORE_PASSWORD || "test";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
     const body = await req.json();
 
-    const { tran_id, status, value_a, value_b } = body;
+    const { tran_id, status } = body;
 
     if (!tran_id || !status) {
       return NextResponse.redirect(

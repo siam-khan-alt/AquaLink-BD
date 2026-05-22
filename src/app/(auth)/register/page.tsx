@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 
 interface FirebaseError {
   code: string;
@@ -212,9 +213,10 @@ export default function RegisterPage() {
           onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           className="w-full h-12 flex items-center justify-center gap-3 bg-white text-black rounded-xl font-bold hover:bg-gray-50 transition-all border border-gray-200 font-hind"
         >
-          <img
+          <Image
             src="https://www.svgrepo.com/show/355037/google.svg"
-            className="w-5 h-5"
+            width={20}
+            height={20}
             alt="Google"
           />{" "}
           Google দিয়ে খুলুন

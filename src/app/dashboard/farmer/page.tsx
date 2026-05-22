@@ -98,7 +98,7 @@ const MONTHS_BN = [
 ];
 
 export default function FarmerDashboard() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);

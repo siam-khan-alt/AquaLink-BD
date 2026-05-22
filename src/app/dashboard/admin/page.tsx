@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
   Users,
@@ -17,18 +17,11 @@ import {
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
-import { z } from "zod";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 const fishTypes = ["Ruhi", "Pangas", "Tilapia", "Katla", "Mrigel", "Koi", "Other"] as const;
-
-const priceSchema = z.object({
-  fishType: z.string().min(1, "মাছের নাম বাধ্যতামূলক"),
-  wholesalePrice: z.number().min(0, "পাইকারি দর ০ এর চেয়ে বেশি হতে হবে"),
-  retailPrice: z.number().min(0, "খুচরা দর ০ এর চেয়ে বেশি হতে হবে"),
-});
 
 interface IAdminStats {
   totalFarmers: number;
@@ -64,8 +57,7 @@ const formatDate = (dateStr: string): string => {
 };
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
-  const queryClient = useQueryClient();
+  const { status } = useSession();
   const [activeTab, setActiveTab] = useState<"farmers" | "prices">("farmers");
 
   const [priceFormData, setPriceFormData] = useState({

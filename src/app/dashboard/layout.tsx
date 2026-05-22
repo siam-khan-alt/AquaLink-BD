@@ -18,17 +18,21 @@ import {
   MessageSquare,
   Users,
   TrendingUp,
-  Settings,
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Button from "@/components/ui/Button";
-import { toast } from "sonner";
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
+}
+
+interface Notification {
+  _id: string;
+  title: string;
+  message: string;
+  createdAt: Date;
 }
 
 const farmerNavItems: NavItem[] = [
@@ -218,7 +222,7 @@ export default function DashboardLayout({
                       </div>
                       <div className="max-h-96 overflow-y-auto">
                         {notificationsData?.notifications && notificationsData.notifications.length > 0 ? (
-                          notificationsData.notifications.map((notification: any) => (
+                          notificationsData.notifications.map((notification: Notification) => (
                             <div
                               key={notification._id}
                               className="p-4 border-b border-[var(--border)] hover:bg-[var(--border)] transition-colors cursor-pointer"

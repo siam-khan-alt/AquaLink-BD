@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Play, Video, Clock, Eye } from "lucide-react";
+import { Play, Clock, Eye } from "lucide-react";
 import Card from "@/components/ui/Card";
 
 interface VideoItem {

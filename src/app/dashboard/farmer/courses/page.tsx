@@ -12,7 +12,6 @@ import {
   DollarSign,
   X,
   CheckCircle,
-  AlertCircle,
   ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -49,7 +48,7 @@ const getYouTubeEmbedUrl = (url: string): string => {
 };
 
 export default function FarmerCoursesPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();

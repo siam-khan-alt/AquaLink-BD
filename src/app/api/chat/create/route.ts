@@ -2,7 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { Chat } from "@/models/Chat";
 import { getToken } from "next-auth/jwt";
-import { Types } from "mongoose";
 
 export async function POST(req: NextRequest) {
   try {

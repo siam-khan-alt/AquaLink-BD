@@ -21,6 +21,12 @@ const SSLCOMMERZ_GATEWAY_URL = SSLCOMMERZ_IS_SANDBOX
   ? "https://sandbox.sslcommerz.com/gwprocess/v4/api.php"
   : "https://securepay.sslcommerz.com/gwprocess/v4/api.php";
 
+interface SSLCommerzResponse {
+  status: string;
+  GatewayPageURL?: string;
+  failedreason?: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -128,7 +134,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(sslczData),
     });
 
-    const sslczResponse = await response.json() as any;
+    const sslczResponse = await response.json() as SSLCommerzResponse;
 
     if (sslczResponse.status === "SUCCESS") {
       return NextResponse.json(
