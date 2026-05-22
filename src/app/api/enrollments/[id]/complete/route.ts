@@ -4,13 +4,15 @@ import Enrollment from "@/models/Enrollment";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
+    const { id } = await params;
+
     const enrollment = await Enrollment.findByIdAndUpdate(
-      params.id,
+      id,
       {
         completed: true,
         completedAt: new Date(),
