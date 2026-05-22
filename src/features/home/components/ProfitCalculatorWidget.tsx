@@ -4,6 +4,17 @@ import { useState, useMemo } from "react";
 import { TrendingUp, Scale, DollarSign, Calculator } from "lucide-react";
 import { Card, Slider } from "@heroui/react";
 
+function handleSliderValueChange(
+  value: number | number[],
+  setter: (value: number) => void
+): void {
+  if (typeof value === 'number') {
+    setter(value);
+  } else if (Array.isArray(value) && value.length > 0) {
+    setter(value[0]);
+  }
+}
+
 export default function ProfitCalculatorWidget() {
   const [pondSize, setPondSize] = useState<number>(1);
   const [fishCount, setFishCount] = useState<number>(1000);
@@ -57,7 +68,7 @@ export default function ProfitCalculatorWidget() {
             minValue={0.5}
             maxValue={10}
             value={pondSize}
-            onChange={setPondSize}
+            onChange={(value) => handleSliderValueChange(value, setPondSize)}
             color="primary"
             className="w-full"
             classNames={{
@@ -80,7 +91,7 @@ export default function ProfitCalculatorWidget() {
             minValue={100}
             maxValue={5000}
             value={fishCount}
-            onChange={setFishCount}
+            onChange={(value) => handleSliderValueChange(value, setFishCount)}
             color="primary"
             className="w-full"
             classNames={{
@@ -103,7 +114,7 @@ export default function ProfitCalculatorWidget() {
             minValue={50}
             maxValue={150}
             value={feedCostPerKg}
-            onChange={setFeedCostPerKg}
+            onChange={(value) => handleSliderValueChange(value, setFeedCostPerKg)}
             color="primary"
             className="w-full"
             classNames={{
@@ -126,7 +137,7 @@ export default function ProfitCalculatorWidget() {
             minValue={200}
             maxValue={1000}
             value={expectedGrowth}
-            onChange={setExpectedGrowth}
+            onChange={(value) => handleSliderValueChange(value, setExpectedGrowth)}
             color="primary"
             className="w-full"
             classNames={{
@@ -149,7 +160,7 @@ export default function ProfitCalculatorWidget() {
             minValue={200}
             maxValue={600}
             value={marketPricePerKg}
-            onChange={setMarketPricePerKg}
+            onChange={(value) => handleSliderValueChange(value, setMarketPricePerKg)}
             color="primary"
             className="w-full"
             classNames={{
