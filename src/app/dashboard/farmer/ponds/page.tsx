@@ -35,10 +35,6 @@ interface IPondsResponse {
   ponds: IPond[];
 }
 
-const fishTypes = ["Ruhi", "Pangas", "Tilapia", "Katla", "Mrigel", "Koi", "Other"] as const;
-
-type FishType = typeof fishTypes[number];
-
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {
     year: "numeric",

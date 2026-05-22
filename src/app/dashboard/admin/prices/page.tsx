@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -41,8 +41,6 @@ const fishSpecies = [
   "Other",
 ] as const;
 
-type FishSpecies = typeof fishSpecies[number];
-
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {
     year: "numeric",
@@ -56,7 +54,6 @@ const formatDate = (dateStr: string): string => {
 export default function AdminPricesPage() {
   const { status } = useSession();
   const queryClient = useQueryClient();
-  const [prices, setPrices] = useState<Record<string, { wholesale: string; retail: string }>>({});
 
   const { data: pricesData, isLoading: isPricesLoading } = useQuery<IPricesResponse>({
     queryKey: ["admin-prices"],
@@ -68,18 +65,19 @@ export default function AdminPricesPage() {
     enabled: status === "authenticated",
   });
 
-  useEffect(() => {
-    if (pricesData?.prices) {
-      const initialPrices: Record<string, { wholesale: string; retail: string }> = {};
-      pricesData.prices.forEach((price: IPrice) => {
-        initialPrices[price.fishType] = {
-          wholesale: price.wholesalePrice.toString(),
-          retail: price.retailPrice.toString(),
-        };
-      });
-      setPrices(initialPrices);
-    }
+  const initialPrices = useMemo(() => {
+    if (!pricesData?.prices) return {};
+    const initial: Record<string, { wholesale: string; retail: string }> = {};
+    pricesData.prices.forEach((price: IPrice) => {
+      initial[price.fishType] = {
+        wholesale: price.wholesalePrice.toString(),
+        retail: price.retailPrice.toString(),
+      };
+    });
+    return initial;
   }, [pricesData]);
+
+  const [prices, setPrices] = useState<Record<string, { wholesale: string; retail: string }>>(initialPrices);
 
   const updatePriceMutation = useMutation({
     mutationFn: async (fishType: string) => {
