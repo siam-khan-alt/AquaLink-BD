@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@heroui/styles"; 
+
 @layer utilities {
   @keyframes slow-spin {
     from {

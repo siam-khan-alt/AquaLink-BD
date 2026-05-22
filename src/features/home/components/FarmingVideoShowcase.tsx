@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Play, Clock, Eye } from "lucide-react";
+import { Card, CardFooter, Chip } from "@heroui/react";
 
 interface VideoItem {
   id: string;
@@ -56,9 +57,9 @@ export default function FarmingVideoShowcase() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {mockVideos.map((video, index) => (
-          <article
+          <Card
             key={video.id}
-            className={`relative aspect-video rounded-2xl overflow-hidden group cursor-pointer ${
+            className={`relative aspect-video rounded-2xl overflow-hidden group cursor-pointer hover:shadow-2xl transition-shadow ${
               index === 0 ? "md:col-span-2 lg:col-span-2" : ""
             }`}
           >
@@ -66,9 +67,15 @@ export default function FarmingVideoShowcase() {
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             
-            <div className="absolute top-3 right-3 flex items-center gap-1 px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg">
-              <Clock size={12} className="text-white" />
-              <span className="text-xs text-white font-hind font-black uppercase tracking-widest">{video.duration}</span>
+            <div className="absolute top-3 right-3">
+              <Chip
+                size="sm"
+                variant="soft"
+                className="bg-black/60 backdrop-blur-md text-white text-xs font-black uppercase tracking-widest"
+              >
+                <Clock size={12} className="mr-1" />
+                {video.duration}
+              </Chip>
             </div>
             
             <div className="absolute inset-0 flex items-center justify-center">
@@ -77,19 +84,19 @@ export default function FarmingVideoShowcase() {
               </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+            <CardFooter className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/30 to-transparent border-none space-y-2">
               <h3 className="text-base font-black text-white leading-tight line-clamp-2 font-hind">
                 {video.title}
               </h3>
               
-              <div className="flex items-center gap-2 text-white/70">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white/70">
                   <Eye size={12} />
                   <span className="text-xs font-hind">{video.views}</span>
                 </div>
               </div>
-            </div>
-          </article>
+            </CardFooter>
+          </Card>
         ))}
       </div>
 

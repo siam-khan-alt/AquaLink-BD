@@ -2,6 +2,7 @@ import { Layers, MoveRight } from "lucide-react";
 import Link from "next/link";
 import type { IMarketPrice } from "@/shared/types/market";
 import { getCategorySnapshot } from "../services/marketQueries";
+import { Chip } from "@heroui/react";
 
 const CATEGORY_LABEL: Record<string, string> = {
   carp: "কার্প",
@@ -46,9 +47,13 @@ export default async function RealtimePriceSnapshot() {
               index !== items.length - 1 ? 'border-b border-[var(--border)]/60' : ''
             }`}
           >
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+            <Chip
+              size="sm"
+              variant="soft"
+              className="mb-2 bg-[var(--primary)]/5 text-[var(--primary)] text-[10px] font-black uppercase tracking-widest"
+            >
               {CATEGORY_LABEL[i.category] ?? "ক্যাটাগরি"}
-            </p>
+            </Chip>
             <h3 className="mt-2 font-black text-lg tracking-tight line-clamp-2 min-h-[3rem]">
               {i.fishName}
             </h3>

@@ -23,7 +23,7 @@ export default async function Home() {
     <div>
       <HeroSection tickerData={tickerData} />
 
-      <div className="container mx-auto px-4 space-y-24 py-16">
+      <div className="container mx-auto px-4 space-y-12 py-12">
         <RealtimePriceSnapshot />
         <CommunityDiscussions />
         <MarketTrendsInsight />

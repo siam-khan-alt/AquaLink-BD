@@ -3,38 +3,47 @@ import { MessageSquare, Eye, TrendingUp, Clock } from "lucide-react";
 import Card from "@/components/ui/Card";
 
 interface Discussion {
+  _id?: string;
   title: string;
   replies: number;
   views: number;
-  timeAgo: string;
   category: string;
+  authorName: string;
+  createdAt: string;
 }
 
-const discussions: Discussion[] = [
-  {
-    title: "পুকুরের অ্যামোনিয়া নিয়ন্ত্রণের সেরা উপায়",
-    replies: 24,
-    views: 156,
-    timeAgo: "২ ঘণ্টা আগে",
-    category: "পানির গুণমান",
-  },
-  {
-    title: "চলতি সপ্তাহে কার্প জাতীয় মাছের পোনার দাম",
-    replies: 18,
-    views: 203,
-    timeAgo: "৫ ঘণ্টা আগে",
-    category: "বাজার দর",
-  },
-  {
-    title: "পুকুরে মাছের রোগ প্রতিরোধে প্রাকৃতিক উপায়",
-    replies: 31,
-    views: 289,
-    timeAgo: "১ দিন আগে",
-    category: "রোগ নির্ণয়",
-  },
-];
+async function getDiscussions(): Promise<Discussion[]> {
+  try {
+    const res = await fetch("/api/home/discussions", {
+      next: { revalidate: 300 }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.discussions || [];
+  } catch {
+    return [];
+  }
+}
 
-export default function CommunityDiscussions() {
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) {
+    return `${diffDays} দিন আগে`;
+  }
+  if (diffHours > 0) {
+    return `${diffHours} ঘণ্টা আগে`;
+  }
+  return "একটু আগে";
+}
+
+export default async function CommunityDiscussions() {
+  const discussions = await getDiscussions();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -52,9 +61,9 @@ export default function CommunityDiscussions() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {discussions.map((discussion, index) => (
+        {discussions.map((discussion) => (
           <Card
-            key={index}
+            key={discussion._id || discussion.title}
             className="bg-[var(--surface)] border border-[var(--border)] p-5 hover:shadow-xl hover:border-[var(--primary)]/30 transition-all duration-300"
           >
             <div className="space-y-4">
@@ -64,7 +73,7 @@ export default function CommunityDiscussions() {
                 </span>
                 <div className="flex items-center gap-1 text-xs text-[var(--text)]/40 font-hind">
                   <Clock size={12} />
-                  {discussion.timeAgo}
+                  {getTimeAgo(discussion.createdAt)}
                 </div>
               </div>
 

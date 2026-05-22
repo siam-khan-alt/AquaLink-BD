@@ -1,91 +1,43 @@
-"use client";
-
 import { Play, BookOpen, TrendingUp, Award, Users } from "lucide-react";
 import Image from "next/image";
+import { Card, CardFooter, Button, Chip } from "@heroui/react";
 
 interface Story {
-  id: string;
+  _id?: string;
   farmerName: string;
   location: string;
   title: string;
   description: string;
-  category: "video" | "article";
   thumbnail: string;
-  duration?: string;
-  readTime?: string;
   achievement: string;
+  createdAt: string;
 }
 
-const STORIES: Story[] = [
-  {
-    id: "1",
-    farmerName: "আব্দুল করিম",
-    location: "যশোর",
-    title: "রুই মাছ চাষে সাফল্যের গল্প",
-    description: "৫ বিঘা পুকুরে আধুনিক পদ্ধতিতে রুই মাছ চাষ করে বছরে ১৫ লাখ টাকা লাভ করেছেন আব্দুল করিম।",
-    category: "video",
-    thumbnail: "/images/stories/story-1.jpg",
-    duration: "৮:৩০",
-    achievement: "১৫ লাখ টাকা লাভ",
-  },
-  {
-    id: "2",
-    farmerName: "রহিমা বেগম",
-    location: "মুন্সিগঞ্জ",
-    title: "গলদা চিংড়ি চাষে নারী উদ্যোক্তা",
-    description: "রহিমা বেগম গলদা চিংড়ি চাষ করে এলাকার অন্যতম সফল নারী উদ্যোক্তা হিসেবে পরিচিতি পেয়েছেন।",
-    category: "article",
-    thumbnail: "/images/stories/story-2.jpg",
-    readTime: "৫ মিনিট",
-    achievement: "২০ লাখ টাকা বার্ষিক আয়",
-  },
-  {
-    id: "3",
-    farmerName: "মোহাম্মদ আলী",
-    location: "কুমিল্লা",
-    title: "পাঙাশ চাষে বিপ্লব",
-    description: "আধুনিক প্রযুক্তি ব্যবহার করে পাঙাশ চাষে নতুন দিগন্ত সৃষ্টি করেছেন মোহাম্মদ আলী।",
-    category: "video",
-    thumbnail: "/images/stories/story-3.jpg",
-    duration: "১২:৪৫",
-    achievement: "২৫ লাখ টাকা লাভ",
-  },
-  {
-    id: "4",
-    farmerName: "ফাতেমা খাতুন",
-    location: "পাবনা",
-    title: "মিশ্র মাছ চাষের সাফল্য",
-    description: "ফাতেমা খাতুন মিশ্র মাছ চাষ করে ঝুঁকি কমিয়ে লাভবান হচ্ছেন।",
-    category: "article",
-    thumbnail: "/images/stories/story-4.jpg",
-    readTime: "৭ মিনিট",
-    achievement: "১৮ লাখ টাকা আয়",
-  },
-  {
-    id: "5",
-    farmerName: "হাসান মাহমুদ",
-    location: "বগুড়া",
-    title: "কার্প মাছের উন্নত জাত",
-    description: "উন্নত জাতের কার্প মাছ চাষ করে হাসান মাহমুদ এলাকায় আদর্শ হয়ে উঠেছেন।",
-    category: "video",
-    thumbnail: "/images/stories/story-5.jpg",
-    duration: "১০:১৫",
-    achievement: "২২ লাখ টাকা লাভ",
-  },
-  {
-    id: "6",
-    farmerName: "জাহানারা বেগম",
-    location: "নওগাঁ",
-    title: "তেলাপিয়া চাষে নারী নেতৃত্ব",
-    description: "জাহানারা বেগম তেলাপিয়া চাষ করে নারীদের জন্য অনুপ্রেরণা হয়ে উঠেছেন।",
-    category: "article",
-    thumbnail: "/images/stories/story-6.jpg",
-    readTime: "৬ মিনিট",
-    achievement: "১২ লাখ টাকা আয়",
-  },
-];
+async function getStories(): Promise<Story[]> {
+  try {
+    const res = await fetch("/api/home/stories", {
+      next: { revalidate: 600 }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.stories || [];
+  } catch {
+    return [];
+  }
+}
 
-export default function SuccessfulFarmerStories() {
+function getStoryCategory(index: number): "video" | "article" {
+  return index % 2 === 0 ? "video" : "article";
+}
+
+function getStoryDuration(index: number): string {
+  const durations = ["৮:৩০", "৫ মিনিট", "১২:৪৫", "৭ মিনিট", "১০:১৫", "৬ মিনিট"];
+  return durations[index % durations.length];
+}
+
+export default async function SuccessfulFarmerStories() {
+  const stories = await getStories();
+
   return (
     <section className="space-y-8">
       <div className="flex items-center justify-between">
@@ -104,67 +56,83 @@ export default function SuccessfulFarmerStories() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {STORIES.map((story, index) => (
-          <article
-            key={story.id}
-            className={`relative aspect-[4/3] rounded-2xl overflow-hidden group cursor-pointer ${
-              index === 0 ? "md:col-span-2 lg:col-span-2" : ""
-            }`}
-          >
-            <Image
-              src={story.thumbnail}
-              alt={story.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-            
-            {story.category === "video" ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
-                  <Play size={24} className="text-[#020617]" fill="currentColor" />
+        {stories.map((story, index) => {
+          const category = getStoryCategory(index);
+          const duration = getStoryDuration(index);
+          
+          return (
+            <Card
+              key={story._id || story.title}
+              className={`relative aspect-[4/3] rounded-2xl overflow-hidden group cursor-pointer hover:shadow-2xl transition-shadow ${
+                index === 0 ? "md:col-span-2 lg:col-span-2" : ""
+              }`}
+            >
+              <Image
+                src={story.thumbnail}
+                alt={story.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              
+              {category === "video" ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+                    <Play size={24} className="text-[#020617]" fill="currentColor" />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
-                  <BookOpen size={24} className="text-[#020617]" />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+                    <BookOpen size={24} className="text-[#020617]" />
+                  </div>
                 </div>
+              )}
+              
+              <div className="absolute top-3 right-3">
+                <Chip
+                  size="sm"
+                  variant="soft"
+                  className="bg-black/60 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest"
+                >
+                  {duration}
+                </Chip>
               </div>
-            )}
-            
-            <div className="absolute top-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-xs font-black text-white uppercase tracking-widest">
-              {story.category === "video" ? story.duration : story.readTime}
-            </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 backdrop-blur-md flex items-center justify-center">
-                  <Award size={16} className="text-[var(--primary)]" />
+              <CardFooter className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/30 to-transparent border-none">
+                <div className="w-full space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 backdrop-blur-md flex items-center justify-center">
+                      <Award size={16} className="text-[var(--primary)]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-white">{story.farmerName}</p>
+                      <p className="text-xs font-bold text-white/70">{story.location}</p>
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-lg font-black text-white leading-tight">
+                    {story.title}
+                  </h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400">
+                      <TrendingUp size={16} />
+                      <span className="text-xs font-black uppercase tracking-widest">{story.achievement}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="px-4 py-2 bg-[var(--primary)] text-[#020617] rounded-lg text-xs font-black uppercase tracking-widest hover:bg-[var(--primary)]/90 transition-all"
+                    >
+                      {category === "video" ? "দেখুন" : "পড়ুন"}
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-black text-white">{story.farmerName}</p>
-                  <p className="text-xs font-bold text-white/70">{story.location}</p>
-                </div>
-              </div>
-              
-              <h3 className="text-lg font-black text-white leading-tight">
-                {story.title}
-              </h3>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <TrendingUp size={16} />
-                  <span className="text-xs font-black uppercase tracking-widest">{story.achievement}</span>
-                </div>
-                <button className="px-4 py-2 bg-[var(--primary)] text-[#020617] rounded-lg text-xs font-black uppercase tracking-widest hover:bg-[var(--primary)]/90 transition-all">
-                  {story.category === "video" ? "দেখুন" : "পড়ুন"}
-                </button>
-              </div>
-            </div>
-          </article>
-        ))}
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </section>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, Search } from "lucide-react";
 import { toast } from "sonner";
+import { Card, Button } from "@heroui/react";
 
 declare global {
   interface Window {
@@ -110,7 +111,7 @@ export default function VoiceSearchGate() {
   };
 
   return (
-    <div className="backdrop-blur-md bg-[var(--surface)]/40 border border-white/10 shadow-2xl rounded-2xl p-6">
+    <Card className="backdrop-blur-xl bg-white/[0.02] border border-white/[0.08] shadow-2xl rounded-2xl p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-3 bg-[var(--primary)]/10 rounded-xl">
           <Search className="text-[var(--primary)]" size={24} />
@@ -122,9 +123,9 @@ export default function VoiceSearchGate() {
       </div>
 
       <div className="space-y-4">
-        <button
+        <Button
           onClick={toggleListening}
-          disabled={!isSpeechSupported}
+          isDisabled={!isSpeechSupported}
           className={`w-full h-16 rounded-xl flex items-center justify-center gap-3 font-bold transition-all ${
             isListening
               ? "bg-red-500 text-white animate-pulse"
@@ -142,18 +143,18 @@ export default function VoiceSearchGate() {
               <span>মাইক চালু করুন</span>
             </>
           )}
-        </button>
+        </Button>
 
         {transcript && (
           <div className="p-4 bg-[var(--background)]/40 rounded-xl border border-[var(--border)]/60">
             <p className="text-sm font-bold text-[var(--text)]/70 mb-2">আপনি বলেছেন:</p>
             <p className="text-lg font-black text-[var(--text)]">{transcript}</p>
-            <button
+            <Button
               onClick={handleSearch}
               className="mt-3 w-full py-2 bg-[var(--primary)] text-[#020617] rounded-lg font-bold hover:scale-105 active:scale-95 transition-all"
             >
               খুঁজুন
-            </button>
+            </Button>
           </div>
         )}
 
@@ -163,6 +164,6 @@ export default function VoiceSearchGate() {
           </p>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

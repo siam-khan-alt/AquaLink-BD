@@ -1,24 +1,53 @@
 import { TriangleAlert } from "lucide-react";
+import { Card, Chip } from "@heroui/react";
 
-const ALERTS: Array<{
-  id: string;
+interface Alert {
+  _id?: string;
   region: string;
   title: string;
   detail: string;
-  level: "high" | "medium";
-}> = [
-  {
-    id: "a1",
-    region: "ঢাকা বিভাগ",
-    title: "ত্বক ক্ষত রোগ নজরদারি",
-    detail: "পানির মান খারাপ হলে সংক্রমণ বাড়ে। pH, অ্যামোনিয়া, DO নিয়মিত মাপুন।",
-    level: "medium",
-  },
-];
+  level: "info" | "warning" | "danger";
+  isActive: boolean;
+  createdAt: string;
+}
 
-export default function EmergencyDiseaseAlerts() {
+async function getAlerts(): Promise<Alert[]> {
+  try {
+    const res = await fetch("/api/home/alerts", {
+      next: { revalidate: 180 }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.alerts || [];
+  } catch {
+    return [];
+  }
+}
+
+function mapLevelToDisplay(level: "info" | "warning" | "danger"): "high" | "medium" {
+  if (level === "danger") return "high";
+  return "medium";
+}
+
+function getLevelColor(level: "high" | "medium"): string {
+  if (level === "high") {
+    return "border-l-4 border-red-500 bg-red-500/5 animate-pulse";
+  }
+  return "border-l-4 border-orange-500 bg-orange-500/5";
+}
+
+function getChipColor(level: "high" | "medium"): string {
+  if (level === "high") {
+    return "text-red-400 bg-red-500/10";
+  }
+  return "text-orange-400 bg-orange-500/10";
+}
+
+export default async function EmergencyDiseaseAlerts() {
+  const alerts = await getAlerts();
+
   return (
-    <section className="rounded-3xl bg-[var(--surface)]/40 p-6">
+    <Card className="rounded-3xl bg-[var(--surface)]/40 p-6">
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Emergency Alerts</p>
@@ -31,37 +60,33 @@ export default function EmergencyDiseaseAlerts() {
       </header>
 
       <div className="mt-6 space-y-3">
-        {ALERTS.map((a) => (
-          <article
-            key={a.id}
-            className={[
-              "p-4",
-              a.level === "high"
-                ? "border-l-4 border-red-500 bg-red-500/5"
-                : "border-l-4 border-orange-500 bg-orange-500/5",
-            ].join(" ")}
-          >
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{a.region}</p>
-                <h4 className="text-lg font-black mt-1">{a.title}</h4>
-                <p className="text-sm font-bold opacity-60 mt-2">{a.detail}</p>
+        {alerts.map((a) => {
+          const displayLevel = mapLevelToDisplay(a.level);
+          
+          return (
+            <Card
+              key={a._id || a.title}
+              className={`p-4 ${getLevelColor(displayLevel)}`}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{a.region}</p>
+                  <h4 className="text-lg font-black mt-1">{a.title}</h4>
+                  <p className="text-sm font-bold opacity-60 mt-2">{a.detail}</p>
+                </div>
+                <Chip
+                  size="sm"
+                  variant="soft"
+                  className={`${getChipColor(displayLevel)} text-[10px] font-black uppercase tracking-widest`}
+                >
+                  {displayLevel === "high" ? "High" : "Medium"}
+                </Chip>
               </div>
-              <span
-                className={[
-                  "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border",
-                  a.level === "high"
-                    ? "text-red-400 border-red-500/30 bg-red-500/10"
-                    : "text-orange-400 border-orange-500/30 bg-orange-500/10",
-                ].join(" ")}
-              >
-                {a.level === "high" ? "High" : "Medium"}
-              </span>
-            </div>
-          </article>
-        ))}
+            </Card>
+          );
+        })}
       </div>
-    </section>
+    </Card>
   );
 }
 
