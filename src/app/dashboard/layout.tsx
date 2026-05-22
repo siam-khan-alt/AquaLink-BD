@@ -6,8 +6,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  Menu,
-  X,
   Bell,
   User,
   LogOut,
@@ -61,7 +59,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -102,99 +99,69 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex">
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className="flex h-screen overflow-hidden bg-[var(--background)]">
+      {/* Static Sidebar */}
+      <aside className="w-72 bg-[var(--surface)] border-r border-[var(--border)]/60 flex flex-col">
+        {/* Logo */}
+        <div className="flex items-center gap-3 p-6 border-b border-[var(--border)]">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center">
+              <Waves className="text-white" size={24} />
+            </div>
+            <span className="text-xl font-bold text-[var(--text)] font-hind">
+              মৎস্য বন্ধু
+            </span>
+          </Link>
+        </div>
 
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-72 bg-[var(--surface)] border-r border-[var(--border)] transform transition-transform duration-300 ease-in-out lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
-            <Link href="/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center">
-                <Waves className="text-white" size={24} />
-              </div>
-              <span className="text-xl font-bold text-[var(--text)] font-hind">
-                মৎস্য বন্ধু
-              </span>
-            </Link>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 hover:bg-[var(--border)] rounded-lg transition-colors"
-            >
-              <X size={20} className="text-[var(--text)]" />
-            </button>
-          </div>
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-hind font-semibold",
+                  isActive
+                    ? "bg-[var(--primary)] text-white shadow-lg"
+                    : "text-[var(--text)] hover:bg-[var(--border)]"
+                )}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-hind font-semibold",
-                    isActive
-                      ? "bg-[var(--primary)] text-white shadow-lg"
-                      : "text-[var(--text)] hover:bg-[var(--border)]"
-                  )}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Info */}
-          <div className="p-4 border-t border-[var(--border)]">
-            <div className="flex items-center gap-3 px-4 py-3 bg-[var(--background)] rounded-xl border border-[var(--border)]">
-              <div className="w-10 h-10 bg-[var(--primary)]/20 rounded-full flex items-center justify-center">
-                <User size={20} className="text-[var(--primary)]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-[var(--text)] truncate font-hind">
-                  {session?.user?.name || "ব্যবহারকারী"}
-                </p>
-                <p className="text-xs text-[var(--text)]/60 font-hind capitalize">
-                  {session?.user?.role === "admin" ? "অ্যাডমিন" : "চাষি"}
-                </p>
-              </div>
+        {/* User Info */}
+        <div className="p-4 border-t border-[var(--border)]">
+          <div className="flex items-center gap-3 px-4 py-3 bg-[var(--background)] rounded-xl border border-[var(--border)]">
+            <div className="w-10 h-10 bg-[var(--primary)]/20 rounded-full flex items-center justify-center">
+              <User size={20} className="text-[var(--primary)]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-[var(--text)] truncate font-hind">
+                {session?.user?.name || "ব্যবহারকারী"}
+              </p>
+              <p className="text-xs text-[var(--text)]/60 font-hind capitalize">
+                {session?.user?.role === "admin" ? "অ্যাডমিন" : "চাষি"}
+              </p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* Content Viewport */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-lg border-b border-[var(--border)]">
-          <div className="flex items-center justify-between px-4 lg:px-8 py-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 hover:bg-[var(--border)] rounded-lg transition-colors"
-              >
-                <Menu size={24} className="text-[var(--text)]" />
-              </button>
-              <h1 className="text-lg font-bold text-[var(--text)] font-hind hidden sm:block">
-                মৎস্য বন্ধু
-              </h1>
-            </div>
+        <header className="bg-[var(--background)]/80 backdrop-blur-lg border-b border-[var(--border)]">
+          <div className="flex items-center justify-between px-8 py-4">
+            <h1 className="text-lg font-bold text-[var(--text)] font-hind">
+              মৎস্য বন্ধু
+            </h1>
 
             <div className="flex items-center gap-3">
               {/* Notification Bell */}
@@ -307,7 +274,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-8">
           {children}
         </main>
       </div>
