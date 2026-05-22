@@ -18,7 +18,7 @@ const ALERTS: Array<{
 
 export default function EmergencyDiseaseAlerts() {
   return (
-    <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+    <section className="rounded-3xl bg-[var(--surface)]/40 p-6">
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Emergency Alerts</p>
@@ -35,10 +35,10 @@ export default function EmergencyDiseaseAlerts() {
           <article
             key={a.id}
             className={[
-              "rounded-2xl border p-4",
+              "p-4",
               a.level === "high"
-                ? "border-red-500/30 bg-red-500/5"
-                : "border-orange-500/30 bg-orange-500/5",
+                ? "border-l-4 border-red-500 bg-red-500/5"
+                : "border-l-4 border-orange-500 bg-orange-500/5",
             ].join(" ")}
           >
             <div className="flex items-center justify-between gap-4">

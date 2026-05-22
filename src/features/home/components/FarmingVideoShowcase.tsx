@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Play, Clock, Eye } from "lucide-react";
-import Card from "@/components/ui/Card";
 
 interface VideoItem {
   id: string;
@@ -56,36 +55,41 @@ export default function FarmingVideoShowcase() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {mockVideos.map((video) => (
-          <Card
+        {mockVideos.map((video, index) => (
+          <article
             key={video.id}
-            className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden hover:shadow-xl hover:border-[var(--primary)]/30 transition-all duration-300 cursor-pointer group"
+            className={`relative aspect-video rounded-2xl overflow-hidden group cursor-pointer ${
+              index === 0 ? "md:col-span-2 lg:col-span-2" : ""
+            }`}
           >
-            <div className="relative aspect-video bg-[var(--background)] flex items-center justify-center">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-black/60 rounded-md">
-                <Clock size={12} className="text-white" />
-                <span className="text-xs text-white font-hind">{video.duration}</span>
-              </div>
-              <div className="relative z-10 p-4">
-                <div className="w-12 h-12 bg-[var(--primary)]/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play size={20} className="text-white fill-white ml-1" />
-                </div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--secondary)]" />
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            
+            <div className="absolute top-3 right-3 flex items-center gap-1 px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg">
+              <Clock size={12} className="text-white" />
+              <span className="text-xs text-white font-hind font-black uppercase tracking-widest">{video.duration}</span>
+            </div>
+            
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 bg-[var(--primary)] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl">
+                <Play size={24} className="text-[#020617] fill-current ml-1" />
               </div>
             </div>
 
-            <div className="p-4">
-              <h3 className="text-sm font-bold text-[var(--text)] line-clamp-2 mb-2 font-hind">
+            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+              <h3 className="text-base font-black text-white leading-tight line-clamp-2 font-hind">
                 {video.title}
               </h3>
-              <div className="flex items-center gap-2 text-xs text-[var(--text)]/60 font-hind">
+              
+              <div className="flex items-center gap-2 text-white/70">
                 <div className="flex items-center gap-1">
                   <Eye size={12} />
-                  <span>{video.views}</span>
+                  <span className="text-xs font-hind">{video.views}</span>
                 </div>
               </div>
             </div>
-          </Card>
+          </article>
         ))}
       </div>
 

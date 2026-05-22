@@ -33,7 +33,7 @@ export default function ProfitCalculatorWidget() {
   }, [pondSize, fishCount, feedCostPerKg, expectedGrowth, marketPricePerKg]);
 
   return (
-    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 shadow-lg">
+    <div className="backdrop-blur-md bg-[var(--surface)]/40 border border-white/10 shadow-2xl rounded-2xl p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-[var(--primary)]/10 rounded-xl">
           <Calculator className="text-[var(--primary)]" size={24} />
@@ -57,7 +57,7 @@ export default function ProfitCalculatorWidget() {
             step="0.5"
             value={pondSize}
             onChange={(e) => setPondSize(Number(e.target.value))}
-            className="w-full h-2 bg-[var(--background)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{pondSize} শতাংশ</div>
         </div>
@@ -74,7 +74,7 @@ export default function ProfitCalculatorWidget() {
             step="100"
             value={fishCount}
             onChange={(e) => setFishCount(Number(e.target.value))}
-            className="w-full h-2 bg-[var(--background)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{fishCount} টি</div>
         </div>
@@ -91,7 +91,7 @@ export default function ProfitCalculatorWidget() {
             step="5"
             value={feedCostPerKg}
             onChange={(e) => setFeedCostPerKg(Number(e.target.value))}
-            className="w-full h-2 bg-[var(--background)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{feedCostPerKg} টাকা</div>
         </div>
@@ -108,7 +108,7 @@ export default function ProfitCalculatorWidget() {
             step="50"
             value={expectedGrowth}
             onChange={(e) => setExpectedGrowth(Number(e.target.value))}
-            className="w-full h-2 bg-[var(--background)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{expectedGrowth} গ্রাম</div>
         </div>
@@ -125,13 +125,13 @@ export default function ProfitCalculatorWidget() {
             step="10"
             value={marketPricePerKg}
             onChange={(e) => setMarketPricePerKg(Number(e.target.value))}
-            className="w-full h-2 bg-[var(--background)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{marketPricePerKg} টাকা</div>
         </div>
       </div>
 
-      <div className="mt-6 pt-6 border-t border-[var(--border)] space-y-3">
+      <div className="mt-6 pt-6 border-t border-[var(--border)]/60 space-y-3">
         <div className="flex justify-between items-center">
           <span className="text-sm font-bold text-[var(--text)]/70">মোট আয়</span>
           <span className="text-lg font-black text-emerald-500">{calculations.totalRevenue.toLocaleString()} টাকা</span>
@@ -140,7 +140,7 @@ export default function ProfitCalculatorWidget() {
           <span className="text-sm font-bold text-[var(--text)]/70">মোট খরচ</span>
           <span className="text-lg font-black text-red-500">{calculations.totalCost.toLocaleString()} টাকা</span>
         </div>
-        <div className="flex justify-between items-center pt-3 border-t border-[var(--border)]">
+        <div className="flex justify-between items-center pt-3 border-t border-[var(--border)]/60">
           <span className="text-sm font-bold text-[var(--text)]">নিট লাভ</span>
           <span className={`text-xl font-black ${calculations.netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
             {calculations.netProfit.toLocaleString()} টাকা

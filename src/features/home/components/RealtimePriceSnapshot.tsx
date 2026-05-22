@@ -38,11 +38,13 @@ export default async function RealtimePriceSnapshot() {
         </Link>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {items.map((i: IMarketPrice) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-0">
+        {items.map((i: IMarketPrice, index: number) => (
           <article
             key={i._id}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--primary)]/30 transition-colors"
+            className={`p-5 hover:bg-[var(--surface)]/50 transition-colors ${
+              index !== items.length - 1 ? 'border-b border-[var(--border)]/60' : ''
+            }`}
           >
             <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
               {CATEGORY_LABEL[i.category] ?? "ক্যাটাগরি"}

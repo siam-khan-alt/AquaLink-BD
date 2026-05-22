@@ -110,7 +110,7 @@ export default function VoiceSearchGate() {
   };
 
   return (
-    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 shadow-lg">
+    <div className="backdrop-blur-md bg-[var(--surface)]/40 border border-white/10 shadow-2xl rounded-2xl p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-3 bg-[var(--primary)]/10 rounded-xl">
           <Search className="text-[var(--primary)]" size={24} />
@@ -145,7 +145,7 @@ export default function VoiceSearchGate() {
         </button>
 
         {transcript && (
-          <div className="p-4 bg-[var(--background)] rounded-xl border border-[var(--border)]">
+          <div className="p-4 bg-[var(--background)]/40 rounded-xl border border-[var(--border)]/60">
             <p className="text-sm font-bold text-[var(--text)]/70 mb-2">আপনি বলেছেন:</p>
             <p className="text-lg font-black text-[var(--text)]">{transcript}</p>
             <button

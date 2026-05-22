@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Users, Waves, MessageSquare, TrendingUp } from "lucide-react";
-import Card from "@/components/ui/Card";
 
 interface StatItem {
   icon: React.ReactNode;
@@ -40,15 +39,15 @@ const mockStats: StatItem[] = [
 
 export default function PlatformStatsBanner() {
   return (
-    <div className="container mx-auto px-4 py-6">
-      <Card className="bg-[var(--surface)] border border-[var(--border)] p-6">
+    <div className="w-full bg-gradient-to-r from-[var(--primary)]/10 via-[var(--secondary)]/10 to-[var(--primary)]/10 py-8">
+      <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {mockStats.map((stat, index) => (
             <div
               key={index}
-              className="flex flex-col items-center text-center p-4 rounded-xl bg-[var(--background)] border border-[var(--border)] hover:border-[var(--primary)]/30 transition-all duration-300"
+              className="flex flex-col items-center text-center p-4"
             >
-              <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl mb-3">
+              <div className="p-3 bg-[var(--primary)]/20 text-[var(--primary)] rounded-xl mb-3">
                 {stat.icon}
               </div>
               <h3 className="text-2xl font-black text-[var(--text)] mb-1 font-hind">
@@ -66,7 +65,7 @@ export default function PlatformStatsBanner() {
             </div>
           ))}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

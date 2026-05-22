@@ -53,49 +53,47 @@ export default function ExpertConsultantPanel() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="flex overflow-x-auto snap-x scrollbar-none gap-6 pb-4">
         {experts.map((expert, index) => (
           <div
             key={index}
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:shadow-xl hover:border-[var(--primary)]/30 transition-all duration-300"
+            className="flex-shrink-0 w-72 flex flex-col items-center text-center space-y-4 snap-start"
           >
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--primary)]/5 rounded-full flex items-center justify-center border-2 border-[var(--primary)]/20">
-                <span className="text-2xl font-black text-[var(--primary)] font-hind">
-                  {expert.initials}
-                </span>
-              </div>
+            <div className="w-32 h-32 bg-gradient-to-br from-[var(--primary)]/30 to-[var(--primary)]/10 rounded-full flex items-center justify-center border-4 border-[var(--primary)]/20 shadow-2xl">
+              <span className="text-3xl font-black text-[var(--primary)] font-hind">
+                {expert.initials}
+              </span>
+            </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <Award size={16} className="text-[var(--primary)]" />
-                  <h3 className="text-lg font-bold text-[var(--text)] font-hind">
-                    {expert.name}
-                  </h3>
-                </div>
-                <p className="text-sm text-[var(--text)]/70 font-hind">
-                  {expert.designation}
-                </p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <Award size={16} className="text-[var(--primary)]" />
+                <h3 className="text-lg font-bold text-[var(--text)] font-hind">
+                  {expert.name}
+                </h3>
               </div>
+              <p className="text-sm text-[var(--text)]/70 font-hind">
+                {expert.designation}
+              </p>
+            </div>
 
-              <div className="w-full space-y-2 pt-2">
-                <Button
-                  variant="outline"
-                  className="w-full font-hind font-semibold text-sm"
-                  onClick={() => window.location.href = `mailto:${expert.email}`}
-                >
-                  <Mail size={16} className="mr-2" />
-                  ইমেইল পাঠান
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="w-full font-hind font-semibold text-sm"
-                  onClick={() => window.location.href = `tel:${expert.phone}`}
-                >
-                  <Phone size={16} className="mr-2" />
-                  কল করুন
-                </Button>
-              </div>
+            <div className="w-full space-y-2 pt-2">
+              <Button
+                variant="outline"
+                className="w-full font-hind font-semibold text-sm"
+                onClick={() => window.location.href = `mailto:${expert.email}`}
+              >
+                <Mail size={16} className="mr-2" />
+                ইমেইল পাঠান
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full font-hind font-semibold text-sm"
+                onClick={() => window.location.href = `tel:${expert.phone}`}
+              >
+                <Phone size={16} className="mr-2" />
+                কল করুন
+              </Button>
             </div>
           </div>
         ))}

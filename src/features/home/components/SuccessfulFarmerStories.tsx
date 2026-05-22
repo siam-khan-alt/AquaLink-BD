@@ -1,6 +1,7 @@
 "use client";
 
 import { Play, BookOpen, TrendingUp, Award, Users } from "lucide-react";
+import Image from "next/image";
 
 interface Story {
   id: string;
@@ -103,55 +104,61 @@ export default function SuccessfulFarmerStories() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {STORIES.map((story) => (
+        {STORIES.map((story, index) => (
           <article
             key={story.id}
-            className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-[var(--primary)]/30 transition-all group"
+            className={`relative aspect-[4/3] rounded-2xl overflow-hidden group cursor-pointer ${
+              index === 0 ? "md:col-span-2 lg:col-span-2" : ""
+            }`}
           >
-            <div className="relative h-48 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--secondary)] flex items-center justify-center">
-              {story.category === "video" ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
-                  <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
-                    <Play size={24} className="text-[#020617]" fill="currentColor" />
-                  </div>
+            <Image
+              src={story.thumbnail}
+              alt={story.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            
+            {story.category === "video" ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+                  <Play size={24} className="text-[#020617]" fill="currentColor" />
                 </div>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
-                  <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
-                    <BookOpen size={24} className="text-[#020617]" />
-                  </div>
-                </div>
-              )}
-              <div className="absolute top-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-xs font-black text-white uppercase tracking-widest">
-                {story.category === "video" ? story.duration : story.readTime}
               </div>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+                  <BookOpen size={24} className="text-[#020617]" />
+                </div>
+              </div>
+            )}
+            
+            <div className="absolute top-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-xs font-black text-white uppercase tracking-widest">
+              {story.category === "video" ? story.duration : story.readTime}
             </div>
 
-            <div className="p-5 space-y-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
-                    <Award size={16} className="text-[var(--primary)]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-[var(--text)]">{story.farmerName}</p>
-                    <p className="text-xs font-bold text-[var(--text)]/50">{story.location}</p>
-                  </div>
+            <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 backdrop-blur-md flex items-center justify-center">
+                  <Award size={16} className="text-[var(--primary)]" />
                 </div>
-                <h3 className="text-lg font-black text-[var(--text)] leading-tight group-hover:text-[var(--primary)] transition-colors">
-                  {story.title}
-                </h3>
-                <p className="text-sm font-medium text-[var(--text)]/60 mt-2 line-clamp-2">
-                  {story.description}
-                </p>
+                <div>
+                  <p className="text-sm font-black text-white">{story.farmerName}</p>
+                  <p className="text-xs font-bold text-white/70">{story.location}</p>
+                </div>
               </div>
-
-              <div className="pt-4 border-t border-[var(--border)] flex items-center justify-between">
-                <div className="flex items-center gap-2 text-emerald-500">
+              
+              <h3 className="text-lg font-black text-white leading-tight">
+                {story.title}
+              </h3>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-400">
                   <TrendingUp size={16} />
                   <span className="text-xs font-black uppercase tracking-widest">{story.achievement}</span>
                 </div>
-                <button className="px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary)] rounded-lg text-xs font-black uppercase tracking-widest hover:bg-[var(--primary)] hover:text-[#020617] transition-all">
+                <button className="px-4 py-2 bg-[var(--primary)] text-[#020617] rounded-lg text-xs font-black uppercase tracking-widest hover:bg-[var(--primary)]/90 transition-all">
                   {story.category === "video" ? "দেখুন" : "পড়ুন"}
                 </button>
               </div>
