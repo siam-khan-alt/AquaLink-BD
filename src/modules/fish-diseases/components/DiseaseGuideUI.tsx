@@ -7,21 +7,77 @@ import {
   Info,
   Camera,
   Zap,
+  Loader2,
+  X,
+  AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/Input";
 import { DISEASES } from "../data/diseases";
 import Image from "next/image";
 import { useDiseaseStore } from "@/shared/hooks/useDiseaseStore";
+import { useState, useRef } from "react";
 
 export default function DiseaseGuideUI() {
   const { searchQuery, setSearchQuery } = useDiseaseStore();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [diagnosisResult, setDiagnosisResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredData = DISEASES.filter(
     (d) =>
       d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.fishType.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleCameraClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target?.result as string;
+      await analyzeImage(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const analyzeImage = async (base64: string) => {
+    setIsAnalyzing(true);
+    setError(null);
+    setDiagnosisResult(null);
+
+    try {
+      const response = await fetch("/api/ai/detect-disease", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64 }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "বিশ্লেষণ করতে ব্যর্থ হয়েছে");
+      }
+
+      setDiagnosisResult(data.diagnosis);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "বিশ্লেষণ করতে ব্যর্থ হয়েছে";
+      setError(message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const closeModal = () => {
+    setDiagnosisResult(null);
+    setError(null);
+  };
 
   return (
     <div className="space-y-16">
@@ -39,6 +95,7 @@ export default function DiseaseGuideUI() {
         <motion.div
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={handleCameraClick}
           className="flex items-center gap-4 p-4 pr-10 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-emerald-500 text-black cursor-pointer shadow-lg w-full md:w-auto"
         >
           <div className="p-3 bg-white/30 rounded-xl backdrop-blur-md">
@@ -53,6 +110,15 @@ export default function DiseaseGuideUI() {
             </h4>
           </div>
         </motion.div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </section>
 
       {/* Disease List */}
@@ -184,6 +250,80 @@ export default function DiseaseGuideUI() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* AI Analysis Modal */}
+      <AnimatePresence>
+        {(isAnalyzing || diagnosisResult || error) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
+                <h3 className="text-lg font-bold text-[var(--text)] font-hind">
+                  এআই রোগ নির্ণয়
+                </h3>
+                <button
+                  onClick={closeModal}
+                  className="p-2 hover:bg-[var(--border)] rounded-lg transition-colors"
+                >
+                  <X size={20} className="text-[var(--text)]" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {isAnalyzing && (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 size={48} className="text-[var(--primary)] animate-spin mb-4" />
+                    <p className="text-lg font-bold text-[var(--text)] font-hind">
+                      এআই মাছের ছবি বিশ্লেষণ করছে...
+                    </p>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="p-4 bg-red-100 rounded-full mb-4">
+                      <AlertCircle size={48} className="text-red-600" />
+                    </div>
+                    <p className="text-lg font-bold text-red-600 font-hind text-center">
+                      {error}
+                    </p>
+                  </div>
+                )}
+
+                {diagnosisResult && !isAnalyzing && (
+                  <div className="prose prose-sm max-w-none">
+                    <div className="p-4 bg-[var(--background)] rounded-xl border border-[var(--border)]">
+                      <p className="text-[var(--text)] whitespace-pre-wrap font-hind leading-relaxed">
+                        {diagnosisResult}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-[var(--border)]">
+                <button
+                  onClick={closeModal}
+                  className="w-full py-3 bg-[var(--primary)] text-white rounded-xl font-bold font-hind hover:opacity-90 transition-opacity"
+                >
+                  বন্ধ করুন
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
