@@ -1,11 +1,18 @@
 import { Schema, model, models, Document, Model } from "mongoose";
 
+export interface IQuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
 export interface ICourse extends Document {
   title: string;
   description: string;
   videoUrl: string;
   price: number;
   category: string;
+  quiz?: IQuizQuestion[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +44,11 @@ const CourseSchema = new Schema<ICourse>({
     required: [true, "কোর্সের ক্যাটাগরি অবশ্যই দিতে হবে"],
     trim: true
   },
+  quiz: [{
+    question: { type: String, required: true },
+    options: [{ type: String, required: true }],
+    correctAnswer: { type: Number, required: true, min: 0 },
+  }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

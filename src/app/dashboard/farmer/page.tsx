@@ -14,6 +14,9 @@ import {
   Waves,
   Calendar,
   Info,
+  AlertTriangle,
+  AlertCircle,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -85,6 +88,20 @@ interface IChartDataRow {
   "অন্যান্য (Other)": number;
 }
 
+interface IAlert {
+  _id: string;
+  title: string;
+  region: string;
+  severity: "info" | "warning" | "danger";
+  detail: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+interface IAlertsResponse {
+  alerts: IAlert[];
+}
+
 const formatBDT = (val: number): string => {
   return "৳ " + new Intl.NumberFormat("bn-BD", {
     minimumFractionDigits: 0,
@@ -98,7 +115,7 @@ const MONTHS_BN = [
 ];
 
 export default function FarmerDashboard() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -129,6 +146,17 @@ export default function FarmerDashboard() {
       return res.json();
     },
     enabled: status === "authenticated",
+  });
+
+  const { data: alertsData } = useQuery<IAlertsResponse>({
+    queryKey: ["alerts"],
+    queryFn: async () => {
+      const res = await fetch("/api/home/alerts");
+      if (!res.ok) throw new Error("সতর্কতা লোড করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
+    enabled: status === "authenticated",
+    refetchInterval: 60000, // Refetch every minute
   });
 
   const addPondMutation = useMutation({
@@ -265,6 +293,13 @@ export default function FarmerDashboard() {
     averagePH: 0,
   };
 
+  // Filter alerts based on farmer's district
+  const farmerDistrict = (session?.user as { district?: string })?.district;
+  const filteredAlerts = alertsData?.alerts?.filter((alert) => {
+    if (!farmerDistrict) return true; // Show all alerts if no district set
+    return alert.region === "সব" || alert.region === farmerDistrict || alert.region === "সকল";
+  }) || [];
+
   const getPHStatusLabel = (ph: number) => {
     if (ph === 0) return { label: "তথ্য নেই", color: "text-[var(--text)]/60 bg-[var(--border)]" };
     if (ph >= 6.5 && ph <= 8.5) {
@@ -391,7 +426,61 @@ export default function FarmerDashboard() {
 
         </div>
 
-        {/* Row 2: Interactive Chart */}
+        {/* Row 2: Emergency Alerts */}
+        {filteredAlerts.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={24} className="text-[var(--primary)]" />
+              <h2 className="text-xl font-extrabold text-[var(--text)] font-hind">জরুরি সতর্কতা</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredAlerts.map((alert) => {
+                const isDanger = alert.severity === "danger";
+                const isWarning = alert.severity === "warning";
+                
+                return (
+                  <Card
+                    key={alert._id}
+                    className={`p-4 border-2 ${
+                      isDanger
+                        ? "border-red-500 bg-red-50 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse"
+                        : isWarning
+                        ? "border-amber-500 bg-amber-50"
+                        : "border-blue-500 bg-blue-50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        isDanger ? "bg-red-500" : isWarning ? "bg-amber-500" : "bg-blue-500"
+                      }`}>
+                        {isDanger ? (
+                          <XCircle size={20} className="text-white" />
+                        ) : isWarning ? (
+                          <AlertCircle size={20} className="text-white" />
+                        ) : (
+                          <Info size={20} className="text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <h3 className="font-bold text-[var(--text)] font-hind text-sm">
+                          {alert.title}
+                        </h3>
+                        <p className="text-xs text-[var(--text)]/70 font-hind">
+                          {alert.region}
+                        </p>
+                        <p className="text-xs text-[var(--text)]/60 font-hind mt-2">
+                          {alert.detail}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Row 3: Interactive Chart */}
         <Card className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-[var(--border)] pb-4 mb-6">
             <div>

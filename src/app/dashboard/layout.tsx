@@ -17,6 +17,10 @@ import {
   Users,
   TrendingUp,
   ChevronDown,
+  AlertTriangle,
+  UserCheck,
+  FileText,
+  Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +41,7 @@ const farmerNavItems: NavItem[] = [
   { label: "ওভারভিউ", href: "/dashboard/farmer", icon: <LayoutDashboard size={20} /> },
   { label: "পুকুর ও পানির গুণমান", href: "/dashboard/farmer/ponds", icon: <Waves size={20} /> },
   { label: "খরচ ট্র্যাকার", href: "/dashboard/farmer/expenses", icon: <DollarSign size={20} /> },
+  { label: "স্মার্ট ফিড ক্যালকুলেটর", href: "/dashboard/farmer/feed-calculator", icon: <Calculator size={20} /> },
   { label: "লার্নিং হাব", href: "/dashboard/farmer/courses", icon: <BookOpen size={20} /> },
   { label: "মেসেজ", href: "/dashboard/chat", icon: <MessageSquare size={20} /> },
 ];
@@ -44,6 +49,9 @@ const farmerNavItems: NavItem[] = [
 const adminNavItems: NavItem[] = [
   { label: "সিস্টেম ওভারভিউ", href: "/dashboard/admin", icon: <LayoutDashboard size={20} /> },
   { label: "চাষি তালিকা", href: "/dashboard/admin/users", icon: <Users size={20} /> },
+  { label: "চাষি গল্প ব্যবস্থাপনা", href: "/dashboard/admin/stories", icon: <FileText size={20} /> },
+  { label: "বিশেষজ্ঞ ব্যবস্থাপনা", href: "/dashboard/admin/experts", icon: <UserCheck size={20} /> },
+  { label: "জরুরি সতর্কতা", href: "/dashboard/admin/alerts", icon: <AlertTriangle size={20} /> },
   { label: "বাজার দর আপডেট", href: "/dashboard/admin/prices", icon: <TrendingUp size={20} /> },
   { label: "বুটক্যাম্প ব্যবস্থাপনা", href: "/dashboard/admin/courses", icon: <BookOpen size={20} /> },
   { label: "সাপোর্ট ইনবক্স", href: "/dashboard/chat", icon: <MessageSquare size={20} /> },

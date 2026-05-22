@@ -5,6 +5,8 @@ export interface IEnrollment extends Document {
   courseId: Types.ObjectId;
   paymentStatus: "pending" | "paid" | "failed";
   transactionId: string;
+  completed: boolean;
+  completedAt?: Date;
   enrolledAt: Date;
   createdAt: Date;
 }
@@ -30,6 +32,8 @@ const EnrollmentSchema = new Schema<IEnrollment>({
     required: [true, "ট্রানজ্যাকশন আইডি অবশ্যই দিতে হবে"],
     unique: true
   },
+  completed: { type: Boolean, default: false },
+  completedAt: { type: Date },
   enrolledAt: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }
 });
@@ -38,4 +42,6 @@ EnrollmentSchema.index({ userId: 1, courseId: 1 });
 EnrollmentSchema.index({ transactionId: 1 });
 EnrollmentSchema.index({ paymentStatus: 1 });
 
-export const Enrollment = (models.Enrollment as Model<IEnrollment>) || model<IEnrollment>("Enrollment", EnrollmentSchema);
+const Enrollment = (models.Enrollment as Model<IEnrollment>) || model<IEnrollment>("Enrollment", EnrollmentSchema);
+
+export default Enrollment;

@@ -10,6 +10,8 @@ export interface IUser extends Document {
   firebaseUid?: string; 
   role: "farmer" | "admin";
   isVerified: boolean;
+  district?: string;
+  division?: string;
   createdAt: Date;
 }
 
@@ -45,6 +47,8 @@ const UserSchema = new Schema<IUser>({
     default: "farmer" 
   },
   isVerified: { type: Boolean, default: false },
+  district: { type: String },
+  division: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 

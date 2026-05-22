@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
-import { Enrollment } from "@/models/Enrollment";
+import Enrollment from "@/models/Enrollment";
 
 export async function POST(req: NextRequest) {
   try {

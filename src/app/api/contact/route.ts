@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { z } from 'zod';
+import { connectDB } from '@/shared/lib/db';
+import ContactMessage from '@/models/ContactMessage';
 
 const contactSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().regex(/^(?:\+880|0)?1[3-9]\d{8}$/),
-  subject: z.string().min(5),
-  message: z.string().min(10).max(1000),
+  name: z.string().min(2, "নাম কমপক্ষে ২ অক্ষর হতে হবে"),
+  email: z.string().email("সঠিক ইমেইল ঠিকানা দিন"),
+  subject: z.string().min(5, "বিষয় কমপক্ষে ৫ অক্ষর হতে হবে"),
+  message: z.string().min(10, "বার্তা কমপক্ষে ১০ অক্ষর হতে হবে").max(2000, "বার্তা ২০০০ অক্ষরের বেশি হতে পারবে না"),
 });
 
 type ContactData = z.infer<typeof contactSchema>;
@@ -61,14 +62,12 @@ export async function POST(request: NextRequest) {
 
     const data: ContactData = validationResult.data;
 
-    console.log('Contact form submission:', {
+    await connectDB();
+    await ContactMessage.create({
       name: data.name,
       email: data.email,
-      phone: data.phone,
       subject: data.subject,
       message: data.message,
-      timestamp: new Date().toISOString(),
-      ip,
     });
 
     return NextResponse.json(

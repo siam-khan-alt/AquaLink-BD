@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Course } from "@/models/Course";
-import { Enrollment } from "@/models/Enrollment";
+import Enrollment from "@/models/Enrollment";
 import { Types } from "mongoose";
 import { z } from "zod";
 
@@ -36,7 +36,7 @@ export async function GET() {
       });
 
       const enrolledCourseIds = new Set(
-        enrollments.map((e) => e.courseId.toString())
+        enrollments.map((e: { courseId: Types.ObjectId }) => e.courseId.toString())
       );
 
       coursesWithEnrollmentStatus = courses.map((course) => ({

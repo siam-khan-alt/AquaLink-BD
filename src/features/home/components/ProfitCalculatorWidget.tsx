@@ -2,18 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { TrendingUp, Scale, DollarSign, Calculator } from "lucide-react";
-import { Card, Slider } from "@heroui/react";
-
-function handleSliderValueChange(
-  value: number | number[],
-  setter: (value: number) => void
-): void {
-  if (typeof value === 'number') {
-    setter(value);
-  } else if (Array.isArray(value) && value.length > 0) {
-    setter(value[0]);
-  }
-}
+import { Card } from "@heroui/react";
 
 export default function ProfitCalculatorWidget() {
   const [pondSize, setPondSize] = useState<number>(1);
@@ -62,20 +51,14 @@ export default function ProfitCalculatorWidget() {
             <Scale size={16} className="text-[var(--primary)]" />
             পুকুরের আকার (শতাংশ)
           </label>
-          <Slider
-            size="lg"
+          <input
+            type="range"
             step={0.5}
-            minValue={0.5}
-            maxValue={10}
+            min={0.5}
+            max={10}
             value={pondSize}
-            onChange={(value) => handleSliderValueChange(value, setPondSize)}
-            color="primary"
-            className="w-full"
-            classNames={{
-              track: "bg-[var(--background)]/40",
-              filler: "bg-[var(--primary)]",
-              thumb: "bg-[var(--primary)] border-2 border-white/20",
-            }}
+            onChange={(e) => setPondSize(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{pondSize} শতাংশ</div>
         </div>
@@ -85,20 +68,14 @@ export default function ProfitCalculatorWidget() {
             <Scale size={16} className="text-[var(--primary)]" />
             মাছের সংখ্যা
           </label>
-          <Slider
-            size="lg"
+          <input
+            type="range"
             step={100}
-            minValue={100}
-            maxValue={5000}
+            min={100}
+            max={5000}
             value={fishCount}
-            onChange={(value) => handleSliderValueChange(value, setFishCount)}
-            color="primary"
-            className="w-full"
-            classNames={{
-              track: "bg-[var(--background)]/40",
-              filler: "bg-[var(--primary)]",
-              thumb: "bg-[var(--primary)] border-2 border-white/20",
-            }}
+            onChange={(e) => setFishCount(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{fishCount} টি</div>
         </div>
@@ -108,20 +85,14 @@ export default function ProfitCalculatorWidget() {
             <DollarSign size={16} className="text-[var(--primary)]" />
             খাবারের দাম (প্রতি কেজি)
           </label>
-          <Slider
-            size="lg"
+          <input
+            type="range"
             step={5}
-            minValue={50}
-            maxValue={150}
+            min={50}
+            max={150}
             value={feedCostPerKg}
-            onChange={(value) => handleSliderValueChange(value, setFeedCostPerKg)}
-            color="primary"
-            className="w-full"
-            classNames={{
-              track: "bg-[var(--background)]/40",
-              filler: "bg-[var(--primary)]",
-              thumb: "bg-[var(--primary)] border-2 border-white/20",
-            }}
+            onChange={(e) => setFeedCostPerKg(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{feedCostPerKg} টাকা</div>
         </div>
@@ -131,20 +102,14 @@ export default function ProfitCalculatorWidget() {
             <TrendingUp size={16} className="text-[var(--primary)]" />
             প্রত্যাশিত ওজন (প্রতি মাছ গ্রাম)
           </label>
-          <Slider
-            size="lg"
+          <input
+            type="range"
             step={50}
-            minValue={200}
-            maxValue={1000}
+            min={200}
+            max={1000}
             value={expectedGrowth}
-            onChange={(value) => handleSliderValueChange(value, setExpectedGrowth)}
-            color="primary"
-            className="w-full"
-            classNames={{
-              track: "bg-[var(--background)]/40",
-              filler: "bg-[var(--primary)]",
-              thumb: "bg-[var(--primary)] border-2 border-white/20",
-            }}
+            onChange={(e) => setExpectedGrowth(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{expectedGrowth} গ্রাম</div>
         </div>
@@ -154,20 +119,14 @@ export default function ProfitCalculatorWidget() {
             <DollarSign size={16} className="text-[var(--primary)]" />
             বাজার দাম (প্রতি কেজি)
           </label>
-          <Slider
-            size="lg"
+          <input
+            type="range"
             step={10}
-            minValue={200}
-            maxValue={600}
+            min={200}
+            max={600}
             value={marketPricePerKg}
-            onChange={(value) => handleSliderValueChange(value, setMarketPricePerKg)}
-            color="primary"
-            className="w-full"
-            classNames={{
-              track: "bg-[var(--background)]/40",
-              filler: "bg-[var(--primary)]",
-              thumb: "bg-[var(--primary)] border-2 border-white/20",
-            }}
+            onChange={(e) => setMarketPricePerKg(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{marketPricePerKg} টাকা</div>
         </div>
