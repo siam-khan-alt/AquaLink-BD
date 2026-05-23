@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { TrendingUp, Scale, DollarSign, Calculator } from "lucide-react";
-import { Card } from "@heroui/react";
+import { TrendingUp, Scale, DollarSign, Calculator, Download, Loader2 } from "lucide-react";
+import { Card, Button } from "@heroui/react";
+import { toast } from "sonner";
 
 export default function ProfitCalculatorWidget() {
   const [pondSize, setPondSize] = useState<number>(1);
@@ -10,6 +11,7 @@ export default function ProfitCalculatorWidget() {
   const [feedCostPerKg, setFeedCostPerKg] = useState<number>(80);
   const [expectedGrowth, setExpectedGrowth] = useState<number>(500);
   const [marketPricePerKg, setMarketPricePerKg] = useState<number>(350);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   const calculations = useMemo(() => {
     const totalFishWeight = (fishCount * expectedGrowth) / 1000;
@@ -32,6 +34,48 @@ export default function ProfitCalculatorWidget() {
       roi,
     };
   }, [pondSize, fishCount, feedCostPerKg, expectedGrowth, marketPricePerKg]);
+
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    
+    try {
+      const response = await fetch("/api/calculator/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pondSize,
+          fishCount,
+          feedCostPerKg,
+          expectedGrowth,
+          marketPricePerKg,
+          ...calculations,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Fish_Profit_Report.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("রিপোর্ট ডাউনলোড সফল হয়েছে!");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast.error("রিপোর্ট ডাউনলোড ব্যর্থ হয়েছে। দয়া করে আবার চেষ্টা করুন।");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <Card className="backdrop-blur-xl bg-white/[0.02] border border-white/[0.08] shadow-2xl rounded-2xl p-6">
@@ -154,6 +198,24 @@ export default function ProfitCalculatorWidget() {
           </span>
         </div>
       </div>
+
+      <Button
+        onClick={handleDownloadPDF}
+        isDisabled={isDownloading}
+        className="w-full mt-4 bg-[var(--primary)] text-[#020617] font-bold hover:scale-105 active:scale-95 transition-all"
+      >
+        {isDownloading ? (
+          <>
+            <Loader2 size={20} className="animate-spin" />
+            রিপোর্ট তৈরি হচ্ছে...
+          </>
+        ) : (
+          <>
+            <Download size={20} />
+            রিপোর্ট ডাউনলোড করুন (PDF)
+          </>
+        )}
+      </Button>
     </Card>
   );
 }
