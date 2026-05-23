@@ -15,6 +15,7 @@ interface MobileMenuProps {
   isOpen: boolean;
   pathname: string;
   status: "authenticated" | "loading" | "unauthenticated";
+  userRole?: string;
   onClose: () => void;
   onLogout: () => void;
 }
@@ -22,7 +23,7 @@ interface MobileMenuProps {
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const handleLogout = (): void => {
     toast("আপনি কি এখন বের হতে চান?", {
       description: "আবার ফিরে আসতে চাইলে আপনাকে লগইন করতে হবে।",
@@ -85,7 +86,7 @@ export default function Navbar() {
                 <Link href={AUTH_LINKS.dashboard.href}>
                   <Button variant="secondary">
                     <AUTH_LINKS.dashboard.icon size={18} />
-                    <span>{AUTH_LINKS.dashboard.name}</span>
+                    <span>{AUTH_LINKS.dashboard.getName(session?.user?.role)}</span>
                   </Button>
                 </Link>
                 <Button
@@ -112,6 +113,7 @@ export default function Navbar() {
         isOpen={isOpen}
         pathname={pathname}
         status={status}
+        userRole={session?.user?.role}
         onClose={() => setIsOpen(false)}
         onLogout={handleLogout}
       />
@@ -125,6 +127,7 @@ const MobileMenu = ({
   status,
   onClose,
   onLogout,
+  userRole,
 }: MobileMenuProps) => (
   <div
     className={`md:hidden absolute w-full bg-[var(--surface)] transition-all duration-300 ease-in-out shadow-xl ${
@@ -170,7 +173,7 @@ const MobileMenu = ({
             <Link href={AUTH_LINKS.dashboard.href} onClick={onClose}>
               <Button variant="secondary" className="w-full py-4 text-lg">
                 <AUTH_LINKS.dashboard.icon size={20} />
-                <span>{AUTH_LINKS.dashboard.name}</span>
+                <span>{AUTH_LINKS.dashboard.getName(userRole)}</span>
               </Button>
             </Link>
             <Button

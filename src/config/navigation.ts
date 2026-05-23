@@ -21,9 +21,9 @@ export const AUTH_LINKS = {
     icon: User 
   },
   dashboard: { 
-    name: "আমার ফিশারি",
     href: "/dashboard",
-    icon: Waves 
+    icon: Waves,
+    getName: (role?: string) => role === "admin" ? "কন্ট্রোল প্যানেল" : "আমার ফিশারি"
   },
   logout: {
     name: "বাহির হন", 
