@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "@/shared/components/providers/ThemeProvider";
-import Navbar from "@/shared/components/navigation/Navbar";
-import Footer from "@/shared/components/navigation/Footer";
 import ChatModule from "@/modules/ai-assistant/ChatModule";
 import { Toaster } from "sonner";
 
@@ -86,37 +84,30 @@ export default function RootLayout({
     <html lang="bn" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--text)]">
         <Providers>
-          <Navbar />
-
-          {/* Main Content Area */}
-          <main className="flex-grow pt-16">
-            {children}
-            <Toaster
-              position="top-center"
-              richColors
-              theme="dark"
-              toastOptions={{
-                className:
-                  "border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] rounded-xl shadow-2xl",
-                style: {
-                  background: "var(--surface)",
-                  color: "var(--text)",
-                },
-                actionButtonStyle: {
-                  background: "var(--primary)",
-                  color: "#fff",
-                },
-                cancelButtonStyle: {
-                  background: "var(--background)",
-                  color: "var(--text)",
-                  border: "1px solid var(--border)",
-                },
-              }}
-            />
-            <ChatModule />
-          </main>
-
-          <Footer />
+          {children}
+          <Toaster
+            position="top-center"
+            richColors
+            theme="dark"
+            toastOptions={{
+              className:
+                "border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] rounded-xl shadow-2xl",
+              style: {
+                background: "var(--surface)",
+                color: "var(--text)",
+              },
+              actionButtonStyle: {
+                background: "var(--primary)",
+                color: "#fff",
+              },
+              cancelButtonStyle: {
+                background: "var(--background)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+              },
+            }}
+          />
+          <ChatModule />
         </Providers>
       </body>
     </html>

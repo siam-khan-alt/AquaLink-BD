@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { connectDB } from "@/shared/lib/db";
 import { MarketPrice } from "@/models/MarketPrice";
 import { fetchMarketDataWithAI } from "@/shared/lib/ai-market";
@@ -47,6 +48,10 @@ export async function GET(req: Request) {
     }));
 
     await MarketPrice.bulkWrite(bulkOps);
+
+    // Revalidate cached pages to reflect new market data
+    revalidatePath("/");
+    revalidatePath("/market");
 
     return NextResponse.json({
       success: true,
