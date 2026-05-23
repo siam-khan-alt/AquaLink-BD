@@ -102,7 +102,7 @@ export default function ProfitCalculatorWidget() {
             max={10}
             value={pondSize}
             onChange={(e) => setPondSize(parseFloat(e.target.value))}
-            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-gray-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{pondSize} শতাংশ</div>
         </div>
@@ -119,7 +119,7 @@ export default function ProfitCalculatorWidget() {
             max={5000}
             value={fishCount}
             onChange={(e) => setFishCount(parseFloat(e.target.value))}
-            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-gray-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{fishCount} টি</div>
         </div>
@@ -136,7 +136,7 @@ export default function ProfitCalculatorWidget() {
             max={150}
             value={feedCostPerKg}
             onChange={(e) => setFeedCostPerKg(parseFloat(e.target.value))}
-            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-gray-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{feedCostPerKg} টাকা</div>
         </div>
@@ -153,7 +153,7 @@ export default function ProfitCalculatorWidget() {
             max={1000}
             value={expectedGrowth}
             onChange={(e) => setExpectedGrowth(parseFloat(e.target.value))}
-            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-gray-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{expectedGrowth} গ্রাম</div>
         </div>
@@ -170,7 +170,7 @@ export default function ProfitCalculatorWidget() {
             max={600}
             value={marketPricePerKg}
             onChange={(e) => setMarketPricePerKg(parseFloat(e.target.value))}
-            className="w-full h-2 bg-[var(--background)]/40 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-full h-2 bg-gray-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
           <div className="text-right text-sm font-black text-[var(--primary)] mt-1">{marketPricePerKg} টাকা</div>
         </div>
