@@ -32,7 +32,7 @@ export default async function WeatherCropAdvisory() {
   const advisory = getAdvisory(w.tempC, w.humidity);
 
   return (
-    <section className="rounded-3xl bg-[var(--surface)]/40 p-6">
+    <section className="rounded-3xl bg-[var(--surface)]/40 p-6 ">
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Weather Advisory</p>
@@ -57,7 +57,8 @@ export default async function WeatherCropAdvisory() {
 
 function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-[var(--background)]/40 p-4 flex items-center justify-between gap-4">
+    <div className="rounded-2xl bg-[var(--background)]/40 p-4 flex items-center justify-between gap-4 
+    border border-[var(--background)]/20">
       <div className="flex items-center gap-3">
         <span className="text-[var(--primary)]">{icon}</span>
         <span className="text-xs font-black uppercase tracking-widest opacity-50">{label}</span>

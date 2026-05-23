@@ -67,11 +67,11 @@ export default function ExpertConsultantPanel() {
           ))}
         </div>
       ) : (
-        <ScrollShadow orientation="horizontal" className="flex overflow-x-auto snap-x scrollbar-none gap-6 pb-4">
+        <ScrollShadow orientation="horizontal" className="flex justify-between overflow-x-auto snap-x scrollbar-none gap-6 pb-4">
           {experts.map((expert) => (
             <div
               key={expert._id || expert.email}
-              className="flex-shrink-0 w-72 flex flex-col items-center text-center space-y-4 snap-start"
+              className="flex-shrink-0  flex flex-col items-center text-center space-y-4 snap-start"
             >
               <Avatar
                 className="w-32 h-32 bg-gradient-to-br from-[var(--primary)]/30 to-[var(--primary)]/10 border-4 border-[var(--primary)]/20 shadow-2xl text-3xl font-black text-[var(--primary)]"

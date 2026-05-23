@@ -15,13 +15,16 @@ interface Story {
 
 async function getStories(): Promise<Story[]> {
   try {
-    const res = await fetch("/api/home/stories", {
-      next: { revalidate: 600 }
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/home/stories`, {
+      cache: "no-store", 
     });
+    
     if (!res.ok) return [];
     const data = await res.json();
     return data.stories || [];
-  } catch {
+  } catch (error) {
+    console.error("Error fetching farmer stories:", error);
     return [];
   }
 }
@@ -37,6 +40,10 @@ function getStoryDuration(index: number): string {
 
 export default async function SuccessfulFarmerStories() {
   const stories = await getStories();
+
+  if (!stories || stories.length === 0) {
+    return null;
+  }
 
   return (
     <section className="space-y-8">
@@ -62,39 +69,40 @@ export default async function SuccessfulFarmerStories() {
           
           return (
             <Card
-              key={story._id || story.title}
+              key={story._id || `${story.title}-${index}`}
               className={`relative aspect-[4/3] rounded-2xl overflow-hidden group cursor-pointer hover:shadow-2xl transition-shadow ${
                 index === 0 ? "md:col-span-2 lg:col-span-2" : ""
               }`}
             >
-              <Image
-                src={story.thumbnail}
-                alt={story.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+              {story.thumbnail && (
+                <Image
+                  src={story.thumbnail}
+                  alt={story.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  priority={index === 0}
+                />
+              )}
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
               
-              {category === "video" ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+                  {category === "video" ? (
                     <Play size={24} className="text-[#020617]" fill="currentColor" />
-                  </div>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="p-4 bg-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+                  ) : (
                     <BookOpen size={24} className="text-[#020617]" />
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
               
               <div className="absolute top-3 right-3">
+                
                 <Chip
                   size="sm"
                   variant="soft"
-                  className="bg-black/60 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest"
+                  className="bg-black/60 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest border-none"
                 >
                   {duration}
                 </Chip>

@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+      protocol: 'https',
+      hostname: 'www.svgrepo.com',
+    },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

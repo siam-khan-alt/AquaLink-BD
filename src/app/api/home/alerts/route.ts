@@ -14,17 +14,17 @@ const SEED_DATA = [
 export async function GET() {
   try {
     await connectDB();
-    
+
     const count = await EmergencyDiseaseAlert.countDocuments();
-    
+
     if (count === 0) {
       await EmergencyDiseaseAlert.insertMany(SEED_DATA);
     }
-    
+
     const alerts = await EmergencyDiseaseAlert.find({ isActive: true })
       .sort({ createdAt: -1 })
       .lean();
-    
+
     return NextResponse.json({ alerts });
   } catch (error) {
     console.error("Error fetching alerts:", error);
