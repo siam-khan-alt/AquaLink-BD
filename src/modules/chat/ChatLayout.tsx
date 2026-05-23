@@ -1,15 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { MessageSquare, Users, HeadphonesIcon, Send, Plus, X } from "lucide-react";
+import { MessageSquare, Users, HeadphonesIcon, Send, Plus, X, Search, Menu, LogOut } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { Chat, ChatMessage, ChatTab } from "@/shared/types/chat";
+import { Chat, ChatMessage, ChatTab, User as UserType, Contact } from "@/shared/types/chat";
 import { usePusherClient } from "@/shared/hooks/usePusherClient";
-
-interface Participant {
-  _id: string;
-  name: string;
-}
+import { cn } from "@/lib/utils";
 
 export default function ChatLayout() {
   const { data: session } = useSession();
@@ -19,8 +15,12 @@ export default function ChatLayout() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showFarmerSearch, setShowFarmerSearch] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Contact[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // এপিআই কল এবং স্টেট আপডেট এক সাথে হ্যান্ডেল করার জন্য useCallback
@@ -53,6 +53,20 @@ export default function ChatLayout() {
 
   usePusherClient(selectedChat?._id || "", (newMessage: ChatMessage) => {
     setMessages((prev) => [...prev, newMessage]);
+    
+    // Update sidebar lastMessage and unread count for real-time sync
+    setChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat._id === newMessage.chatId
+          ? {
+              ...chat,
+              lastMessage: newMessage,
+              unreadCount: chat._id === selectedChat?._id ? 0 : (chat.unreadCount || 0) + 1,
+              updatedAt: new Date(),
+            }
+          : chat
+      )
+    );
   });
 
   // অটো স্ক্রোল ইফেক্ট
@@ -163,6 +177,66 @@ export default function ChatLayout() {
     }
   };
 
+  const handleSearchFarmers = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/chat/search?q=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+      if (data.contacts) {
+        setSearchResults(data.contacts);
+      }
+    } catch (error) {
+      console.error("Error searching farmers:", error);
+    }
+  };
+
+  const handleStartFarmerDM = async (farmerId: string) => {
+    try {
+      const response = await fetch("/api/chat/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isGroup: false,
+          participants: [farmerId],
+        }),
+      });
+
+      const data = await response.json();
+      if (data.chat) {
+        setSelectedChat(data.chat);
+        setShowFarmerSearch(false);
+        setSearchQuery("");
+        setSearchResults([]);
+        fetchChats();
+      }
+    } catch (error) {
+      console.error("Error starting DM:", error);
+    }
+  };
+
+  // Helper function to get participant name safely
+  const getParticipantName = (participant: string | UserType): string => {
+    if (typeof participant === 'string') return 'Unknown';
+    return participant.name || 'Unknown';
+  };
+
+  // Helper function to check if participant is current user
+  const isCurrentUser = (participant: string | UserType): boolean => {
+    if (typeof participant === 'string') return participant === session?.user?.id;
+    return participant._id === session?.user?.id;
+  };
+
+  // Helper function to get other participant for direct messages
+  const getOtherParticipant = (chat: Chat): UserType | null => {
+    if (chat.isGroup || chat.isAdminSupport) return null;
+    const other = chat.participants.find(p => !isCurrentUser(p));
+    return typeof other === 'string' ? null : (other || null);
+  };
+
   if (!session || !session.user) {
     return (
       <div className="flex items-center justify-center h-screen bg-[var(--background)]">
@@ -172,10 +246,30 @@ export default function ChatLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-[var(--background)]">
-      <div className="w-80 border-r border-[var(--border)] flex flex-col bg-[var(--surface)]">
-        <div className="p-4 border-b border-[var(--border)]">
+    <div className="flex h-screen bg-[var(--background)] relative">
+      {/* Mobile Sidebar Overlay */}
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[var(--primary)] text-white rounded-lg shadow-lg"
+        >
+          <Menu size={24} />
+        </button>
+      )}
+
+      {/* Sidebar */}
+      <div className={cn(
+        "w-80 border-r border-[var(--border)] flex flex-col bg-[var(--surface)] fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 lg:relative lg:transform-none",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
+        <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
           <h1 className="text-xl font-bold text-[var(--text)]">মৎস্য বন্ধু চ্যাট</h1>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 hover:bg-[var(--border)] rounded-lg"
+          >
+            <X size={20} className="text-[var(--text)]" />
+          </button>
         </div>
 
         <div className="flex border-b border-[var(--border)]">
@@ -191,15 +285,15 @@ export default function ChatLayout() {
             <span className="text-sm font-semibold">Direct</span>
           </button>
           <button
-            onClick={() => setActiveTab("groups")}
+            onClick={() => setActiveTab("community")}
             className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 transition-colors ${
-              activeTab === "groups"
+              activeTab === "community"
                 ? "text-[var(--primary)] border-b-2 border-[var(--primary)]"
                 : "text-[var(--text)] opacity-60 hover:opacity-100"
             }`}
           >
             <Users size={18} />
-            <span className="text-sm font-semibold">Groups</span>
+            <span className="text-sm font-semibold">Community</span>
           </button>
           <button
             onClick={() => setActiveTab("support")}
@@ -215,13 +309,13 @@ export default function ChatLayout() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-2">
-          {activeTab === "groups" && (
+          {activeTab === "direct" && (
             <button
-              onClick={() => setShowCreateGroup(true)}
+              onClick={() => setShowFarmerSearch(true)}
               className="w-full mb-4 p-3 bg-[var(--primary)] text-[#020617] rounded-lg flex items-center justify-center gap-2 font-semibold hover:opacity-90 transition-opacity"
             >
-              <Plus size={18} />
-              Create Group
+              <Search size={18} />
+              Search Farmers
             </button>
           )}
 
@@ -235,46 +329,66 @@ export default function ChatLayout() {
             </button>
           )}
 
-          {chats.map((chat) => (
-            <div
-              key={chat._id}
-              onClick={() => setSelectedChat(chat)}
-              className={`p-3 rounded-lg cursor-pointer transition-colors mb-2 ${
-                selectedChat?._id === chat._id
-                  ? "bg-[var(--primary)] text-[#020617]"
-                  : "bg-[var(--background)] text-[var(--text)] hover:bg-[var(--border)]"
-              }`}
-            >
-              <div className="font-semibold">
-                {chat.isGroup 
-                  ? chat.groupName 
-                  : (chat.participants as unknown as Participant[]).find((p) => p._id !== session.user.id)?.name || "Unknown"
-                }
-              </div>
-              {chat.lastMessage && (
-                <div className="text-sm opacity-70 truncate">
-                  {chat.lastMessage.text}
+          {chats.map((chat) => {
+            const otherParticipant = getOtherParticipant(chat);
+            return (
+              <div
+                key={chat._id}
+                onClick={() => {
+                  setSelectedChat(chat);
+                  setSidebarOpen(false);
+                }}
+                className={`p-3 rounded-lg cursor-pointer transition-colors mb-2 relative ${
+                  selectedChat?._id === chat._id
+                    ? "bg-[var(--primary)] text-[#020617]"
+                    : "bg-[var(--background)] text-[var(--text)] hover:bg-[var(--border)]"
+                }`}
+              >
+                <div className="font-semibold">
+                  {chat.isGroup 
+                    ? chat.groupName 
+                    : otherParticipant?.name || "Unknown"
+                  }
                 </div>
-              )}
-            </div>
-          ))}
+                {chat.lastMessage && (
+                  <div className="text-sm opacity-70 truncate">
+                    {chat.lastMessage.text}
+                  </div>
+                )}
+                {chat.unreadCount && chat.unreadCount > 0 && (
+                  <div className="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {chat.unreadCount}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
+      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-[var(--background)]">
         {selectedChat ? (
           <>
             <div className="p-4 border-b border-[var(--border)] bg-[var(--surface)] flex items-center justify-between">
-              <div>
-                <h2 className="font-bold text-[var(--text)]">
-                  {selectedChat.isGroup 
-                    ? selectedChat.groupName 
-                    : (selectedChat.participants as unknown as Participant[]).find((p) => p._id !== session.user.id)?.name || "Unknown"
-                  }
-                </h2>
-                <p className="text-sm text-[var(--text)] opacity-60">
-                  {selectedChat.isGroup ? `${selectedChat.participants.length} members` : "Direct message"}
-                </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-2 hover:bg-[var(--border)] rounded-lg"
+                >
+                  <Menu size={20} className="text-[var(--text)]" />
+                </button>
+                <div>
+                  <h2 className="font-bold text-[var(--text)]">
+                    {selectedChat.isGroup 
+                      ? selectedChat.groupName 
+                      : getOtherParticipant(selectedChat)?.name || "Unknown"
+                    }
+                  </h2>
+                  <p className="text-sm text-[var(--text)] opacity-60">
+                    {selectedChat.isGroup ? `${selectedChat.participants.length} members` : "Direct message"}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setSelectedChat(null)}
@@ -336,6 +450,57 @@ export default function ChatLayout() {
         )}
       </div>
 
+      {/* Farmer Search Modal */}
+      {showFarmerSearch && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[var(--surface)] rounded-lg p-6 w-full max-w-md border border-[var(--border)]">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[var(--text)]">Search Farmers</h2>
+              <button
+                onClick={() => {
+                  setShowFarmerSearch(false);
+                  setSearchQuery("");
+                  setSearchResults([]);
+                }}
+                className="p-2 hover:bg-[var(--border)] rounded-lg transition-colors"
+              >
+                <X size={20} className="text-[var(--text)]" />
+              </button>
+            </div>
+            <div className="flex gap-2 mb-4">
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name..."
+                className="flex-1 bg-[var(--background)] border border-[var(--border)] rounded-lg px-4 py-3 text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              />
+              <button
+                onClick={handleSearchFarmers}
+                className="p-3 bg-[var(--primary)] text-[#020617] rounded-lg hover:opacity-90 transition-opacity"
+              >
+                <Search size={20} />
+              </button>
+            </div>
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {searchResults.map((contact) => (
+                <div
+                  key={contact._id}
+                  onClick={() => handleStartFarmerDM(contact._id)}
+                  className="p-3 bg-[var(--background)] rounded-lg cursor-pointer hover:bg-[var(--border)] transition-colors"
+                >
+                  <div className="font-semibold text-[var(--text)]">{contact.name}</div>
+                  <div className="text-sm text-[var(--text)] opacity-60">{contact.role}</div>
+                </div>
+              ))}
+              {searchResults.length === 0 && searchQuery && (
+                <p className="text-center text-[var(--text)] opacity-60">No farmers found</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Group Modal */}
       {showCreateGroup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-[var(--surface)] rounded-lg p-6 w-full max-w-md border border-[var(--border)]">

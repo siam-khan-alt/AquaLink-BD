@@ -5,6 +5,7 @@ import { Message } from "@/models/Message";
 import { User } from "@/models/User";
 import { getToken } from "next-auth/jwt";
 import { Document, Types } from "mongoose";
+import { ChatMessage } from "@/shared/types/chat";
 
 interface IPopulatedParticipant {
   _id: string;
@@ -17,23 +18,31 @@ interface IPopulatedParticipant {
 
 interface IChatDocument extends Document {
   _id: Types.ObjectId;
+  type: "direct" | "group" | "support" | "community";
   isGroup: boolean;
   isAdminSupport: boolean;
+  isPublic?: boolean;
   participants: Types.ObjectId[] | IPopulatedParticipant[];
   groupAdmin?: Types.ObjectId | IPopulatedParticipant;
+  groupName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 type ChatResponseObject = {
   _id: string;
+  type: "direct" | "group" | "support" | "community";
   isGroup: boolean;
   isAdminSupport: boolean;
+  isPublic?: boolean;
   participants: IPopulatedParticipant[];
   groupAdmin?: IPopulatedParticipant;
+  groupName?: string;
   createdAt: Date;
   updatedAt: Date;
-  lastMessage: Record<string, unknown> | null;
+  lastMessage: ChatMessage | null;
+  unreadCount?: number;
+  memberCount?: number;
 };
 
 export async function GET(req: NextRequest) {
@@ -49,6 +58,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
+    const searchQuery = searchParams.get("search"); // For farmer search
 
     await connectDB();
 
@@ -56,35 +66,48 @@ export async function GET(req: NextRequest) {
     const userRole = token.role as string;
     let chats: IChatDocument[];
 
+    // ADMIN VIEW
     if (userRole === "admin") {
       if (type === "support") {
+        // Support inbox: all farmer support tickets
         chats = await Chat.find({
           isAdminSupport: true,
         })
           .populate("participants", "name email phone image role")
           .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
       } else if (type === "direct") {
+        // Direct messages with farmers
         const farmers = await User.find({ role: "farmer" }).select("_id");
         const farmerIds = farmers.map((f) => f._id);
         
         chats = await Chat.find({
+          type: "direct",
           isGroup: false,
           isAdminSupport: false,
           participants: { $in: farmerIds },
         })
           .populate("participants", "name email phone image role")
           .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+      } else if (type === "community") {
+        // Community channels for moderation
+        chats = await Chat.find({
+          type: "community",
+          isPublic: true,
+        })
+          .populate("participants", "name email phone image role")
+          .populate("groupAdmin", "name email phone image role")
+          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
       } else {
-        const farmers = await User.find({ role: "farmer" }).select("_id");
-        const farmerIds = farmers.map((f) => f._id);
-        
+        // All chats for admin
         chats = await Chat.find({
           $or: [
             { isAdminSupport: true },
+            { type: "community", isPublic: true },
             { 
+              type: "direct",
               isGroup: false, 
               isAdminSupport: false,
-              participants: { $in: farmerIds },
+              participants: { $in: await User.find({ role: "farmer" }).select("_id").then(f => f.map(u => u._id)) },
             },
           ],
         })
@@ -92,24 +115,30 @@ export async function GET(req: NextRequest) {
           .populate("groupAdmin", "name email phone image role")
           .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
       }
-    } else {
+    } 
+    // FARMER VIEW
+    else {
       if (type === "direct") {
+        // Direct messages (farmer-to-farmer and farmer-to-admin)
         chats = await Chat.find({
+          type: "direct",
           isGroup: false,
           isAdminSupport: false,
           participants: userId,
         })
           .populate("participants", "name email phone image role")
           .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
-      } else if (type === "groups") {
+      } else if (type === "community") {
+        // Public community channels
         chats = await Chat.find({
-          isGroup: true,
-          participants: userId,
+          type: "community",
+          isPublic: true,
         })
           .populate("participants", "name email phone image role")
           .populate("groupAdmin", "name email phone image role")
           .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
       } else if (type === "support") {
+        // Support tickets with admin
         chats = await Chat.find({
           isAdminSupport: true,
           participants: userId,
@@ -117,8 +146,12 @@ export async function GET(req: NextRequest) {
           .populate("participants", "name email phone image role")
           .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
       } else {
+        // All chats for farmer
         chats = await Chat.find({
-          participants: userId,
+          $or: [
+            { participants: userId },
+            { type: "community", isPublic: true },
+          ],
         })
           .populate("participants", "name email phone image role")
           .populate("groupAdmin", "name email phone image role")
@@ -126,32 +159,58 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const chatsWithLastMessage: ChatResponseObject[] = await Promise.all(
-      chats.map(async (chat) => {
-        const lastMessage = await Message.findOne({ chatId: chat._id })
-          .sort({ createdAt: -1 })
-          .limit(1);
+    // OPTIMIZATION: Fetch all last messages in a single query instead of N+1
+    const chatIds = chats.map(c => c._id);
+    const lastMessages = await Message.find({ chatId: { $in: chatIds } })
+      .sort({ createdAt: -1 })
+      .lean();
 
-        const rawObject = chat.toObject();
-        
-        const plainChat = {
-          ...rawObject,
-          _id: rawObject._id.toString(),
-          groupAdmin: rawObject.groupAdmin 
-            ? { ...rawObject.groupAdmin, _id: rawObject.groupAdmin._id.toString() }
-            : undefined,
-          participants: (rawObject.participants || []).map((p: Record<string, unknown>) => ({
-            ...p,
-            _id: p._id ? p._id.toString() : "",
-          })),
-        } as unknown as Omit<ChatResponseObject, "lastMessage">;
-
-        return {
-          ...plainChat,
-          lastMessage: lastMessage ? (lastMessage.toObject() as unknown as Record<string, unknown>) : null,
+    // Create a map for quick lookup with proper type conversion
+    const lastMessageMap = new Map<string, ChatMessage>();
+    lastMessages.forEach(msg => {
+      const chatId = msg.chatId.toString();
+      if (!lastMessageMap.has(chatId)) {
+        // Convert Mongoose lean document to ChatMessage interface
+        const chatMessage: ChatMessage = {
+          _id: msg._id.toString(),
+          chatId: chatId,
+          sender: msg.sender.toString(),
+          text: msg.text,
+          createdAt: msg.createdAt,
         };
-      })
-    );
+        lastMessageMap.set(chatId, chatMessage);
+      }
+    });
+
+    // Calculate unread counts
+    const unreadCounts = await Message.aggregate([
+      { $match: { chatId: { $in: chatIds }, sender: { $ne: userId } } },
+      { $group: { _id: "$chatId", count: { $sum: 1 } } }
+    ]);
+    const unreadCountMap = new Map(unreadCounts.map(u => [u._id.toString(), u.count]));
+
+    const chatsWithLastMessage: ChatResponseObject[] = chats.map((chat) => {
+      const rawObject = chat.toObject();
+      const chatId = rawObject._id.toString();
+      
+      const plainChat = {
+        ...rawObject,
+        _id: chatId,
+        type: rawObject.type || (rawObject.isGroup ? "group" : "direct"),
+        groupAdmin: rawObject.groupAdmin 
+          ? { ...rawObject.groupAdmin, _id: rawObject.groupAdmin._id?.toString() || rawObject.groupAdmin._id }
+          : undefined,
+        participants: (rawObject.participants || []).map((p: Record<string, unknown>) => ({
+          ...p,
+          _id: p._id ? p._id.toString() : "",
+        })),
+        lastMessage: lastMessageMap.get(chatId) || null,
+        unreadCount: unreadCountMap.get(chatId) || 0,
+        memberCount: rawObject.isPublic ? (rawObject.participants || []).length : undefined,
+      } as ChatResponseObject;
+
+      return plainChat;
+    });
 
     return NextResponse.json({ chats: chatsWithLastMessage }, { status: 200 });
   } catch (error) {
