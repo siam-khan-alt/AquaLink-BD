@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Mic, MicOff, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Card, Button } from "@heroui/react";
@@ -8,6 +9,7 @@ import { Card, Button } from "@heroui/react";
 declare global {
   interface Window {
     webkitSpeechRecognition?: { new (): SpeechRecognition };
+    SpeechRecognition?: { new (): SpeechRecognition };
   }
 }
 
@@ -25,20 +27,25 @@ interface SpeechRecognition {
 
 interface SpeechRecognitionEvent {
   results: SpeechRecognitionResultList;
+  resultIndex?: number;
 }
 
 interface SpeechRecognitionErrorEvent {
   error: string;
+  message?: string;
 }
 
 interface SpeechRecognitionResultList {
   [index: number]: SpeechRecognitionResult;
   length: number;
+  item(index: number): SpeechRecognitionResult;
 }
 
 interface SpeechRecognitionResult {
   [index: number]: SpeechRecognitionAlternative;
   length: number;
+  isFinal: boolean;
+  item(index: number): SpeechRecognitionAlternative;
 }
 
 interface SpeechRecognitionAlternative {
@@ -47,66 +54,159 @@ interface SpeechRecognitionAlternative {
 }
 
 export default function VoiceSearchGate() {
+  const router = useRouter();
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
+  const [interimTranscript, setInterimTranscript] = useState<string>("");
   const [isSpeechSupported, setIsSpeechSupported] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const isMountedRef = useRef<boolean>(true);
 
   useEffect(() => {
-    const supported = typeof window !== "undefined" && "webkitSpeechRecognition" in window;
+    isMountedRef.current = true;
+
+    const supported = typeof window !== "undefined" && 
+      ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
     
     if (supported) {
-      setTimeout(() => {
-        setIsSpeechSupported(true);
-      }, 0);
+      setIsSpeechSupported(true);
 
-      const ctor = (window as Window).webkitSpeechRecognition;
+      const ctor = (window as Window).webkitSpeechRecognition || (window as Window).SpeechRecognition;
       if (ctor) {
         const recognition = new ctor();
         recognition.continuous = false;
-        recognition.interimResults = false;
+        recognition.interimResults = true;
         recognition.lang = "bn-BD";
 
-        recognition.onstart = () => setIsListening(true);
+        recognition.onstart = () => {
+          if (isMountedRef.current) {
+            setIsListening(true);
+            setInterimTranscript("");
+          }
+        };
+
         recognition.onresult = (event: SpeechRecognitionEvent) => {
-          const text = event.results[0][0].transcript;
-          setTranscript(text);
-          setIsListening(false);
+          if (!isMountedRef.current) return;
+
+          let finalTranscript = "";
+          let interim = "";
+
+          for (let i = event.resultIndex || 0; i < event.results.length; i++) {
+            const result = event.results[i];
+            const transcriptText = result[0].transcript;
+
+            if (result.isFinal) {
+              finalTranscript += transcriptText;
+            } else {
+              interim += transcriptText;
+            }
+          }
+
+          if (finalTranscript) {
+            setTranscript(finalTranscript);
+            setInterimTranscript("");
+          } else if (interim) {
+            setInterimTranscript(interim);
+          }
         };
+
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-          console.error("Speech recognition error:", event.error);
+          if (!isMountedRef.current) return;
+
           setIsListening(false);
+          setInterimTranscript("");
+
+          switch (event.error) {
+            case "not-allowed":
+              toast.error("আপনার মাইক্রোফোন পারমিশন ব্লক করা আছে। দয়া করে ব্রাউজার সেটিংস চেক করুন।");
+              break;
+            case "network":
+              toast.error("দুর্বল ইন্টারনেট সংযোগ! দয়া করে আবার চেষ্টা করুন।");
+              break;
+            case "no-speech":
+              toast.error("কোনো শব্দ সনাক্ত করা যায়নি। দয়া করে মাইক অন করে স্পষ্ট করে বলুন।");
+              break;
+            case "aborted":
+              // User manually stopped, no error needed
+              break;
+            default:
+              toast.error(`ভয়েস রিকগনিশন এরর: ${event.error}`);
+          }
         };
-        recognition.onend = () => setIsListening(false);
+
+        recognition.onend = () => {
+          if (isMountedRef.current) {
+            setIsListening(false);
+            setInterimTranscript("");
+          }
+        };
 
         recognitionRef.current = recognition;
       }
     }
 
     return () => {
+      isMountedRef.current = false;
+      
       if (recognitionRef.current) {
+        // Nullify all event handlers to prevent memory leaks
+        recognitionRef.current.onstart = () => {};
+        recognitionRef.current.onresult = () => {};
+        recognitionRef.current.onerror = () => {};
+        recognitionRef.current.onend = () => {};
+        
+        // Abort the recognition
         recognitionRef.current.abort();
+        recognitionRef.current = null;
       }
     };
   }, []);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-     toast.error("আপনার ব্রাউজার ভয়েস সার্চ সাপোর্ট করে না।");
+      toast.error("আপনার ব্রাউজার ভয়েস সার্চ সাপোর্ট করে না।");
       return;
     }
 
     if (isListening) {
       recognitionRef.current.abort();
       setIsListening(false);
+      setInterimTranscript("");
     } else {
+      setTranscript("");
+      setInterimTranscript("");
       recognitionRef.current.start();
     }
   };
 
   const handleSearch = () => {
-    if (transcript.trim()) {
-      window.location.href = `/market-prices?q=${encodeURIComponent(transcript)}`;
+    const normalizedText = transcript.trim().toLowerCase();
+    
+    if (!normalizedText) {
+      toast.error("দুঃখিত, আপনার অনুসন্ধানটি বুঝতে পারিনি। দয়া করে মাছের বাজার দর, রোগ বা সমাধান সংক্রান্ত বিষয়ে কথা বলুন।");
+      return;
+    }
+
+    // Market prices keywords
+    const marketPriceKeywords = ["দাম", "দর", "বাজার", "টাকা", "রেট", "কত"];
+    const isMarketPrice = marketPriceKeywords.some(keyword => normalizedText.includes(keyword));
+
+    // Fish diseases keywords
+    const diseaseKeywords = ["রোগ", "সমাধান", "চিকিৎসা", "মরে", "ক্ষত", "ঘা", "ভাইরাস"];
+    const isDisease = diseaseKeywords.some(keyword => normalizedText.includes(keyword));
+
+    // Contact keywords
+    const contactKeywords = ["যোগাযোগ", "হেল্প", "অফিস", "ফোন"];
+    const isContact = contactKeywords.some(keyword => normalizedText.includes(keyword));
+
+    if (isMarketPrice) {
+      router.push(`/market-prices?q=${encodeURIComponent(transcript)}`);
+    } else if (isDisease) {
+      router.push(`/fish-diseases?q=${encodeURIComponent(transcript)}`);
+    } else if (isContact) {
+      router.push("/contact");
+    } else {
+      toast.error("দুঃখিত, আপনার অনুসন্ধানটি বুঝতে পারিনি। দয়া করে মাছের বাজার দর, রোগ বা সমাধান সংক্রান্ত বিষয়ে কথা বলুন।");
     }
   };
 
@@ -145,16 +245,22 @@ export default function VoiceSearchGate() {
           )}
         </Button>
 
-        {transcript && (
+        {(transcript || interimTranscript) && (
           <div className="p-4 bg-[var(--background)]/40 rounded-xl border border-[var(--border)]/60">
-            <p className="text-sm font-bold text-[var(--text)]/70 mb-2">আপনি বলেছেন:</p>
-            <p className="text-lg font-black text-[var(--text)]">{transcript}</p>
-            <Button
-              onClick={handleSearch}
-              className="mt-3 w-full py-2 bg-[var(--primary)] text-[#020617] rounded-lg font-bold hover:scale-105 active:scale-95 transition-all"
-            >
-              খুঁজুন
-            </Button>
+            <p className="text-sm font-bold text-[var(--text)]/70 mb-2">
+              {interimTranscript ? "শুনছি..." : "আপনি বলেছেন:"}
+            </p>
+            <p className="text-lg font-black text-[var(--text)]">
+              {transcript || interimTranscript}
+            </p>
+            {transcript && (
+              <Button
+                onClick={handleSearch}
+                className="mt-3 w-full py-2 bg-[var(--primary)] text-[#020617] rounded-lg font-bold hover:scale-105 active:scale-95 transition-all"
+              >
+                খুঁজুন
+              </Button>
+            )}
           </div>
         )}
 
