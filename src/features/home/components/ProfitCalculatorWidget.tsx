@@ -39,35 +39,112 @@ export default function ProfitCalculatorWidget() {
     setIsDownloading(true);
     
     try {
-      const response = await fetch("/api/calculator/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          pondSize,
-          fishCount,
-          feedCostPerKg,
-          expectedGrowth,
-          marketPricePerKg,
-          ...calculations,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate PDF");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "Fish_Profit_Report.pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
+      const html2pdf = (await import("html2pdf.js")).default;
+      
+      // Create a temporary container for PDF generation
+      const container = document.createElement("div");
+      container.style.position = "absolute";
+      container.style.left = "-9999px";
+      container.style.top = "0";
+      container.style.width = "210mm";
+      container.style.padding = "20px";
+      container.style.fontFamily = "'Noto Sans Bengali', sans-serif";
+      container.style.background = "white";
+      
+      container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 30px; padding: 30px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 12px;">
+          <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">মৎস্য বন্ধু</h1>
+          <p style="font-size: 14px; opacity: 0.9;">লাভ-ক্ষতি ও বিনিয়োগ রিপোর্ট</p>
+          <p style="font-size: 12px; margin-top: 8px;">${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 18px; font-weight: 700; color: #059669; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #10b981;">ইনপুট তথ্য</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">পুকুরের আকার</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${pondSize} শতাংশ</div>
+            </div>
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">মাছের সংখ্যা</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${fishCount.toLocaleString('bn-BD')} টি</div>
+            </div>
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">খাবারের দাম (প্রতি কেজি)</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${feedCostPerKg.toLocaleString('bn-BD')} টাকা</div>
+            </div>
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">প্রত্যাশিত ওজন (প্রতি মাছ)</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${expectedGrowth.toLocaleString('bn-BD')} গ্রাম</div>
+            </div>
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">বাজার দাম (প্রতি কেজি)</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${marketPricePerKg.toLocaleString('bn-BD')} টাকা</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 18px; font-weight: 700; color: #059669; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #10b981;">গণনা বিবরণ</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">মোট মাছের ওজন</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${calculations.totalFishWeight.toFixed(2)} কেজি</div>
+            </div>
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">মোট খাবার প্রয়োজন</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${calculations.totalFeedNeeded.toFixed(2)} কেজি</div>
+            </div>
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">মোট খাবার খরচ</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${calculations.totalFeedCost.toLocaleString('bn-BD')} টাকা</div>
+            </div>
+            <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border-left: 4px solid #10b981;">
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">অন্যান্য খরচ</div>
+              <div style="font-size: 16px; font-weight: 600; color: #1a1a1a;">${calculations.otherCosts.toLocaleString('bn-BD')} টাকা</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 20px; border-radius: 8px; margin-top: 25px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(16, 185, 129, 0.19);">
+            <span style="font-size: 14px; font-weight: 600; color: #374151;">মোট আয়</span>
+            <span style="font-size: 18px; font-weight: 700; color: #10b981;">${calculations.totalRevenue.toLocaleString('bn-BD')} টাকা</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(16, 185, 129, 0.19);">
+            <span style="font-size: 14px; font-weight: 600; color: #374151;">মোট খরচ</span>
+            <span style="font-size: 18px; font-weight: 700; color: #ef4444;">${calculations.totalCost.toLocaleString('bn-BD')} টাকা</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(16, 185, 129, 0.19);">
+            <span style="font-size: 14px; font-weight: 600; color: #374151;">নিট লাভ/ক্ষতি</span>
+            <span style="font-size: 18px; font-weight: 700; color: ${calculations.netProfit >= 0 ? '#10b981' : '#ef4444'};">${calculations.netProfit.toLocaleString('bn-BD')} টাকা</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+            <span style="font-size: 14px; font-weight: 600; color: #374151;">ROI (বিনিয়োগের হার)</span>
+            <span style="font-size: 18px; font-weight: 700; color: ${calculations.roi >= 0 ? '#10b981' : '#ef4444'};">${calculations.roi.toFixed(1)}%</span>
+          </div>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; background: #f9fafb; margin-top: 25px; font-size: 12px; color: #6b7280;">
+          <p>এই রিপোর্টটি মৎস্য বন্ধু প্ল্যাটফর্ম থেকে জেনারেট করা হয়েছে</p>
+          <p>© ${new Date().getFullYear()} মৎস্য বন্ধু - সর্বস্বত্ব সংরক্ষিত</p>
+        </div>
+      `;
+      
+      document.body.appendChild(container);
+      
+      const options = {
+        margin: 10,
+        filename: 'Fish_Profit_Report.pdf',
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      };
+      
+      await html2pdf().set(options).from(container).save();
+      
+      document.body.removeChild(container);
+      
       toast.success("রিপোর্ট ডাউনলোড সফল হয়েছে!");
     } catch (error) {
       console.error("Error downloading PDF:", error);

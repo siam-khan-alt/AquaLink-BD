@@ -58,7 +58,7 @@ export default function VoiceSearchGate() {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
   const [interimTranscript, setInterimTranscript] = useState<string>("");
-  const [isSpeechSupported, setIsSpeechSupported] = useState<boolean>(false);
+  const [isSpeechSupported] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isMountedRef = useRef<boolean>(true);
 
