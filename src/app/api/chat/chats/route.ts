@@ -58,7 +58,6 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
-    const searchQuery = searchParams.get("search"); // For farmer search
 
     await connectDB();
 

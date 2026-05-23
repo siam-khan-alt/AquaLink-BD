@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, startTransition } from "react";
-import { MessageSquare, Users, HeadphonesIcon, Send, Plus, X, Search, Menu, Info, MoreVertical, ChevronLeft } from "lucide-react";
+import { MessageSquare, Users, HeadphonesIcon, Send, X, Search, Menu, Info, ChevronLeft } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Chat, ChatMessage, ChatTab, User as UserType, Contact, FarmerChatTab, AdminChatTab } from "@/shared/types/chat";
 import { cn } from "@/lib/utils";
@@ -22,10 +22,8 @@ export default function ChatLayout() {
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pusherRef = useRef<any>(null);
+  const pusherRef = useRef<Record<string, unknown> | null>(null);
 
   // Role-based tab ordering
   const getTabsForRole = (): ChatTab[] => {
@@ -62,19 +60,13 @@ export default function ChatLayout() {
     }
   }, [activeTab, session?.user?.id]);
 
-  const fetchMessages = useCallback(async (chatId: string, pageNum: number = 1) => {
+  const fetchMessages = useCallback(async (chatId: string) => {
     if (!chatId) return;
     try {
-      const limit = 50;
-      const response = await fetch(`/api/chat/messages?chatId=${chatId}&page=${pageNum}&limit=${limit}`);
+      const response = await fetch(`/api/chat/messages?chatId=${chatId}`);
       const data = await response.json();
       if (data.messages) {
-        if (pageNum === 1) {
-          setMessages(data.messages);
-        } else {
-          setMessages((prev) => [...data.messages, ...prev]);
-        }
-        setHasMore(data.messages.length === limit);
+        setMessages(data.messages);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -124,8 +116,8 @@ export default function ChatLayout() {
     return () => {
       if (pusherRef.current) {
         const { pusher, channel } = pusherRef.current;
-        channel.unbind("new-message");
-        pusher.unsubscribe(`private-chat-${selectedChat._id}`);
+        (channel as { unbind: (event: string) => void }).unbind("new-message");
+        (pusher as { unsubscribe: (channel: string) => void }).unsubscribe(`private-chat-${selectedChat._id}`);
         pusherRef.current = null;
       }
     };
@@ -297,12 +289,6 @@ export default function ChatLayout() {
     } catch (error) {
       console.error("Error starting DM:", error);
     }
-  };
-
-  // Helper function to get participant name safely
-  const getParticipantName = (participant: string | UserType): string => {
-    if (typeof participant === 'string') return 'Unknown';
-    return participant.name || 'Unknown';
   };
 
   // Helper function to check if participant is current user
