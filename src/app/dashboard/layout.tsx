@@ -139,6 +139,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             );
           })}
         </nav>
+        {/* Public Home Page Link */}
+        <div className="px-4 mb-2">
+          <Link
+            href="/"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--text)] hover:text-[var(--text)] hover:bg-[var(--border)] transition-all duration-200 font-hind font-semibold border border-dashed border-[var(--border)]"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span>মূল ওয়েবসাইট</span>
+          </Link>
+        </div>
 
         {/* User Footer Profile Card */}
         <div className="p-4 border-t border-[var(--border)]">
@@ -191,7 +214,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="fixed inset-0 z-40"
                       onClick={() => setNotificationOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-80 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="absolute max-sm:fixed max-sm:top-16 max-sm:left-4 max-sm:right-4 right-0 mt-2 sm:w-80 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden transition-all duration-200">
                       <div className="p-4 border-b border-[var(--border)]">
                         <h3 className="text-sm font-bold text-[var(--text)] font-hind">
                           নোটিফিকেশন
