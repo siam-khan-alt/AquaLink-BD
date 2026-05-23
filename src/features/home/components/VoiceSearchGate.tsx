@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Mic, MicOff, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +58,10 @@ export default function VoiceSearchGate() {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
   const [interimTranscript, setInterimTranscript] = useState<string>("");
-  const [isSpeechSupported] = useState<boolean>(false);
+  const isSpeechSupported = useMemo(() => {
+    return typeof window !== "undefined" && 
+      ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
+  }, []);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isMountedRef = useRef<boolean>(true);
 

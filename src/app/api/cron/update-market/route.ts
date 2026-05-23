@@ -9,12 +9,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const secret = searchParams.get("secret");
   const cronSecret = process.env.CRON_SECRET;
-  const isVercelCron = req.headers.get("x-vercel-cron") === "1";
-
-  // Authorization rules:
-  // - Vercel scheduled cron requests are allowed via the `x-vercel-cron` header.
-  // - Manual / external triggers must provide the correct `?secret=...`.
-  if (!isVercelCron && (!secret || !cronSecret || secret !== cronSecret)) {
+  if (!cronSecret || secret !== cronSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

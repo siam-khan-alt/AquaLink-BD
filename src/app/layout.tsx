@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     title: "মৎস্য বন্ধু - আধুনিক মাছ চাষের ডিজিটাল প্ল্যাটফর্ম",
     description:
       "আধুনিক প্রযুক্তিতে মাছ চাষ করুন লাভজনকভাবে। বাংলাদেশের মাছ চাষিদের জন্য সেরা ডিজিটাল সমাধান। আজই যুক্ত হোন মৎস্য বন্ধু প্ল্যাটফর্মে।",
-    url: "https://aqualinkbd.vercel.app",
+    url: "https://aqualink-bd-production.up.railway.app",
     siteName: "মৎস্য বন্ধু",
     locale: "bn_BD",
     type: "website",
