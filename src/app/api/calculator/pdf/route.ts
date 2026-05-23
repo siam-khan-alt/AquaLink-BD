@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer";
 
 export const maxDuration = 60;
 
@@ -219,13 +218,13 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    const isLocal = process.env.NODE_ENV === "development";
+    const isLocalWindows = process.platform === "win32";
 
     const browser = await puppeteer.launch({
-      args: isLocal ? [] : chromium.args,
-      executablePath: isLocal 
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+      executablePath: isLocalWindows 
         ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-        : await chromium.executablePath(),
+        : process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium-browser",
       headless: true,
     });
 
