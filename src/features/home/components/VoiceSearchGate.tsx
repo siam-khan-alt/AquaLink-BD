@@ -69,8 +69,6 @@ export default function VoiceSearchGate() {
       ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
     
     if (supported) {
-      setIsSpeechSupported(true);
-
       const ctor = (window as Window).webkitSpeechRecognition || (window as Window).SpeechRecognition;
       if (ctor) {
         const recognition = new ctor();
