@@ -4,12 +4,15 @@ export interface IDoctorApplication extends Document {
   name: string;
   email: string;
   phone: string;
+  password: string;
   degree: string;
   specialization: string;
   licenseNumber: string;
   experience: number; // years
   consultationFee: number;
   bio: string;
+  avatarUrl: string;
+  certificateUrl: string;
   district?: string;
   division?: string;
   status: "pending" | "approved" | "rejected";
@@ -34,6 +37,10 @@ const DoctorApplicationSchema = new Schema<IDoctorApplication>({
   phone: {
     type: String,
     required: [true, "ফোন নম্বর অবশ্যই দিতে হবে"],
+  },
+  password: {
+    type: String,
+    required: [true, "পাসওয়ার্ড অবশ্যই দিতে হবে"],
   },
   degree: {
     type: String,
@@ -62,6 +69,14 @@ const DoctorApplicationSchema = new Schema<IDoctorApplication>({
     type: String,
     required: [true, "বায়োগ্রাফি অবশ্যই দিতে হবে"],
     maxlength: 1000,
+  },
+  avatarUrl: {
+    type: String,
+    required: [true, "অ্যাভাটার ছবি অবশ্যই দিতে হবে"],
+  },
+  certificateUrl: {
+    type: String,
+    required: [true, "সার্টিফিকেট অবশ্যই দিতে হবে"],
   },
   district: { type: String },
   division: { type: String },

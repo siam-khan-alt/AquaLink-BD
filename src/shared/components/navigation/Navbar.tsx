@@ -53,10 +53,10 @@ export default function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border  ${
                   pathname === link.href
-                    ? "bg-[var(--secondary)] text-[var(--primary)]"
-                    : "text-[var(--text)]/80 hover:bg-[var(--background)]"
+                    ? "border-[var(--primary)] text-[var(--primary)] bg-[var(--secondary)]/30"
+                    : "border-transparent text-[var(--text)]/80 hover:bg-[var(--background)]"
                 }`}
               >
                 {link.name}
@@ -86,7 +86,9 @@ export default function Navbar() {
                 <Link href={AUTH_LINKS.dashboard.href}>
                   <Button variant="secondary">
                     <AUTH_LINKS.dashboard.icon size={18} />
-                    <span>{AUTH_LINKS.dashboard.getName(session?.user?.role)}</span>
+                    <span>
+                      {AUTH_LINKS.dashboard.getName(session?.user?.role)}
+                    </span>
                   </Button>
                 </Link>
                 <Button

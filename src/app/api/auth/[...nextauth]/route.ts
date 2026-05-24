@@ -102,6 +102,11 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return url;
+      if (url) return url;
+      return baseUrl;
+    },
   },
   pages: { signIn: "/login" },
   session: { strategy: "jwt" },

@@ -20,6 +20,8 @@ export default function DashboardRedirectPage() {
     const role = session.user?.role;
     if (role === "admin") {
       router.push("/dashboard/admin");
+    } else if (role === "doctor") {
+      router.push("/dashboard/doctor");
     } else {
       router.push("/dashboard/farmer");
     }

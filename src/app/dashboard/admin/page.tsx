@@ -108,14 +108,15 @@ export default function AdminDashboard() {
     enabled: status === "authenticated" && activeTab === "farmers",
   });
 
-  const { data: doctorApplicationsData, isLoading: isDoctorApplicationsLoading } = useQuery<{ applications: IDoctorApplication[] }>({
+  const { data: doctorApplicationsData, isLoading: isDoctorApplicationsLoading, refetch: refetchDoctorApplications } = useQuery<{ applications: IDoctorApplication[] }>({
     queryKey: ["admin-doctor-applications"],
     queryFn: async () => {
       const res = await fetch("/api/admin/doctor-applications");
       if (!res.ok) throw new Error("ডাক্তার আবেদন লোড করতে ব্যর্থ হয়েছে");
       return res.json();
     },
-    enabled: status === "authenticated" && activeTab === "doctor-applications",
+    enabled: status === "authenticated",
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
 
   const updatePriceMutation = useMutation({
@@ -164,6 +165,7 @@ export default function AdminDashboard() {
     },
     onSuccess: () => {
       toast.success("আবেদন সফলভাবে প্রক্রিয়া করা হয়েছে!");
+      refetchDoctorApplications();
     },
     onError: (error: Error) => {
       toast.error(error.message);

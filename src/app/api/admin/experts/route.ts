@@ -3,18 +3,9 @@ import type { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
-import { ExpertConsultant } from "@/models/ExpertConsultant";
-import { z } from "zod";
-
-const createExpertSchema = z.object({
-  name: z.string().min(2, "নাম অবশ্যই দিতে হবে"),
-  designation: z.string().min(2, "পদবী অবশ্যই দিতে হবে"),
-  email: z.string().email("সঠিক ইমেইল ঠিকানা দিন").optional(),
-  phone: z.string().min(10, "ফোন নম্বর অবশ্যই দিতে হবে"),
-  specialization: z.string().min(2, "বিশেষীকরণ অবশ্যই দিতে হবে"),
-  avatarUrl: z.string().optional(),
-  isVerified: z.boolean().default(false),
-});
+import { DoctorApplication } from "@/models/DoctorApplication";
+import { User } from "@/models/User";
+import bcrypt from "bcryptjs";
 
 export async function GET() {
   try {
@@ -29,63 +20,17 @@ export async function GET() {
 
     await connectDB();
 
-    const experts = await ExpertConsultant.find()
+    const applications = await DoctorApplication.find()
       .sort({ createdAt: -1 })
       .lean();
 
     return NextResponse.json(
-      { success: true, experts },
+      { success: true, applications },
       { status: 200 }
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
-    console.error("Error fetching experts:", message);
-    return NextResponse.json(
-      { error: "Internal server error: " + message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized. Admin access only." },
-        { status: 401 }
-      );
-    }
-
-    await connectDB();
-    const body = await req.json();
-    const parsedData = createExpertSchema.parse(body);
-
-    const newExpert = await ExpertConsultant.create({
-      name: parsedData.name,
-      designation: parsedData.designation,
-      email: parsedData.email,
-      phone: parsedData.phone,
-      specialization: parsedData.specialization,
-      avatarUrl: parsedData.avatarUrl || "",
-      isVerified: parsedData.isVerified,
-    });
-
-    return NextResponse.json(
-      { success: true, expert: newExpert },
-      { status: 201 }
-    );
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.issues[0].message },
-        { status: 400 }
-      );
-    }
-
-    const message = error instanceof Error ? error.message : "Unknown Error";
-    console.error("Error creating expert:", message);
+    console.error("Error fetching doctor applications:", message);
     return NextResponse.json(
       { error: "Internal server error: " + message },
       { status: 500 }
@@ -106,35 +51,65 @@ export async function PATCH(req: NextRequest) {
 
     await connectDB();
     const body = await req.json();
-    const { id, isVerified } = body;
+    const { id, action, rejectionReason } = body;
 
-    if (!id) {
+    if (!id || !action) {
       return NextResponse.json(
-        { error: "Expert ID is required" },
+        { error: "Application ID and action are required" },
         { status: 400 }
       );
     }
 
-    const updatedExpert = await ExpertConsultant.findByIdAndUpdate(
-      id,
-      { isVerified },
-      { new: true }
-    );
-
-    if (!updatedExpert) {
+    const application = await DoctorApplication.findById(id);
+    if (!application) {
       return NextResponse.json(
-        { error: "Expert not found" },
+        { error: "Application not found" },
         { status: 404 }
       );
     }
 
+    if (action === "approve") {
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(application.password, 10);
+      
+      // Create user in users collection
+      const existingUser = await User.findOne({ email: application.email });
+      if (!existingUser) {
+        await User.create({
+          name: application.name,
+          email: application.email,
+          phone: application.phone,
+          password: hashedPassword,
+          role: "doctor",
+          specialization: application.specialization,
+          consultationFee: application.consultationFee,
+          bio: application.bio,
+          image: application.avatarUrl,
+          district: application.district,
+          division: application.division,
+          isVerified: true,
+        });
+      }
+      
+      application.status = "approved";
+      application.reviewedBy = session.user?.id as string;
+      application.reviewedAt = new Date();
+      await application.save();
+    } else if (action === "reject") {
+      application.status = "rejected";
+      application.rejectionReason = rejectionReason;
+      application.reviewedBy = session.user?.id as string;
+      application.reviewedAt = new Date();
+      await application.save();
+    }
+
     return NextResponse.json(
-      { success: true, expert: updatedExpert },
+      { success: true, application },
       { status: 200 }
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
-    console.error("Error updating expert:", message);
+    console.error("Error updating application:", message);
     return NextResponse.json(
       { error: "Internal server error: " + message },
       { status: 500 }

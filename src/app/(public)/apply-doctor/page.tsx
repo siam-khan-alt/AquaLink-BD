@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, GraduationCap, FileText, DollarSign, Send, Loader2 } from "lucide-react";
+import { User, GraduationCap, FileText, DollarSign, Send, Loader2, Lock, Image as ImageIcon, FileCheck } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import ImageUpload from "@/components/ui/ImageUpload";
 import { toast } from "sonner";
 
 export default function ApplyDoctorPage() {
@@ -15,12 +16,15 @@ export default function ApplyDoctorPage() {
     name: "",
     email: "",
     phone: "",
+    password: "",
     degree: "",
     specialization: "",
     licenseNumber: "",
     experience: "",
     consultationFee: "",
     bio: "",
+    avatarUrl: "",
+    certificateUrl: "",
     district: "",
     division: "",
   });
@@ -46,6 +50,8 @@ export default function ApplyDoctorPage() {
     if (!formData.email.trim()) newErrors.email = "ইমেইল প্রয়োজন";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "সঠিক ইমেইল দিন";
     if (!formData.phone.trim()) newErrors.phone = "ফোন নম্বর প্রয়োজন";
+    if (!formData.password.trim()) newErrors.password = "পাসওয়ার্ড প্রয়োজন";
+    else if (formData.password.length < 6) newErrors.password = "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে";
     if (!formData.degree.trim()) newErrors.degree = "ডিগ্রি প্রয়োজন";
     if (!formData.specialization.trim()) newErrors.specialization = "বিশেষীকরণ প্রয়োজন";
     if (!formData.licenseNumber.trim()) newErrors.licenseNumber = "লাইসেন্স নম্বর প্রয়োজন";
@@ -54,6 +60,8 @@ export default function ApplyDoctorPage() {
     if (!formData.bio.trim()) newErrors.bio = "বায়োগ্রাফি প্রয়োজন";
     else if (formData.bio.length < 10) newErrors.bio = "বায়োগ্রাফি কমপক্ষে ১০ অক্ষরের হতে হবে";
     else if (formData.bio.length > 1000) newErrors.bio = "বায়োগ্রাফি ১০০০ অক্ষরের বেশি হতে পারবে না";
+    if (!formData.avatarUrl.trim()) newErrors.avatarUrl = "অ্যাভাটার ছবি প্রয়োজন";
+    if (!formData.certificateUrl.trim()) newErrors.certificateUrl = "সার্টিফিকেট প্রয়োজন";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -157,6 +165,19 @@ export default function ApplyDoctorPage() {
                 </div>
                 <div>
                   <label className="text-sm font-bold text-[var(--text)] font-hind mb-2 block">
+                    পাসওয়ার্ড *
+                  </label>
+                  <Input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="কমপক্ষে ৬ অক্ষর"
+                    error={errors.password}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-[var(--text)] font-hind mb-2 block">
                     জেলা
                   </label>
                   <Input
@@ -256,6 +277,36 @@ export default function ApplyDoctorPage() {
                       error={errors.consultationFee}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Picture & Certificate */}
+            <div>
+              <h3 className="text-xl font-bold text-[var(--text)] font-hind mb-4 flex items-center gap-2">
+                <ImageIcon size={20} className="text-[var(--primary)]" />
+                প্রোফাইল ছবি ও সার্টিফিকেট
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <ImageUpload
+                    value={formData.avatarUrl}
+                    onChange={(url) => setFormData((prev) => ({ ...prev, avatarUrl: url }))}
+                    label="প্রোফাইল ছবি *"
+                  />
+                  {errors.avatarUrl && (
+                    <p className="text-red-500 text-xs mt-1 font-hind">{errors.avatarUrl}</p>
+                  )}
+                </div>
+                <div>
+                  <ImageUpload
+                    value={formData.certificateUrl}
+                    onChange={(url) => setFormData((prev) => ({ ...prev, certificateUrl: url }))}
+                    label="মেডিকেল সার্টিফিকেট *"
+                  />
+                  {errors.certificateUrl && (
+                    <p className="text-red-500 text-xs mt-1 font-hind">{errors.certificateUrl}</p>
+                  )}
                 </div>
               </div>
             </div>

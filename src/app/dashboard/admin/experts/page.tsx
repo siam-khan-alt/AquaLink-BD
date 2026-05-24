@@ -1,27 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
   UserCheck,
-  Plus,
   X,
   Loader2,
   Mail,
   Phone,
   Award,
   Calendar,
-  Edit,
-  Trash2,
+  Eye,
   ShieldCheck,
   ShieldX,
+  Check,
+  X as XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import { useExperts } from "@/shared/hooks/useExperts";
 
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {
@@ -31,83 +29,57 @@ const formatDate = (dateStr: string): string => {
   });
 };
 
+interface IDoctorApplication {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  degree: string;
+  specialization: string;
+  licenseNumber: string;
+  experience: number;
+  consultationFee: number;
+  bio: string;
+  avatarUrl: string;
+  certificateUrl: string;
+  district?: string;
+  division?: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
 export default function AdminExpertsManagement() {
   const { status } = useSession();
   const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState<IDoctorApplication | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    designation: "",
-    email: "",
-    phone: "",
-    specialization: "",
-    avatarUrl: "",
-    isVerified: false,
-  });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
-  const { data: expertsData, isLoading: isExpertsLoading } = useExperts({
+  const { data: applicationsData, isLoading: isLoading } = useQuery<{ applications: IDoctorApplication[] }>({
+    queryKey: ["admin-experts-applications"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/experts");
+      if (!res.ok) throw new Error("আবেদন লোড করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
     enabled: status === "authenticated",
   });
 
-  const createExpertMutation = useMutation({
-    mutationFn: async (newExpertData: {
-      name: string;
-      designation: string;
-      email: string;
-      phone: string;
-      specialization: string;
-      avatarUrl: string;
-      isVerified: boolean;
-    }) => {
-      const res = await fetch("/api/admin/experts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newExpertData),
-      });
-      if (!res.ok) {
-        const errorData = await res.json() as { error?: string };
-        throw new Error(errorData.error || "বিশেষজ্ঞ তৈরি করতে ব্যর্থ হয়েছে");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      toast.success("নতুন বিশেষজ্ঞ সফলভাবে তৈরি হয়েছে!");
-      queryClient.invalidateQueries({ queryKey: ["experts"] });
-      setIsModalOpen(false);
-      setFormData({
-        name: "",
-        designation: "",
-        email: "",
-        phone: "",
-        specialization: "",
-        avatarUrl: "",
-        isVerified: false,
-      });
-      setFormErrors({});
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const toggleVerificationMutation = useMutation({
-    mutationFn: async ({ id, isVerified }: { id: string; isVerified: boolean }) => {
+  const approveApplicationMutation = useMutation({
+    mutationFn: async ({ id, action, rejectionReason }: { id: string; action: "approve" | "reject"; rejectionReason?: string }) => {
       const res = await fetch("/api/admin/experts", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, isVerified }),
+        body: JSON.stringify({ id, action, rejectionReason }),
       });
       if (!res.ok) {
         const errorData = await res.json() as { error?: string };
-        throw new Error(errorData.error || "ভেরিফিকেশন আপডেট করতে ব্যর্থ হয়েছে");
+        throw new Error(errorData.error || "আবেদন প্রক্রিয়া করতে ব্যর্থ হয়েছে");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("ভেরিফিকেশন স্ট্যাটাস আপডেট হয়েছে!");
-      queryClient.invalidateQueries({ queryKey: ["experts"] });
+      toast.success("আবেদন সফলভাবে প্রক্রিয়া করা হয়েছে!");
+      queryClient.invalidateQueries({ queryKey: ["admin-experts-applications"] });
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -122,34 +94,6 @@ export default function AdminExpertsManagement() {
     );
   }
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const errors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      errors.name = "নাম অবশ্যই দিতে হবে";
-    }
-    if (!formData.designation.trim()) {
-      errors.designation = "পদবী অবশ্যই দিতে হবে";
-    }
-    if (formData.email && !formData.email.includes("@")) {
-      errors.email = "সঠিক ইমেইল ঠিকানা দিন";
-    }
-    if (!formData.phone.trim()) {
-      errors.phone = "ফোন নম্বর অবশ্যই দিতে হবে";
-    }
-    if (!formData.specialization.trim()) {
-      errors.specialization = "বিশেষীকরণ অবশ্যই দিতে হবে";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    createExpertMutation.mutate(formData);
-  };
-
   return (
     <div className="min-h-screen bg-[var(--background)] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-10">
@@ -158,22 +102,15 @@ export default function AdminExpertsManagement() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border)] pb-8">
           <div>
             <h1 className="text-3xl font-black text-[var(--text)] tracking-tight font-hind">
-              বিশেষজ্ঞ ব্যবস্থাপনা
+              ডাক্তার আবেদন ব্যবস্থাপনা
             </h1>
             <p className="text-[var(--text)]/60 text-sm font-medium mt-1 font-hind">
-              মৎস্য বিশেষজ্ঞদের পরিচালনা এবং ভেরিফিকেশন
+              ডাক্তার আবেদন পর্যালোচনা এবং অনুমোদন
             </p>
           </div>
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            className="sm:w-auto h-12 flex items-center justify-center gap-2 font-hind text-sm font-bold shadow-lg hover:scale-105 transition-all"
-          >
-            <Plus size={18} />
-            নতুন বিশেষজ্ঞ যোগ করুন
-          </Button>
         </div>
 
-        {/* Experts Table */}
+        {/* Applications Table */}
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -183,7 +120,7 @@ export default function AdminExpertsManagement() {
                     নাম
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-[var(--text)]/70 font-hind">
-                    পদবী
+                    ডিগ্রি
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-[var(--text)]/70 font-hind">
                     বিশেষীকরণ
@@ -192,7 +129,7 @@ export default function AdminExpertsManagement() {
                     যোগাযোগ
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-[var(--text)]/70 font-hind">
-                    ভেরিফিকেশন
+                    স্ট্যাটাস
                   </th>
                   <th className="text-left py-4 px-6 text-sm font-bold text-[var(--text)]/70 font-hind">
                     তারিখ
@@ -203,82 +140,64 @@ export default function AdminExpertsManagement() {
                 </tr>
               </thead>
               <tbody>
-                {isExpertsLoading ? (
+                {isLoading ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center">
                       <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin mx-auto" />
                     </td>
                   </tr>
-                ) : !expertsData?.experts || expertsData.experts.length === 0 ? (
+                ) : !applicationsData?.applications || applicationsData.applications.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center">
                       <UserCheck size={48} className="text-[var(--text)]/30 mx-auto mb-4" />
                       <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">
-                        কোনো বিশেষজ্ঞ পাওয়া যায়নি
+                        কোনো আবেদন পাওয়া যায়নি
                       </p>
                     </td>
                   </tr>
                 ) : (
-                  expertsData.experts.map((expert) => (
+                  applicationsData.applications.map((application) => (
                     <tr
-                      key={expert._id}
+                      key={application._id}
                       className="border-b border-[var(--border)]/50 hover:bg-[var(--surface)] transition-colors"
                     >
                       <td className="py-4 px-6 text-sm font-semibold text-[var(--text)] font-hind">
-                        {expert.name}
+                        {application.name}
                       </td>
                       <td className="py-4 px-6 text-sm text-[var(--text)]/80 font-hind">
-                        {expert.designation}
+                        {application.degree}
                       </td>
                       <td className="py-4 px-6 text-sm text-[var(--text)]/80 font-hind flex items-center gap-1">
                         <Award size={14} />
-                        {expert.specialization}
+                        {application.specialization}
                       </td>
                       <td className="py-4 px-6 text-sm text-[var(--text)]/80 font-hind space-y-1">
-                        {expert.email && (
-                          <div className="flex items-center gap-1">
-                            <Mail size={12} />
-                            {expert.email}
-                          </div>
-                        )}
-                        {expert.phone && (
-                          <div className="flex items-center gap-1">
-                            <Phone size={12} />
-                            {expert.phone}
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1">
+                          <Mail size={12} />
+                          {application.email}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Phone size={12} />
+                          {application.phone}
+                        </div>
                       </td>
                       <td className="py-4 px-6">
-                        <button
-                          onClick={() =>
-                            toggleVerificationMutation.mutate({
-                              id: expert._id,
-                              isVerified: !expert.isVerified,
-                            })
-                          }
-                          disabled={toggleVerificationMutation.isPending}
-                          className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full font-hind transition-colors ${
-                            expert.isVerified
-                              ? "bg-green-100 text-green-800 hover:bg-green-200"
-                              : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-                          }`}
-                        >
-                          {expert.isVerified ? (
-                            <>
-                              <ShieldCheck size={12} />
-                              ভেরিফাইড
-                            </>
-                          ) : (
-                            <>
-                              <ShieldX size={12} />
-                              পেন্ডিং
-                            </>
-                          )}
-                        </button>
+                        <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full font-hind ${
+                          application.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : application.status === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {application.status === "approved" && <ShieldCheck size={12} />}
+                          {application.status === "rejected" && <ShieldX size={12} />}
+                          {application.status === "pending" && <ShieldX size={12} />}
+                          {application.status === "approved" ? "অনুমোদিত" : application.status === "rejected" ? "বাতিল" : "পেন্ডিং"}
+                        </span>
                       </td>
                       <td className="py-4 px-6 text-sm text-[var(--text)]/60 font-hind flex items-center gap-1">
                         <Calendar size={14} />
-                        {formatDate(expert.createdAt)}
+                        {formatDate(application.createdAt)}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
@@ -286,18 +205,38 @@ export default function AdminExpertsManagement() {
                             variant="outline"
                             size="sm"
                             className="font-hind text-xs"
-                            onClick={() => toast.info("সম্পাদনা ফিচার শীঘ্রই আসছে")}
+                            onClick={() => {
+                              setSelectedApplication(application);
+                              setIsDetailsModalOpen(true);
+                            }}
                           >
-                            <Edit size={14} />
+                            <Eye size={14} />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="font-hind text-xs text-red-600 hover:text-red-700"
-                            onClick={() => toast.info("মুছে ফেলা ফিচার শীঘ্রই আসছে")}
-                          >
-                            <Trash2 size={14} />
-                          </Button>
+                          {application.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="bg-green-500 hover:bg-green-600 text-white font-hind text-xs"
+                                onClick={() => approveApplicationMutation.mutate({ id: application._id, action: "approve" })}
+                                disabled={approveApplicationMutation.isPending}
+                              >
+                                <Check size={14} />
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-red-500 hover:bg-red-600 text-white font-hind text-xs"
+                                onClick={() => {
+                                  const reason = prompt("বাতিলের কারণ লিখুন:");
+                                  if (reason) {
+                                    approveApplicationMutation.mutate({ id: application._id, action: "reject", rejectionReason: reason });
+                                  }
+                                }}
+                                disabled={approveApplicationMutation.isPending}
+                              >
+                                <XIcon size={14} />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -308,116 +247,92 @@ export default function AdminExpertsManagement() {
           </div>
         </Card>
 
-        {/* Create Expert Modal */}
-        {isModalOpen && (
+        {/* Details Modal */}
+        {isDetailsModalOpen && selectedApplication && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-            <Card className="bg-[var(--surface)] w-full max-w-md border border-[var(--border)] relative shadow-2xl p-6 rounded-2xl flex flex-col justify-between animate-in slide-in-from-bottom-12 duration-400 max-h-[90vh] overflow-y-auto">
-              
+            <Card className="bg-[var(--surface)] w-full max-w-2xl border border-[var(--border)] relative shadow-2xl p-6 rounded-2xl flex flex-col max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-[var(--border)] pb-4 mb-5">
                 <h3 className="text-xl font-bold text-[var(--text)] font-hind flex items-center gap-2">
                   <UserCheck className="text-[var(--primary)]" size={20} />
-                  নতুন বিশেষজ্ঞ যোগ করুন
+                  আবেদনকারীর বিস্তারিত
                 </h3>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => setIsDetailsModalOpen(false)}
                   className="p-1.5 hover:bg-[var(--border)] text-[var(--text)]/60 hover:text-[var(--text)] rounded-lg transition-colors"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-                <Input
-                  label="নাম"
-                  id="name"
-                  placeholder="যেমন: ড. মোহাম্মদ আব্দুল করিম"
-                  className="font-hind"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  error={formErrors.name}
-                />
-
-                <Input
-                  label="পদবী"
-                  id="designation"
-                  placeholder="যেমন: সিনিয়র উপজেলা মৎস্য কর্মকর্তা"
-                  className="font-hind"
-                  value={formData.designation}
-                  onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                  error={formErrors.designation}
-                />
-
-                <Input
-                  label="ইমেইল"
-                  id="email"
-                  type="email"
-                  placeholder="expert@example.com"
-                  className="font-hind"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  error={formErrors.email}
-                />
-
-                <Input
-                  label="ফোন নম্বর"
-                  id="phone"
-                  placeholder="যেমন: +880 1712-345678"
-                  className="font-hind"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  error={formErrors.phone}
-                />
-
-                <Input
-                  label="বিশেষীকরণ"
-                  id="specialization"
-                  placeholder="যেমন: পুকুর ব্যবস্থাপনা"
-                  className="font-hind"
-                  value={formData.specialization}
-                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  error={formErrors.specialization}
-                />
-
-                <Input
-                  label="অ্যাভাতার URL"
-                  id="avatarUrl"
-                  placeholder="https://example.com/avatar.jpg"
-                  className="font-hind"
-                  value={formData.avatarUrl}
-                  onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-                />
-
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="is-verified"
-                    checked={formData.isVerified}
-                    onChange={(e) => setFormData({ ...formData, isVerified: e.target.checked })}
-                    className="w-4 h-4 accent-[var(--primary)]"
-                  />
-                  <label htmlFor="is-verified" className="text-sm font-semibold text-[var(--text)] font-hind">
-                    ভেরিফাইড হিসেবে চিহ্নিত করুন
-                  </label>
+              <div className="space-y-6">
+                <div className="flex items-start gap-6">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--border)]">
+                    <img
+                      src={selectedApplication.avatarUrl}
+                      alt={selectedApplication.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-2xl font-bold text-[var(--text)] font-hind">{selectedApplication.name}</h4>
+                    <p className="text-sm text-[var(--text)]/60 font-hind mt-1">{selectedApplication.degree}</p>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-[var(--text)]/80 font-hind">
+                      <span className="flex items-center gap-1">
+                        <Mail size={14} />
+                        {selectedApplication.email}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Phone size={14} />
+                        {selectedApplication.phone}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-[var(--border)] mt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsModalOpen(false)}
-                    className="flex-1 font-hind text-sm h-11"
-                  >
-                    বাতিল
-                  </Button>
-                  <Button
-                    type="submit"
-                    isLoading={createExpertMutation.isPending}
-                    className="flex-1 font-hind text-sm h-11"
-                  >
-                    বিশেষজ্ঞ তৈরি করুন
-                  </Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-[var(--text)]/60 font-hind mb-1">বিশেষীকরণ</p>
+                    <p className="text-sm font-bold text-[var(--text)] font-hind">{selectedApplication.specialization}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--text)]/60 font-hind mb-1">অভিজ্ঞতা</p>
+                    <p className="text-sm font-bold text-[var(--text)] font-hind">{selectedApplication.experience} বছর</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--text)]/60 font-hind mb-1">কনসালটেশন ফি</p>
+                    <p className="text-sm font-bold text-[var(--text)] font-hind">৳ {selectedApplication.consultationFee}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--text)]/60 font-hind mb-1">লাইসেন্স নম্বর</p>
+                    <p className="text-sm font-bold text-[var(--text)] font-hind">{selectedApplication.licenseNumber}</p>
+                  </div>
                 </div>
-              </form>
+
+                <div>
+                  <p className="text-xs text-[var(--text)]/60 font-hind mb-1">বায়োগ্রাফি</p>
+                  <p className="text-sm text-[var(--text)]/80 font-hind">{selectedApplication.bio}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-[var(--text)]/60 font-hind mb-2">সার্টিফিকেট</p>
+                  <div className="border border-[var(--border)] rounded-lg overflow-hidden">
+                    <img
+                      src={selectedApplication.certificateUrl}
+                      alt="Certificate"
+                      className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(selectedApplication.certificateUrl, '_blank')}
+                    />
+                  </div>
+                </div>
+
+                {selectedApplication.district && selectedApplication.division && (
+                  <div className="flex items-center gap-4 text-sm text-[var(--text)]/60 font-hind">
+                    <span>জেলা: {selectedApplication.district}</span>
+                    <span>•</span>
+                    <span>বিভাগ: {selectedApplication.division}</span>
+                  </div>
+                )}
+              </div>
             </Card>
           </div>
         )}

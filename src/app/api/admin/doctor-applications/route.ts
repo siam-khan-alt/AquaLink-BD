@@ -17,7 +17,9 @@ export async function GET() {
 
     await connectDB();
 
-    const applications = await DoctorApplication.find({ status: "pending" }).sort({ createdAt: -1 });
+    const applications = await DoctorApplication.find({ status: "pending" })
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ applications });
   } catch (error) {
