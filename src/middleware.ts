@@ -48,6 +48,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith('/dashboard/doctor')) {
+    if (userRole !== 'doctor') {
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 

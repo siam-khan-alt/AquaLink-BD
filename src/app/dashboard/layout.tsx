@@ -7,7 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { 
   Bell, User, LogOut, Waves, ChevronDown, Menu, X,
-  LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator
+  LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator, Calendar, Stethoscope, UserCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -43,6 +43,15 @@ const adminNavItems: NavItem[] = [
   { label: "জরুরি সতর্কতা", href: "/dashboard/admin/alerts", icon: <AlertTriangle size={20} /> },
   { label: "বুটক্যাম্প ব্যবস্থাপনা", href: "/dashboard/admin/courses", icon: <BookOpen size={20} /> },
   { label: "সাপোর্ট ইনবক্স", href: "/dashboard/chat", icon: <MessageSquare size={20} /> },
+];
+
+const doctorNavItems: NavItem[] = [
+  { label: "ওভারভিউ", href: "/dashboard/doctor", icon: <LayoutDashboard size={20} /> },
+  { label: "কনসালটেশন রিকোয়েস্ট", href: "/dashboard/doctor/consultations", icon: <Stethoscope size={20} /> },
+  { label: "রোগী ইতিহাস", href: "/dashboard/doctor/patients", icon: <Users size={20} /> },
+  { label: "সময়সূচি", href: "/dashboard/doctor/schedule", icon: <Calendar size={20} /> },
+  { label: "প্রোফাইল", href: "/dashboard/doctor/profile", icon: <UserCircle size={20} /> },
+  { label: "মেসেজ", href: "/dashboard/chat", icon: <MessageSquare size={20} /> },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -81,7 +90,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push("/login");
   };
 
-  const navItems = session?.user?.role === "admin" ? adminNavItems : farmerNavItems;
+  const navItems = session?.user?.role === "admin" 
+    ? adminNavItems 
+    : session?.user?.role === "doctor" 
+      ? doctorNavItems 
+      : farmerNavItems;
 
   if (status === "loading") {
     return (
@@ -177,7 +190,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-[var(--text)] truncate font-hind">{session?.user?.name || "ব্যবহারকারী"}</p>
-              <p className="text-xs text-[var(--text)]/60 font-hind capitalize">{session?.user?.role === "admin" ? "অ্যাডমিন" : "চাষি"}</p>
+              <p className="text-xs text-[var(--text)]/60 font-hind capitalize">
+                {session?.user?.role === "admin" ? "অ্যাডমিন" : session?.user?.role === "doctor" ? "ডাক্তার" : "চাষি"}
+              </p>
             </div>
           </div>
         </div>
