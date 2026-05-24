@@ -56,12 +56,16 @@ export const metadata: Metadata = {
 
 
 export default async function Home() {
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
   let tickerData: IMarketPrice[] = [];
-  try {
-    tickerData = await getTickerMarketPrices(12);
-  } catch (error) {
-    console.error("Failed to fetch ticker market prices during build:", error);
-    tickerData = [];
+
+  if (!isBuildPhase) {
+    try {
+      tickerData = await getTickerMarketPrices(12);
+    } catch (error) {
+      console.error("Failed to fetch ticker market prices:", error);
+      tickerData = [];
+    }
   }
 
   return (
