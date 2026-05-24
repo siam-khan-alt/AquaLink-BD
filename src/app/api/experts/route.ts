@@ -9,11 +9,7 @@ export async function GET(request: Request) {
 
     await connectDB();
 
-    const query: {
-      role: string;
-      isVerified: boolean;
-      specialization?: { $regex: RegExp; $options: string };
-    } = {
+    const query: Record<string, unknown> = {
       role: "doctor",
       isVerified: true,
     };

@@ -105,12 +105,16 @@ export async function POST(req: NextRequest) {
 
       // Send notification to doctor via Chat module
       if (transaction.doctorId && transaction.metadata) {
+        const farmerName = (transaction.metadata.farmerName as string) || (session.user.name as string) || "চাষি";
+        const doctorName = (transaction.metadata.doctorName as string) || "ডাক্তার";
+        const doctorSpecialization = (transaction.metadata.doctorSpecialization as string) || "মৎস্য চাষ";
+        
         await sendConsultationNotification(
           transaction.userId,
           transaction.doctorId,
-          transaction.metadata.farmerName || session.user.name,
-          transaction.metadata.doctorName || "ডাক্তার",
-          transaction.metadata.doctorSpecialization || "মৎস্য চাষ"
+          farmerName,
+          doctorName,
+          doctorSpecialization
         );
       }
 
@@ -178,12 +182,16 @@ export async function GET(req: NextRequest) {
 
       // Send notification to doctor via Chat module
       if (transaction.doctorId && transaction.metadata) {
+        const farmerName = (transaction.metadata.farmerName as string) || (session.user.name as string) || "চাষি";
+        const doctorName = (transaction.metadata.doctorName as string) || "ডাক্তার";
+        const doctorSpecialization = (transaction.metadata.doctorSpecialization as string) || "মৎস্য চাষ";
+        
         await sendConsultationNotification(
           transaction.userId,
           transaction.doctorId,
-          transaction.metadata.farmerName || session.user.name,
-          transaction.metadata.doctorName || "ডাক্তার",
-          transaction.metadata.doctorSpecialization || "মৎস্য চাষ"
+          farmerName,
+          doctorName,
+          doctorSpecialization
         );
       }
 

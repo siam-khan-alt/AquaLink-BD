@@ -70,15 +70,15 @@ const TransactionSchema = new Schema<ITransaction>(
 );
 
 // Pre-save middleware to calculate commission for consultation payments
-TransactionSchema.pre("save", function (_next) {
-  if (this.type === "consultation" && this.status === "paid" && !this.adminCommission && !this.doctorEarnings) {
-    const adminCommission = this.amount * 0.1; // 10% commission
-    const doctorEarnings = this.amount * 0.9; // 90% earnings
+TransactionSchema.pre("save", function () {
+  const doc = this as ITransaction;
+  if (doc.type === "consultation" && doc.status === "paid" && !doc.adminCommission && !doc.doctorEarnings) {
+    const adminCommission = doc.amount * 0.1; // 10% commission
+    const doctorEarnings = doc.amount * 0.9; // 90% earnings
     
-    this.adminCommission = adminCommission;
-    this.doctorEarnings = doctorEarnings;
+    doc.adminCommission = adminCommission;
+    doc.doctorEarnings = doctorEarnings;
   }
-  _next();
 });
 
 const Transaction =
