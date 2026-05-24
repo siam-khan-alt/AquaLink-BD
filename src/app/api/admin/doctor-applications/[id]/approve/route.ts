@@ -13,7 +13,7 @@ const approveSchema = z.object({
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,7 +30,8 @@ export async function POST(
 
     await connectDB();
 
-    const application = await DoctorApplication.findById(params.id);
+    const { id } = await params;
+    const application = await DoctorApplication.findById(id);
 
     if (!application) {
       return NextResponse.json(
