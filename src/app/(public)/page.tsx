@@ -17,6 +17,7 @@ import BecomeExpertCTA from "@/features/home/components/BecomeExpertCTA";
 import { getTickerMarketPrices } from "@/features/home/services/marketQueries";
 import { Metadata } from "next";
 import VoiceSearchWrapper from "@/features/home/components/VoiceSearchWrapper";
+import type { IMarketPrice } from "@/shared/types/market";
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -55,7 +56,13 @@ export const metadata: Metadata = {
 
 
 export default async function Home() {
-  const tickerData = await getTickerMarketPrices(12);
+  let tickerData: IMarketPrice[] = [];
+  try {
+    tickerData = await getTickerMarketPrices(12);
+  } catch (error) {
+    console.error("Failed to fetch ticker market prices during build:", error);
+    tickerData = [];
+  }
 
   return (
     <div>
