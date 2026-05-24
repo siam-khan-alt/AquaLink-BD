@@ -1,5 +1,7 @@
 import { TriangleAlert } from "lucide-react";
 import { Card, Chip } from "@heroui/react";
+import { connectDB } from "@/shared/lib/db";
+import { EmergencyDiseaseAlert } from "@/models/EmergencyDiseaseAlert";
 
 interface Alert {
   _id?: string;
@@ -8,20 +10,7 @@ interface Alert {
   detail: string;
   level: "info" | "warning" | "danger";
   isActive: boolean;
-  createdAt: string;
-}
-
-async function getAlerts(): Promise<Alert[]> {
-  try {
-    const res = await fetch("/api/home/alerts", {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.alerts || [];
-  } catch {
-    return [];
-  }
+  createdAt: string | Date;
 }
 
 function mapLevelToDisplay(level: "info" | "warning" | "danger"): "high" | "medium" {
@@ -44,7 +33,24 @@ function getChipColor(level: "high" | "medium"): string {
 }
 
 export default async function EmergencyDiseaseAlerts() {
-  const alerts = await getAlerts();
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+  let alerts: Alert[] = [];
+
+  if (!isBuildPhase) {
+    try {
+      await connectDB();
+      const rawAlerts = await EmergencyDiseaseAlert.find({ isActive: true })
+        .sort({ createdAt: -1 })
+        .lean();
+      alerts = rawAlerts.map((alert) => ({
+        ...alert,
+        _id: alert._id?.toString(),
+      })) as Alert[];
+    } catch (error) {
+      console.error("Failed to fetch emergency disease alerts:", error);
+      alerts = [];
+    }
+  }
 
   return (
     <Card className="rounded-3xl bg-[var(--surface)]/40 p-6">
