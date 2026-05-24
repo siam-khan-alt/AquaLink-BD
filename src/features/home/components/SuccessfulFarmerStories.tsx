@@ -42,19 +42,17 @@ function getStoryDuration(index: number): string {
 }
 
 export default function SuccessfulFarmerStories() {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    setIsMounted(true);
     getStories().then((data) => {
       setStories(data);
       setIsLoading(false);
     });
   }, []);
 
-  if (!isMounted || isLoading) {
+  if (isLoading) {
     return (
       <section className="space-y-8">
         <div className="flex items-center justify-between">

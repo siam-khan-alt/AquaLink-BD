@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Play, Clock, Eye } from "lucide-react";
 import { Card, CardFooter, Chip } from "@heroui/react";
 
@@ -44,32 +44,6 @@ const mockVideos: VideoItem[] = [
 ];
 
 export default function FarmingVideoShowcase() {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-black text-[var(--text)] mb-2 font-hind">
-            মাছ চাষের ভিডিও টিউটোরিয়াল
-          </h2>
-          <p className="text-sm text-[var(--text)]/60 font-hind">
-            বিশেষজ্ঞদের থেকে মাছ চাষের আধুনিক কৌশল শিখুন
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="aspect-video rounded-2xl bg-[var(--surface)] animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">

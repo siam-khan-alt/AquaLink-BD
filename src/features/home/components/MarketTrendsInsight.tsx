@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUp, Fish, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
 import Card from "@/components/ui/Card";
@@ -54,7 +54,6 @@ const getDayName = (dateStr: string): string => {
 };
 
 export default function MarketTrendsInsight() {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
   const { data: trendsData, isLoading, error } = useQuery<TrendsResponse>({
     queryKey: ["market-trends"],
     queryFn: async () => {
@@ -64,10 +63,6 @@ export default function MarketTrendsInsight() {
     },
     refetchInterval: 60000, // Refetch every minute
   });
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   if (isLoading) {
     return (
@@ -89,18 +84,6 @@ export default function MarketTrendsInsight() {
             <p className="text-sm text-[var(--text)]/60 font-hind">
               বাজার দর তথ্য লোড করতে ব্যর্থ হয়েছে
             </p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!isMounted) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <Card className="bg-[var(--surface)] border border-[var(--border)] p-6">
-          <div className="flex items-center justify-center h-48">
-            <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
           </div>
         </Card>
       </div>

@@ -1,22 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { TrendingUp, Scale, DollarSign, Calculator, Download, Loader2 } from "lucide-react";
 import { Card, Button } from "@heroui/react";
 import { toast } from "sonner";
 
 export default function ProfitCalculatorWidget() {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
   const [pondSize, setPondSize] = useState<number>(1);
   const [fishCount, setFishCount] = useState<number>(1000);
   const [feedCostPerKg, setFeedCostPerKg] = useState<number>(80);
   const [expectedGrowth, setExpectedGrowth] = useState<number>(500);
   const [marketPricePerKg, setMarketPricePerKg] = useState<number>(350);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const calculations = useMemo(() => {
     const totalFishWeight = (fishCount * expectedGrowth) / 1000;
@@ -81,16 +76,6 @@ export default function ProfitCalculatorWidget() {
       setIsDownloading(false);
     }
   };
-
-  if (!isMounted) {
-    return (
-      <div className="backdrop-blur-xl bg-white/[0.02] border border-white/[0.08] shadow-2xl rounded-2xl p-6">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Card className="backdrop-blur-xl bg-white/[0.02] border border-white/[0.08] shadow-2xl rounded-2xl p-6">

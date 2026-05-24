@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
   UserCheck,
@@ -21,22 +21,7 @@ import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-interface IExpert {
-  _id: string;
-  name: string;
-  designation: string;
-  email?: string;
-  phone?: string;
-  specialization: string;
-  avatarUrl: string;
-  isVerified: boolean;
-  createdAt: string;
-}
-
-interface IExpertsResponse {
-  experts: IExpert[];
-}
+import { useExperts } from "@/shared/hooks/useExperts";
 
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {
@@ -62,13 +47,7 @@ export default function AdminExpertsManagement() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const { data: expertsData, isLoading: isExpertsLoading } = useQuery<IExpertsResponse>({
-    queryKey: ["admin-experts"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/experts");
-      if (!res.ok) throw new Error("বিশেষজ্ঞ লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
+  const { data: expertsData, isLoading: isExpertsLoading } = useExperts({
     enabled: status === "authenticated",
   });
 
@@ -95,7 +74,7 @@ export default function AdminExpertsManagement() {
     },
     onSuccess: () => {
       toast.success("নতুন বিশেষজ্ঞ সফলভাবে তৈরি হয়েছে!");
-      queryClient.invalidateQueries({ queryKey: ["admin-experts"] });
+      queryClient.invalidateQueries({ queryKey: ["experts"] });
       setIsModalOpen(false);
       setFormData({
         name: "",
@@ -128,7 +107,7 @@ export default function AdminExpertsManagement() {
     },
     onSuccess: () => {
       toast.success("ভেরিফিকেশন স্ট্যাটাস আপডেট হয়েছে!");
-      queryClient.invalidateQueries({ queryKey: ["admin-experts"] });
+      queryClient.invalidateQueries({ queryKey: ["experts"] });
     },
     onError: (error: Error) => {
       toast.error(error.message);

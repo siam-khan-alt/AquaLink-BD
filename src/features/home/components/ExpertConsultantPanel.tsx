@@ -1,19 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Mail, Phone, Shield, Award } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { ScrollShadow, Avatar } from "@heroui/react";
-
-interface Expert {
-  _id?: string;
-  name: string;
-  designation: string;
-  email: string;
-  phone: string;
-  specialization: string;
-  avatarUrl: string;
-}
+import { useExperts } from "@/shared/hooks/useExperts";
 
 function getInitials(name: string): string {
   const words = name.split(" ");
@@ -24,32 +15,10 @@ function getInitials(name: string): string {
 }
 
 export default function ExpertConsultantPanel() {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-  const [experts, setExperts] = useState<Expert[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: expertsData, isLoading } = useExperts();
+  const experts = expertsData?.experts || [];
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    async function fetchExperts() {
-      try {
-        const res = await fetch("/api/home/experts");
-        if (res.ok) {
-          const data = await res.json();
-          setExperts(data.experts || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch experts:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchExperts();
-  }, []);
-
-  if (!isMounted) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">

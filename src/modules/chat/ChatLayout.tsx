@@ -132,36 +132,22 @@ export default function ChatLayout() {
 
   // চ্যাট লিস্ট লোড করার ইফেক্ট
   useEffect(() => {
-    let isMounted = true;
-    
     const loadChats = async () => {
-      if (isMounted) {
-        await fetchChats();
-      }
+      await fetchChats();
     };
 
     loadChats();
-
-    return () => {
-      isMounted = false;
-    };
   }, [fetchChats]);
 
   // মেসেজ লোড করার ইফেক্ট
   useEffect(() => {
-    let isMounted = true;
-
     const loadMessages = async () => {
-      if (selectedChat?._id && isMounted) {
+      if (selectedChat?._id) {
         await fetchMessages(selectedChat._id);
       }
     };
 
     loadMessages();
-
-    return () => {
-      isMounted = false;
-    };
   }, [selectedChat?._id, fetchMessages]);
 
   const handleSendMessage = async () => {
