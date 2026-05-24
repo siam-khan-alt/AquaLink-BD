@@ -42,6 +42,4 @@ EnrollmentSchema.index({ userId: 1, courseId: 1 });
 EnrollmentSchema.index({ transactionId: 1 });
 EnrollmentSchema.index({ paymentStatus: 1 });
 
-const Enrollment = (models.Enrollment as Model<IEnrollment>) || model<IEnrollment>("Enrollment", EnrollmentSchema);
-
-export default Enrollment;
+export const Enrollment = (models.Enrollment as Model<IEnrollment>) || model<IEnrollment>("Enrollment", EnrollmentSchema);

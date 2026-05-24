@@ -3,9 +3,25 @@ import puppeteer from "puppeteer";
 
 export const maxDuration = 60;
 
+interface PDFRequestData {
+  pondSize: string;
+  fishCount: string;
+  feedCostPerKg: string;
+  expectedGrowth: string;
+  marketPricePerKg: string;
+  totalFishWeight: string;
+  totalRevenue: string;
+  totalFeedNeeded: string;
+  totalFeedCost: string;
+  otherCosts: string;
+  totalCost: string;
+  netProfit: string;
+  roi: string;
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json() as PDFRequestData;
     const {
       pondSize,
       fishCount,
@@ -218,13 +234,46 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    const isLocalWindows = process.platform === "win32";
+    // Environment-aware Chrome executable path configuration
+    const getExecutablePath = (): string | undefined => {
+      const platform = process.platform;
+      
+      // Production Linux environments (Vercel, Docker, etc.)
+      if (platform === "linux") {
+        return process.env.PUPPETEER_EXECUTABLE_PATH || 
+               process.env.CHROME_EXECUTABLE_PATH ||
+               "/usr/bin/chromium-browser" ||
+               "/usr/bin/chromium" ||
+               "/usr/bin/google-chrome" ||
+               "/usr/bin/google-chrome-stable";
+      }
+      
+      // Local Windows development
+      if (platform === "win32") {
+        return process.env.PUPPETEER_EXECUTABLE_PATH || 
+               "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+      }
+      
+      // Local macOS development
+      if (platform === "darwin") {
+        return process.env.PUPPETEER_EXECUTABLE_PATH || 
+               "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+      }
+      
+      // Fallback to environment variable or undefined (let Puppeteer decide)
+      return process.env.PUPPETEER_EXECUTABLE_PATH;
+    };
 
     const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-      executablePath: isLocalWindows 
-        ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-        : process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium-browser",
+      args: [
+        "--no-sandbox", 
+        "--disable-setuid-sandbox", 
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-default-browser-check"
+      ],
+      executablePath: getExecutablePath(),
       headless: true,
     });
 
@@ -248,6 +297,7 @@ export async function POST(req: Request) {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Failed to generate PDF";
+    console.error("PDF generation error:", errorMessage);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

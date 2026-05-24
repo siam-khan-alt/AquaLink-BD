@@ -10,6 +10,7 @@ import {
   LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, TrendingUp, BookOpen, MessageSquare, DollarSign, Calculator
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface NavItem {
   label: string;
@@ -98,6 +99,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
 
@@ -108,19 +110,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}>
         {/* Logo and Close button for Mobile */}
         <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
-          <Link href="/dashboard" className="flex items-center gap-3" onClick={() => setSidebarOpen(false)}>
+          <Link href="/dashboard" className="flex items-center gap-3" onClick={() => setSidebarOpen(false)} aria-label="মৎস্য বন্ধু ড্যাশবোর্ড">
             <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center">
-              <Waves className="text-white" size={24} />
+              <Waves className="text-white" size={24} aria-hidden="true" />
             </div>
             <span className="text-xl font-bold text-[var(--text)] font-hind">মৎস্য বন্ধু</span>
           </Link>
-          <button className="lg:hidden p-2 text-[var(--text)]/80" onClick={() => setSidebarOpen(false)}>
+          <button className="lg:hidden p-2 text-[var(--text)]/80" onClick={() => setSidebarOpen(false)} aria-label="সাইডবার বন্ধ করুন">
             <X size={22} />
           </button>
         </div>
 
         {/* Navigation links */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto p-4 space-y-2" aria-label="ড্যাশবোর্ড নেভিগেশন">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -132,6 +134,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-hind font-semibold",
                   isActive ? "bg-[var(--primary)] text-white shadow-lg" : "text-[var(--text)] hover:bg-[var(--border)]"
                 )}
+                aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -144,6 +148,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link
             href="/"
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--text)] hover:text-[var(--text)] hover:bg-[var(--border)] transition-all duration-200 font-hind font-semibold border border-dashed border-[var(--border)]"
+            aria-label="মূল ওয়েবসাইটে যান"
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
@@ -155,6 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
@@ -187,6 +193,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button 
               onClick={() => setSidebarOpen(true)}
               className="p-2 hover:bg-[var(--border)] rounded-lg transition-colors lg:hidden text-[var(--text)]"
+              aria-label="সাইডবার খুলুন"
             >
               <Menu size={24} />
             </button>
@@ -202,9 +209,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <button
                   onClick={() => setNotificationOpen(!notificationOpen)}
                   className="relative p-2 hover:bg-[var(--border)] rounded-lg transition-colors"
+                  aria-label="নোটিফিকেশন"
+                  aria-expanded={notificationOpen}
                 >
                   <Bell size={22} className="text-[var(--text)]" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" aria-hidden="true" />
                 </button>
 
                 {/* Notification Dropdown */}
@@ -214,7 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="fixed inset-0 z-40"
                       onClick={() => setNotificationOpen(false)}
                     />
-                    <div className="absolute max-sm:fixed max-sm:top-16 max-sm:left-4 max-sm:right-4 right-0 mt-2 sm:w-80 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden transition-all duration-200">
+                    <div className="absolute max-sm:fixed max-sm:top-16 max-sm:left-4 max-sm:right-4 right-0 mt-2 sm:w-80 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden transition-all duration-200" role="dialog" aria-label="নোটিফিকেশন">
                       <div className="p-4 border-b border-[var(--border)]">
                         <h3 className="text-sm font-bold text-[var(--text)] font-hind">
                           নোটিফিকেশন
@@ -267,11 +276,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center gap-2 p-2 hover:bg-[var(--border)] rounded-lg transition-colors"
+                  aria-label="প্রোফাইল মেনু"
+                  aria-expanded={profileOpen}
                 >
                   <div className="w-9 h-9 bg-[var(--primary)]/20 rounded-full flex items-center justify-center">
-                    <User size={18} className="text-[var(--primary)]" />
+                    <User size={18} className="text-[var(--primary)]" aria-hidden="true" />
                   </div>
-                  <ChevronDown size={16} className="text-[var(--text)]" />
+                  <ChevronDown size={16} className="text-[var(--text)]" aria-hidden="true" />
                 </button>
 
                 {profileOpen && (
@@ -280,7 +291,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className="fixed inset-0 z-40"
                       onClick={() => setProfileOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden" role="menu" aria-label="প্রোফাইল মেনু">
                       <div className="p-4 border-b border-[var(--border)]">
                         <p className="text-sm font-bold text-[var(--text)] font-hind">
                           {session?.user?.name || "ব্যবহারকারী"}
@@ -293,8 +304,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <button
                           onClick={handleLogout}
                           className="w-full flex items-center gap-3 px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--border)] rounded-lg transition-colors font-hind font-semibold"
+                          role="menuitem"
                         >
-                          <LogOut size={18} />
+                          <LogOut size={18} aria-hidden="true" />
                           লগআউট
                         </button>
                       </div>
@@ -308,7 +320,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Dashboard Dynamic Page Render Screen */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
     </div>

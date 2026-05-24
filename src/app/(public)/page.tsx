@@ -15,7 +15,43 @@ import FishDiseaseVisionPreview from "@/features/home/components/FishDiseaseVisi
 import ExpertConsultantPanel from "@/features/home/components/ExpertConsultantPanel";
 import CommunityDiscussions from "@/features/home/components/CommunityDiscussions";
 import { getTickerMarketPrices } from "@/features/home/services/marketQueries";
-export const dynamic = "force-dynamic";
+import { Metadata } from "next";
+
+export const revalidate = 300; // Revalidate every 5 minutes
+
+export const metadata: Metadata = {
+  title: "মৎস্য বন্ধু - বাংলাদেশের স্মার্ট মৎস্য চাষ প্ল্যাটফর্ম",
+  description: "মৎস্য বন্ধু - বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
+  keywords: "মৎস্য চাষ, মাছ চাষ, বাংলাদেশ মৎস্য চাষ, মৎস্য বন্ধু, ফিশ ফার্মিং, মাছের বাজার দর, মৎস্য রোগ নির্ণয়, স্মার্ট মৎস্য চাষ",
+  openGraph: {
+    title: "মৎস্য বন্ধু - বাংলাদেশের স্মার্ট মৎস্য চাষ প্ল্যাটফর্ম",
+    description: "বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://aqualink-bd.com",
+    siteName: "মৎস্য বন্ধু",
+    locale: "bn_BD",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "মৎস্য বন্ধু - বাংলাদেশের স্মার্ট মৎস্য চাষ প্ল্যাটফর্ম",
+    description: "বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+};
+
 export default async function Home() {
   const tickerData = await getTickerMarketPrices(12);
 

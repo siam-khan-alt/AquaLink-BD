@@ -58,12 +58,20 @@ export default function VoiceSearchGate() {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>("");
   const [interimTranscript, setInterimTranscript] = useState<string>("");
+  const [isMounted, setIsMounted] = useState<boolean>(false);
   const isSpeechSupported = useMemo(() => {
     return typeof window !== "undefined" && 
       ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
   }, []);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isMountedRef = useRef<boolean>(true);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -210,6 +218,25 @@ export default function VoiceSearchGate() {
       toast.error("দুঃখিত, আপনার অনুসন্ধানটি বুঝতে পারিনি। দয়া করে মাছের বাজার দর, রোগ বা সমাধান সংক্রান্ত বিষয়ে কথা বলুন।");
     }
   };
+
+  if (!isMounted) {
+    return (
+      <Card className="backdrop-blur-xl bg-white/[0.02] border border-white/[0.08] shadow-2xl rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-[var(--primary)]/10 rounded-xl">
+            <Search className="text-[var(--primary)]" size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-[var(--text)]">ভয়েস সার্চ</h3>
+            <p className="text-xs font-bold text-[var(--text)]/50">কথা বলে খুঁজুন</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]" />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="backdrop-blur-xl bg-white/[0.02] border border-white/[0.08] shadow-2xl rounded-2xl p-6">

@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 export interface IWaterQualityLog extends Document {
-  pondId: string;
+  pondId: Types.ObjectId;
   ph: number;
   dissolvedOxygen: number;
   ammonia: number;
@@ -12,9 +12,10 @@ export interface IWaterQualityLog extends Document {
 const WaterQualityLogSchema: Schema = new Schema(
   {
     pondId: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: [true, "Pond ID is required"],
       index: true,
+      ref: "Pond",
     },
     ph: {
       type: Number,
@@ -50,8 +51,6 @@ const WaterQualityLogSchema: Schema = new Schema(
 WaterQualityLogSchema.index({ pondId: 1, loggedAt: -1 });
 WaterQualityLogSchema.index({ loggedAt: -1 });
 
-const WaterQualityLog =
+export const WaterQualityLog: Model<IWaterQualityLog> =
   mongoose.models.WaterQualityLog ||
   mongoose.model<IWaterQualityLog>("WaterQualityLog", WaterQualityLogSchema);
-
-export default WaterQualityLog;

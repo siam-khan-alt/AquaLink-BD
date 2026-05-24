@@ -24,8 +24,13 @@ function getInitials(name: string): string {
 }
 
 export default function ExpertConsultantPanel() {
+  const [isMounted, setIsMounted] = useState<boolean>(false);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     async function fetchExperts() {
@@ -43,6 +48,31 @@ export default function ExpertConsultantPanel() {
     }
     fetchExperts();
   }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-xl flex items-center justify-center">
+            <Shield size={20} className="text-[var(--primary)]" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-[var(--text)] font-hind">
+              বিশেষজ্ঞ পরামর্শ প্যানেল
+            </h2>
+            <p className="text-sm text-[var(--text)]/60 font-hind">
+              অভিজ্ঞ মৎস্য কর্মকর্তাদের সাথে সরাসরি যোগাযোগ করুন
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex-shrink-0 w-72 h-80 bg-[var(--surface)] rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

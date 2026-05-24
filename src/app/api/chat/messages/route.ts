@@ -1,7 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { Message } from "@/models/Message";
+import { Chat } from "@/models/Chat";
 import { getToken } from "next-auth/jwt";
+import { Types } from "mongoose";
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,13 +28,36 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
+    // Verify user is a participant in the chat before fetching messages
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return NextResponse.json(
+        { error: "Chat not found" },
+        { status: 404 }
+      );
+    }
+
+    const userId = new Types.ObjectId(token.id);
+    const isParticipant = chat.participants.some((participant: Types.ObjectId) => 
+      participant.toString() === userId.toString()
+    );
+
+    if (!isParticipant) {
+      console.error(`Unauthorized access attempt: User ${token.id} tried to access chat ${chatId} without being a participant`);
+      return NextResponse.json(
+        { error: "Unauthorized. You are not a participant in this chat." },
+        { status: 403 }
+      );
+    }
+
     const messages = await Message.find({ chatId })
       .populate("sender", "name email phone image role")
       .sort({ createdAt: 1 });
 
     return NextResponse.json({ messages }, { status: 200 });
   } catch (error) {
-    console.error("Error fetching messages:", error);
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching messages:", message);
     return NextResponse.json(
       { error: "Failed to fetch messages" },
       { status: 500 }

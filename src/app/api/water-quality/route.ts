@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/shared/lib/db";
-import WaterQualityLog from "@/models/WaterQualityLog";
+import { getToken } from "next-auth/jwt";
+import { WaterQualityLog } from "@/models/WaterQualityLog";
 import { Pond } from "@/models/Pond";
 import { z } from "zod";
+import { Types } from "mongoose";
+
+interface WaterQualityInput {
+  pondId: string;
+  ph: number;
+  dissolvedOxygen: number;
+  ammonia: number;
+}
 
 const waterQualitySchema = z.object({
   pondId: z.string().min(1, "Pond ID is required"),
@@ -15,6 +24,15 @@ type WaterQualityData = z.infer<typeof waterQualitySchema>;
 
 export async function GET(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    
+    if (!token || !token.id || token.role !== "farmer") {
+      return NextResponse.json(
+        { error: "Unauthorized. Farmer access only." },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const pondId = searchParams.get("pondId");
     const days = parseInt(searchParams.get("days") || "30", 10);
@@ -25,6 +43,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         { error: "Pond ID is required" },
         { status: 400 }
+      );
+    }
+
+    // Verify pond ownership before fetching logs
+    const pond = await Pond.findById(pondId);
+    if (!pond) {
+      return NextResponse.json(
+        { error: "Pond not found" },
+        { status: 404 }
+      );
+    }
+
+    if (pond.owner.toString() !== token.id) {
+      console.error(`Unauthorized access attempt: User ${token.id} tried to access pond ${pondId} owned by ${pond.owner}`);
+      return NextResponse.json(
+        { error: "Unauthorized. You do not own this pond." },
+        { status: 403 }
       );
     }
 
@@ -41,7 +76,8 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching water quality logs:", error);
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching water quality logs:", message);
     return NextResponse.json(
       { error: "Failed to fetch water quality logs" },
       { status: 500 }
@@ -51,7 +87,16 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    
+    if (!token || !token.id || token.role !== "farmer") {
+      return NextResponse.json(
+        { error: "Unauthorized. Farmer access only." },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json() as WaterQualityInput;
     const validationResult = waterQualitySchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -65,12 +110,20 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Verify pond exists
-    const pond = await Pond.findById(data.pondId);
+    // Verify pond exists and user owns it
+    const pond = await Pond.findById(new Types.ObjectId(data.pondId));
     if (!pond) {
       return NextResponse.json(
         { error: "Pond not found" },
         { status: 404 }
+      );
+    }
+
+    if (pond.owner.toString() !== token.id) {
+      console.error(`Unauthorized access attempt: User ${token.id} tried to modify pond ${data.pondId} owned by ${pond.owner}`);
+      return NextResponse.json(
+        { error: "Unauthorized. You do not own this pond." },
+        { status: 403 }
       );
     }
 
@@ -87,7 +140,8 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating water quality log:", error);
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error creating water quality log:", message);
     return NextResponse.json(
       { error: "Failed to create water quality log" },
       { status: 500 }

@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
-import Enrollment from "@/models/Enrollment";
+import { Enrollment } from "@/models/Enrollment";
+
+interface PaymentCallbackBody {
+  tran_id: string;
+  status: string;
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user?.id) {
+      console.error("Unauthorized payment callback attempt: No session");
+      return NextResponse.redirect(
+        new URL("/dashboard/farmer/courses?error=unauthorized", req.url)
+      );
+    }
+
     await connectDB();
-    const body = await req.json();
+    const body = await req.json() as PaymentCallbackBody;
 
     const { tran_id, status } = body;
 
@@ -21,6 +37,14 @@ export async function POST(req: NextRequest) {
     if (!enrollment) {
       return NextResponse.redirect(
         new URL("/dashboard/farmer/courses?error=enrollment_not_found", req.url)
+      );
+    }
+
+    // IDOR Fix: Verify the authenticated user owns this enrollment
+    if (enrollment.userId.toString() !== session.user.id) {
+      console.error(`IDOR attempt: User ${session.user.id} tried to access enrollment ${enrollment._id} owned by ${enrollment.userId}`);
+      return NextResponse.redirect(
+        new URL("/dashboard/farmer/courses?error=unauthorized", req.url)
       );
     }
 
@@ -50,6 +74,15 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user?.id) {
+      console.error("Unauthorized payment callback attempt: No session");
+      return NextResponse.redirect(
+        new URL("/dashboard/farmer/courses?error=unauthorized", req.url)
+      );
+    }
+
     const searchParams = req.nextUrl.searchParams;
     const tran_id = searchParams.get("tran_id");
     const status = searchParams.get("status");
@@ -66,6 +99,14 @@ export async function GET(req: NextRequest) {
     if (!enrollment) {
       return NextResponse.redirect(
         new URL("/dashboard/farmer/courses?error=enrollment_not_found", req.url)
+      );
+    }
+
+    // IDOR Fix: Verify the authenticated user owns this enrollment
+    if (enrollment.userId.toString() !== session.user.id) {
+      console.error(`IDOR attempt: User ${session.user.id} tried to access enrollment ${enrollment._id} owned by ${enrollment.userId}`);
+      return NextResponse.redirect(
+        new URL("/dashboard/farmer/courses?error=unauthorized", req.url)
       );
     }
 

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IContactMessage extends Document {
   name: string;
@@ -55,8 +55,6 @@ ContactMessageSchema.index({ isRead: 1 });
 ContactMessageSchema.index({ createdAt: -1 });
 ContactMessageSchema.index({ email: 1 });
 
-const ContactMessage =
+export const ContactMessage: Model<IContactMessage> =
   mongoose.models.ContactMessage ||
   mongoose.model<IContactMessage>("ContactMessage", ContactMessageSchema);
-
-export default ContactMessage;
