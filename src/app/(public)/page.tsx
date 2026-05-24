@@ -3,7 +3,6 @@ import RealtimePriceSnapshot from "@/features/home/components/RealtimePriceSnaps
 import WeatherCropAdvisory from "@/features/home/components/WeatherCropAdvisory";
 import EmergencyDiseaseAlerts from "@/features/home/components/EmergencyDiseaseAlerts";
 import ProfitCalculatorWidget from "@/features/home/components/ProfitCalculatorWidget";
-import VoiceSearchGate from "@/features/home/components/VoiceSearchGate";
 import SuccessfulFarmerStories from "@/features/home/components/SuccessfulFarmerStories";
 import PWAInstallBanner from "@/features/home/components/PWAInstallBanner";
 import AIChatbotCTA from "@/features/home/components/AIChatbotCTA";
@@ -14,8 +13,10 @@ import PlatformStatsBanner from "@/features/home/components/PlatformStatsBanner"
 import FishDiseaseVisionPreview from "@/features/home/components/FishDiseaseVisionPreview";
 import ExpertConsultantPanel from "@/features/home/components/ExpertConsultantPanel";
 import CommunityDiscussions from "@/features/home/components/CommunityDiscussions";
+import BecomeExpertCTA from "@/features/home/components/BecomeExpertCTA";
 import { getTickerMarketPrices } from "@/features/home/services/marketQueries";
 import { Metadata } from "next";
+import VoiceSearchWrapper from "@/features/home/components/VoiceSearchWrapper";
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -52,6 +53,7 @@ export const metadata: Metadata = {
   },
 };
 
+
 export default async function Home() {
   const tickerData = await getTickerMarketPrices(12);
 
@@ -67,7 +69,7 @@ export default async function Home() {
            <WeatherCropAdvisory /> 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-            <VoiceSearchGate />
+            <VoiceSearchWrapper />
             <EmergencyDiseaseAlerts />
             
           
@@ -76,6 +78,7 @@ export default async function Home() {
 
         <FishDiseaseVisionPreview />
         <PremiumBootcampCTA />
+        <BecomeExpertCTA />
         <FarmingVideoShowcase />
         <SuccessfulFarmerStories />
         <ExpertConsultantPanel />

@@ -1,18 +1,38 @@
 "use client";
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { Stethoscope, Users, Clock, DollarSign, TrendingUp } from "lucide-react";
+import { Stethoscope, Clock, DollarSign, TrendingUp } from "lucide-react";
 import Card from "@/components/ui/Card";
 
 export default function DoctorDashboard() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
-  // Mock data for demonstration
+  const { data: earningsData, isLoading: isEarningsLoading } = useQuery({
+    queryKey: ["doctor-earnings"],
+    queryFn: async () => {
+      const res = await fetch("/api/doctor/earnings");
+      if (!res.ok) throw new Error("উপার্জন লোড করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
+    enabled: status === "authenticated",
+  });
+
+  const formatNumber = (val: number): string => {
+    return new Intl.NumberFormat("bn-BD").format(val);
+  };
+
+  const earnings = earningsData || {
+    totalEarnings: 0,
+    totalConsultations: 0,
+    monthlyEarnings: 0,
+  };
+
   const stats = [
     {
       label: "মোট কনসালটেশন",
-      value: "১২৫",
+      value: isEarningsLoading ? "..." : formatNumber(earnings.totalConsultations),
       icon: <Stethoscope size={24} className="text-[var(--primary)]" />,
       trend: "+১২%",
     },
@@ -24,15 +44,15 @@ export default function DoctorDashboard() {
     },
     {
       label: "মাসিক আয়",
-      value: "৳ ১৫,০০০",
+      value: isEarningsLoading ? "..." : `৳ ${formatNumber(earnings.monthlyEarnings)}`,
       icon: <DollarSign size={24} className="text-green-500" />,
       trend: "+২৫%",
     },
     {
-      label: "মোট রোগী",
-      value: "৪৫",
-      icon: <Users size={24} className="text-blue-500" />,
-      trend: "+৮",
+      label: "মোট আয়",
+      value: isEarningsLoading ? "..." : `৳ ${formatNumber(earnings.totalEarnings)}`,
+      icon: <TrendingUp size={24} className="text-blue-500" />,
+      trend: "+৪০%",
     },
   ];
 

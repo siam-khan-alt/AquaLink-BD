@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
-import { UserCircle, Stethoscope, DollarSign, Save, Camera } from "lucide-react";
+import { UserCircle, Stethoscope, DollarSign, Save, Camera, Loader2 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import { toast } from "sonner";
 
 export default function DoctorProfile() {
   const { data: session } = useSession();
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: session?.user?.name || "",
     email: session?.user?.email || "",
@@ -23,9 +25,35 @@ export default function DoctorProfile() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // TODO: Save to backend
-    console.log("Saving profile:", formData);
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    try {
+      const response = await fetch("/api/doctor/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          specialization: formData.specialization,
+          licenseNumber: formData.licenseNumber,
+          consultationFee: parseInt(formData.consultationFee.toString()),
+          bio: formData.bio,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "প্রোফাইল আপডেট করতে ব্যর্থ হয়েছে");
+      }
+
+      toast.success("প্রোফাইল সফলভাবে আপডেট করা হয়েছে");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "প্রোফাইল আপডেট করতে ব্যর্থ হয়েছে");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -196,10 +224,20 @@ export default function DoctorProfile() {
       <div className="flex justify-end">
         <Button
           onClick={handleSave}
+          disabled={isSaving}
           className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6 py-2 rounded-lg font-hind font-bold flex items-center gap-2"
         >
-          <Save size={16} />
-          সংরক্ষণ করুন
+          {isSaving ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              সংরক্ষণ করছে...
+            </>
+          ) : (
+            <>
+              <Save size={16} />
+              সংরক্ষণ করুন
+            </>
+          )}
         </Button>
       </div>
     </div>

@@ -15,6 +15,10 @@ import {
   XCircle,
   DollarSign,
   Calendar,
+  Stethoscope,
+  Check,
+  X,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
@@ -44,6 +48,23 @@ interface IFarmer {
   createdAt: string;
 }
 
+interface IDoctorApplication {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  degree: string;
+  specialization: string;
+  licenseNumber: string;
+  experience: number;
+  consultationFee: number;
+  bio: string;
+  district?: string;
+  division?: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
 const formatNumber = (val: number): string => {
   return new Intl.NumberFormat("bn-BD").format(val);
 };
@@ -58,7 +79,7 @@ const formatDate = (dateStr: string): string => {
 
 export default function AdminDashboard() {
   const { status } = useSession();
-  const [activeTab, setActiveTab] = useState<"farmers" | "prices">("farmers");
+  const [activeTab, setActiveTab] = useState<"farmers" | "prices" | "doctor-applications">("farmers");
 
   const [priceFormData, setPriceFormData] = useState({
     fishType: "Ruhi",
@@ -87,6 +108,16 @@ export default function AdminDashboard() {
     enabled: status === "authenticated" && activeTab === "farmers",
   });
 
+  const { data: doctorApplicationsData, isLoading: isDoctorApplicationsLoading } = useQuery<{ applications: IDoctorApplication[] }>({
+    queryKey: ["admin-doctor-applications"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/doctor-applications");
+      if (!res.ok) throw new Error("ডাক্তার আবেদন লোড করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
+    enabled: status === "authenticated" && activeTab === "doctor-applications",
+  });
+
   const updatePriceMutation = useMutation({
     mutationFn: async (priceData: {
       fishType: string;
@@ -112,6 +143,27 @@ export default function AdminDashboard() {
         retailPrice: "",
       });
       setPriceFormErrors({});
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const approveDoctorMutation = useMutation({
+    mutationFn: async ({ id, action, rejectionReason }: { id: string; action: "approve" | "reject"; rejectionReason?: string }) => {
+      const res = await fetch(`/api/admin/doctor-applications/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, rejectionReason }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json() as { error?: string };
+        throw new Error(errorData.error || "আবেদন প্রক্রিয়া করতে ব্যর্থ হয়েছে");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("আবেদন সফলভাবে প্রক্রিয়া করা হয়েছে!");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -296,6 +348,16 @@ export default function AdminDashboard() {
             >
               বাজার দর নিয়ন্ত্রণ
             </button>
+            <button
+              onClick={() => setActiveTab("doctor-applications")}
+              className={`px-4 py-2 rounded-lg font-semibold font-hind transition-all ${
+                activeTab === "doctor-applications"
+                  ? "bg-[var(--primary)] text-white"
+                  : "text-[var(--text)] hover:bg-[var(--surface)]"
+              }`}
+            >
+              ডাক্তার আবেদন
+            </button>
           </div>
 
           {/* Tab A: Farmers Monitor */}
@@ -384,6 +446,126 @@ export default function AdminDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab C: Doctor Applications */}
+          {activeTab === "doctor-applications" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-extrabold text-[var(--text)] font-hind flex items-center gap-2">
+                  <Stethoscope size={24} className="text-[var(--primary)]" />
+                  পেন্ডিং ডাক্তার আবেদন
+                </h2>
+                <span className="text-sm font-semibold text-[var(--text)]/60 font-hind">
+                  মোট: {isDoctorApplicationsLoading ? "..." : formatNumber(doctorApplicationsData?.applications?.length || 0)}টি আবেদন
+                </span>
+              </div>
+
+              {isDoctorApplicationsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+                </div>
+              ) : !doctorApplicationsData?.applications || doctorApplicationsData.applications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Stethoscope size={48} className="text-[var(--text)]/30 mb-4" />
+                  <h3 className="text-lg font-bold text-[var(--text)] font-hind">কোনো আবেদন পাওয়া যায়নি</h3>
+                  <p className="text-sm text-[var(--text)]/60 mt-1 font-hind">
+                    এখন কোনো পেন্ডিং ডাক্তার আবেদন নেই
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {doctorApplicationsData.applications.map((application) => (
+                    <Card key={application._id} className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
+                              <Stethoscope size={24} className="text-[var(--primary)]" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-bold text-[var(--text)] font-hind">
+                                {application.name}
+                              </h3>
+                              <p className="text-sm text-[var(--text)]/60 font-hind">
+                                {application.email} • {application.phone}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                              <p className="text-xs text-[var(--text)]/60 font-hind mb-1">ডিগ্রি</p>
+                              <p className="text-sm font-bold text-[var(--text)] font-hind">{application.degree}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-[var(--text)]/60 font-hind mb-1">বিশেষীকরণ</p>
+                              <p className="text-sm font-bold text-[var(--text)] font-hind">{application.specialization}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-[var(--text)]/60 font-hind mb-1">অভিজ্ঞতা</p>
+                              <p className="text-sm font-bold text-[var(--text)] font-hind">{application.experience} বছর</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-[var(--text)]/60 font-hind mb-1">কনসালটেশন ফি</p>
+                              <p className="text-sm font-bold text-[var(--text)] font-hind">৳ {application.consultationFee}</p>
+                            </div>
+                          </div>
+
+                          <div className="mb-4">
+                            <p className="text-xs text-[var(--text)]/60 font-hind mb-1">বায়োগ্রাফি</p>
+                            <p className="text-sm text-[var(--text)]/80 font-hind line-clamp-2">
+                              {application.bio}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-4 text-sm text-[var(--text)]/60 font-hind">
+                            <span>লাইসেন্স: {application.licenseNumber}</span>
+                            {application.district && <span>• {application.district}</span>}
+                            {application.division && <span>• {application.division}</span>}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="font-hind text-xs"
+                            onClick={() => toast.info("বিস্তারিত দেখার ফিচার শীঘ্রই আসছে")}
+                          >
+                            <Eye size={14} className="mr-1" />
+                            বিস্তারিত
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-green-500 hover:bg-green-600 text-white font-hind text-xs"
+                            onClick={() => approveDoctorMutation.mutate({ id: application._id, action: "approve" })}
+                            disabled={approveDoctorMutation.isPending}
+                          >
+                            <Check size={14} className="mr-1" />
+                            অনুমোদন
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-red-500 hover:bg-red-600 text-white font-hind text-xs"
+                            onClick={() => {
+                              const reason = prompt("বাতিলের কারণ লিখুন:");
+                              if (reason) {
+                                approveDoctorMutation.mutate({ id: application._id, action: "reject", rejectionReason: reason });
+                              }
+                            }}
+                            disabled={approveDoctorMutation.isPending}
+                          >
+                            <X size={14} className="mr-1" />
+                            বাতিল
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
               )}
             </div>
