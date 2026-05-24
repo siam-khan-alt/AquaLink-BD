@@ -4,10 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Course } from "@/models/Course";
-import Enrollment from "@/models/Enrollment";
 import { Types } from "mongoose";
 import { z } from "zod";
 import crypto from "crypto";
+import { Enrollment } from "@/models/Enrollment";
 
 const initiatePaymentSchema = z.object({
   courseId: z.string().min(1, "কোর্স আইডি প্রদান করতে হবে"),

@@ -3,8 +3,7 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { z } from 'zod';
 import { connectDB } from '@/shared/lib/db';
-import ContactMessage from '@/models/ContactMessage';
-
+import { ContactMessage } from '@/models/ContactMessage';
 const contactSchema = z.object({
   name: z.string().min(2, "নাম কমপক্ষে ২ অক্ষর হতে হবে"),
   email: z.string().email("সঠিক ইমেইল ঠিকানা দিন"),

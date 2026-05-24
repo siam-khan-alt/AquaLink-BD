@@ -4,9 +4,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Course } from "@/models/Course";
-import Enrollment from "@/models/Enrollment";
 import { Types } from "mongoose";
 import { z } from "zod";
+import { Enrollment } from "@/models/Enrollment";
 
 const createCourseSchema = z.object({
   title: z.string().min(1, "কোর্সের শিরোনাম অবশ্যই দিতে হবে"),

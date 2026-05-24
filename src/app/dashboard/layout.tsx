@@ -7,10 +7,11 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { 
   Bell, User, LogOut, Waves, ChevronDown, Menu, X,
-  LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, TrendingUp, BookOpen, MessageSquare, DollarSign, Calculator
+  LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { ThemeToggle } from "@/shared/components/ui/ThemeToggle";
 
 interface NavItem {
   label: string;
@@ -30,7 +31,7 @@ const farmerNavItems: NavItem[] = [
   { label: "পুকুর ও পানির গুণমান", href: "/dashboard/farmer/ponds", icon: <Waves size={20} /> },
   { label: "খরচ ট্র্যাকার", href: "/dashboard/farmer/expenses", icon: <DollarSign size={20} /> },
   { label: "স্মার্ট ফিড ক্যালকুলেটর", href: "/dashboard/farmer/feed-calculator", icon: <Calculator size={20} /> },
-  { label: "ラーニング ハブ", href: "/dashboard/farmer/courses", icon: <BookOpen size={20} /> },
+  { label: "মাছ চাষের পাঠশালা", href: "/dashboard/farmer/courses", icon: <BookOpen size={20} /> },
   { label: "মেসেজ", href: "/dashboard/chat", icon: <MessageSquare size={20} /> },
 ];
 
@@ -40,7 +41,6 @@ const adminNavItems: NavItem[] = [
   { label: "চাষি গল্প ব্যবস্থাপনা", href: "/dashboard/admin/stories", icon: <FileText size={20} /> },
   { label: "বিশেষজ্ঞ ব্যবস্থাপনা", href: "/dashboard/admin/experts", icon: <UserCheck size={20} /> },
   { label: "জরুরি সতর্কতা", href: "/dashboard/admin/alerts", icon: <AlertTriangle size={20} /> },
-  { label: "বাজার দর আপডেট", href: "/dashboard/admin/prices", icon: <TrendingUp size={20} /> },
   { label: "বুটক্যাম্প ব্যবস্থাপনা", href: "/dashboard/admin/courses", icon: <BookOpen size={20} /> },
   { label: "সাপোর্ট ইনবক্স", href: "/dashboard/chat", icon: <MessageSquare size={20} /> },
 ];
@@ -198,12 +198,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Menu size={24} />
             </button>
 
-            <h1 className="text-base lg:text-lg font-bold text-[var(--text)] font-hind">
-              মৎস্য বন্ধু ড্যাশবোর্ড
+            <h1 className="text-base lg:text-lg font-bold text-[var(--primary)] font-hind flex items-center gap-2">
+              মৎস্য বন্ধু <span className=" text-[var(--text)] hidden lg:flex">ড্যাশবোর্ড</span> 
             </h1>
 
             {/* Profile Dropdown actions */}
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               {/* Notification Bell */}
               <div className="relative">
                 <button

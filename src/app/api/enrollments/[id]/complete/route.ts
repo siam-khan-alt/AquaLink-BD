@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/shared/lib/db";
-import Enrollment from "@/models/Enrollment";
-
+import { Enrollment } from "@/models/Enrollment";
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

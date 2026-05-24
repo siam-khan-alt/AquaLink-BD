@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import React, {  useState } from "react";
 import { Calculator, TrendingUp, DollarSign, Fish, Droplets, ChevronDown } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
@@ -47,26 +45,12 @@ const formatNumber = (val: number): string => {
 };
 
 export default function FeedCalculatorPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [fishType, setFishType] = useState<string>("রুই");
   const [fishCount, setFishCount] = useState<string>("");
   const [avgWeight, setAvgWeight] = useState<string>("");
   const [waterTemp, setWaterTemp] = useState<string>("");
   const [result, setResult] = useState<FeedCalculationResult | null>(null);
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]" />
-      </div>
-    );
-  }
-
-  if (status === "unauthenticated" || session?.user?.role !== "farmer") {
-    router.push("/login");
-    return null;
-  }
 
   const selectedFish = fishTypes.find((f) => f.name === fishType) || fishTypes[0];
 
