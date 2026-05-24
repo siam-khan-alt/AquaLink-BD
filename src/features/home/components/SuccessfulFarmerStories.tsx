@@ -20,7 +20,7 @@ async function getStories(): Promise<Story[]> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const res = await fetch(`${baseUrl}/api/home/stories`, {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
 
     if (!res.ok) return [];

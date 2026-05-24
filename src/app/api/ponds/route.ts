@@ -27,7 +27,10 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const farmerId = token.id as string;
 
-    const ponds = await Pond.find({ owner: new Types.ObjectId(farmerId) }).sort({ createdAt: -1 });
+    const ponds = await Pond.find({ owner: new Types.ObjectId(farmerId) })
+      .select("name area fishType waterQuality createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, ponds }, { status: 200 });
   } catch (error) {

@@ -61,7 +61,6 @@ export default function MarketTrendsInsight() {
       if (!res.ok) throw new Error("Failed to fetch market trends");
       return res.json();
     },
-    refetchInterval: 60000, // Refetch every minute
   });
 
   if (isLoading) {

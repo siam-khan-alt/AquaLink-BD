@@ -20,7 +20,8 @@ export async function GET(request: Request) {
 
     const experts = await User.find(query)
       .select("name email phone specialization consultationFee bio image district division availability")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ experts });
   } catch (error) {

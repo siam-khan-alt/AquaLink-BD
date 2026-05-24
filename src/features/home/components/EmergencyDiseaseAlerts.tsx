@@ -14,7 +14,7 @@ interface Alert {
 async function getAlerts(): Promise<Alert[]> {
   try {
     const res = await fetch("/api/home/alerts", {
-      cache: "no-store"
+      next: { revalidate: 300 },
     });
     if (!res.ok) return [];
     const data = await res.json();
