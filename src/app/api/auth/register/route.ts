@@ -6,9 +6,13 @@ import bcrypt from "bcryptjs";
 
 const registerSchema = z.object({
   name: z.string().min(2, "নাম কমপক্ষে ২ অক্ষরের হতে হবে"),
-  phone: z.string().regex(/^01[3-9]\d{8}$/, "সঠিক বাংলাদেশী নাম্বার দিন"),
+  phone: z.string().regex(/^01[3-9]\d{8}$/, "সঠিক বাংলাদেশী নাম্বার দিন").optional(),
+  email: z.string().email("সঠিক ইমেইল দিন").optional(),
   password: z.string().min(6, "পাসওয়ার্ড কমপক্ষে ৬ ডিজিটের হতে হবে"),
-  firebaseUid: z.string().optional(),
+  image: z.string().url("সঠিক ইমেজ URL দিন").optional(),
+}).refine((data) => data.phone || data.email, {
+  message: "ফোন বা ইমেইল অন্তত একটি প্রয়োজন",
+  path: ["phone"],
 });
 
 export async function POST(req: Request) {
@@ -17,19 +21,45 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsedData = registerSchema.parse(body);
 
-    const existingUser = await User.findOne({ phone: parsedData.phone });
+    // Build query conditions
+    const queryConditions: any[] = [];
+    if (parsedData.phone) {
+      queryConditions.push({ phone: parsedData.phone });
+    }
+    if (parsedData.email) {
+      queryConditions.push({ email: parsedData.email });
+    }
+
+    // Check if user already exists with phone or email
+    const existingUser = queryConditions.length > 0
+      ? await User.findOne({ $or: queryConditions })
+      : null;
+
     if (existingUser) {
-      return NextResponse.json(
-        { error: "এই নাম্বারটি ইতিমধ্যে ব্যবহার করা হয়েছে" },
-        { status: 400 }
-      );
+      if (existingUser.phone === parsedData.phone) {
+        return NextResponse.json(
+          { error: "এই নাম্বারটি ইতিমধ্যে ব্যবহার করা হয়েছে" },
+          { status: 400 }
+        );
+      }
+      if (existingUser.email === parsedData.email) {
+        return NextResponse.json(
+          { error: "এই ইমেইলটি ইতিমধ্যে ব্যবহার করা হয়েছে" },
+          { status: 400 }
+        );
+      }
     }
 
     const hashedPassword = await bcrypt.hash(parsedData.password, 12);
     
     await User.create({
-      ...parsedData,
+      name: parsedData.name,
+      phone: parsedData.phone,
+      email: parsedData.email,
       password: hashedPassword,
+      image: parsedData.image,
+      role: "farmer",
+      isVerified: true,
     });
 
     return NextResponse.json(

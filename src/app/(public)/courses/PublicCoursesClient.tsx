@@ -73,7 +73,7 @@ export const PublicCoursesClient = memo(() => {
 
   return (
     <div className="min-h-screen bg-[var(--background)] py-12 px-4 transition-colors duration-300">
-      <div className="container mx-auto max-w-6xl space-y-10">
+      <div className="container mx-auto space-y-10">
         
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <Chip
@@ -133,8 +133,8 @@ export const PublicCoursesClient = memo(() => {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
               <Card key={i} className="h-80 bg-[var(--surface)] border border-[var(--border)] flex flex-col justify-center items-center">
                 <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
               </Card>
@@ -149,7 +149,7 @@ export const PublicCoursesClient = memo(() => {
             </p>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredCourses.map((course) => (
               <Card 
                 key={course._id} 
@@ -162,7 +162,7 @@ export const PublicCoursesClient = memo(() => {
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     priority={false}
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 rounded-2xl"
                   />
                   <div className="absolute top-3 left-3 z-10 backdrop-blur-md bg-black/40 border border-white/10 px-2.5 py-1 rounded-xl flex items-center gap-1">
                     <Tag size={12} className="text-emerald-400" />

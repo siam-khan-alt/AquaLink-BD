@@ -13,54 +13,49 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     
-    // password login
+    // password login with email or phone
     CredentialsProvider({
       id: "credentials",
-      name: "Phone",
+      name: "Credentials",
       credentials: {
         phone: { label: "ফোন নাম্বার", type: "text" },
+        email: { label: "ইমেইল", type: "text" },
         password: { label: "পাসওয়ার্ড", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.phone || !credentials?.password) {
-          throw new Error("ফোন এবং পাসওয়ার্ড দুটোই দিন");
+        if (!credentials?.password) {
+          throw new Error("পাসওয়ার্ড প্রয়োজন");
         }
+        
+        if (!credentials?.phone && !credentials?.email) {
+          throw new Error("ফোন বা ইমেইল প্রয়োজন");
+        }
+        
         await connectDB();
-        const user = await User.findOne({ phone: credentials.phone }).select("+password");
-        if (!user || !user.password) {
-          throw new Error("এই নাম্বারে কোনো অ্যাকাউন্ট পাওয়া যায়নি");
+        
+        // Build query conditions
+        const queryConditions: any[] = [];
+        if (credentials.phone) {
+          queryConditions.push({ phone: credentials.phone });
         }
+        if (credentials.email) {
+          queryConditions.push({ email: credentials.email });
+        }
+        
+        // Find user by phone or email
+        const user = queryConditions.length > 0
+          ? await User.findOne({ $or: queryConditions }).select("+password")
+          : null;
+        
+        if (!user || !user.password) {
+          throw new Error("এই তথ্যে কোনো অ্যাকাউন্ট পাওয়া যায়নি");
+        }
+        
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) {
           throw new Error("পাসওয়ার্ড সঠিক নয়");
         }
-        return {
-          id: user._id.toString(),
-          name: user.name ?? "অজানা চাষি",
-          email: user.email ?? "",
-          role: user.role,
-        };
-      },
-    }),
-
-    // otp login
-    CredentialsProvider({
-      id: "otp-login",
-      name: "OTP Login",
-      credentials: {
-        phone: { label: "ফোন নাম্বার", type: "text" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.phone) {
-          throw new Error("ফোন নাম্বার প্রয়োজন");
-        }
-        await connectDB();
-        const user = await User.findOne({ phone: credentials.phone });
-
-        if (!user) {
-          throw new Error("এই নাম্বারে কোনো অ্যাকাউন্ট নেই, আগে রেজিস্ট্রেশন করুন");
-        }
-
+        
         return {
           id: user._id.toString(),
           name: user.name ?? "অজানা চাষি",
