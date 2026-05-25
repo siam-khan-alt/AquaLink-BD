@@ -23,11 +23,14 @@ export const revalidate = 300; // Revalidate every 5 minutes
 
 export const metadata: Metadata = {
   title: "মৎস্য বন্ধু - বাংলাদেশের স্মার্ট মৎস্য চাষ প্ল্যাটফর্ম",
-  description: "মৎস্য বন্ধু - বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
-  keywords: "মৎস্য চাষ, মাছ চাষ, বাংলাদেশ মৎস্য চাষ, মৎস্য বন্ধু, ফিশ ফার্মিং, মাছের বাজার দর, মৎস্য রোগ নির্ণয়, স্মার্ট মৎস্য চাষ",
+  description:
+    "মৎস্য বন্ধু - বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
+  keywords:
+    "মৎস্য চাষ, মাছ চাষ, বাংলাদেশ মৎস্য চাষ, মৎস্য বন্ধু, ফিশ ফার্মিং, মাছের বাজার দর, মৎস্য রোগ নির্ণয়, স্মার্ট মৎস্য চাষ",
   openGraph: {
     title: "মৎস্য বন্ধু - বাংলাদেশের স্মার্ট মৎস্য চাষ প্ল্যাটফর্ম",
-    description: "বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
+    description:
+      "বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
     url: process.env.NEXT_PUBLIC_APP_URL || "https://aqualink-bd.com",
     siteName: "মৎস্য বন্ধু",
     locale: "bn_BD",
@@ -36,7 +39,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "মৎস্য বন্ধু - বাংলাদেশের স্মার্ট মৎস্য চাষ প্ল্যাটফর্ম",
-    description: "বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
+    description:
+      "বাংলাদেশের সর্বাধিক আধুনিক মৎস্য চাষ ব্যবস্থাপনা প্ল্যাটফর্ম। বাজার দর, রোগ নির্ণয়, লাভ-ক্ষতি ক্যালকুলেটর, এআই সহায়তা এবং আরও অনেক কিছু।",
   },
   robots: {
     index: true,
@@ -54,9 +58,8 @@ export const metadata: Metadata = {
   },
 };
 
-
 export default async function Home() {
-  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
   let tickerData: IMarketPrice[] = [];
 
   if (!isBuildPhase) {
@@ -76,15 +79,11 @@ export default async function Home() {
         <RealtimePriceSnapshot />
         <CommunityDiscussions />
         <MarketTrendsInsight />
-         
-           <WeatherCropAdvisory /> 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-            <VoiceSearchWrapper />
-            <EmergencyDiseaseAlerts />
-            
-          
-        </div>
+
+        <WeatherCropAdvisory />
+
+        <EmergencyDiseaseAlerts />
+
         <ProfitCalculatorWidget />
 
         <FishDiseaseVisionPreview />
