@@ -27,7 +27,6 @@ const formatBDT = (val: number): string => {
 };
 
 export const PremiumBootcampCTA = memo(() => {
-  // কোর্স ডাটা ফেচিং (TanStack Query)
   const { data: coursesData, isLoading } = useQuery<ICoursesResponse>({
     queryKey: ["bootcamp-featured-courses"],
     queryFn: async () => {
@@ -37,11 +36,10 @@ export const PremiumBootcampCTA = memo(() => {
     },
   });
 
-  // ডাটা থেকে লেটেস্ট ৩টি কোর্স ফিল্টার
   const featuredCourses = coursesData?.courses?.slice(0, 3) ?? [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto py-8">
       {/* Main Banner Hero container */}
       <Card className="relative overflow-hidden bg-gradient-to-br from-[var(--hero-bg-start)] via-[var(--hero-bg-mid)] to-[var(--hero-bg-end)] border border-[var(--primary)]/20 p-6 md:p-10 rounded-3xl shadow-2xl">
         {/* Abstract Architectural Tech Shapes */}

@@ -2,6 +2,8 @@
 
 import React from "react";
 import { Users, Waves, MessageSquare, TrendingUp } from "lucide-react";
+import { Card } from "@heroui/react";
+import { motion } from "framer-motion";
 
 interface StatItem {
   icon: React.ReactNode;
@@ -10,62 +12,48 @@ interface StatItem {
   trend?: string;
 }
 
-const mockStats: StatItem[] = [
-  {
-    icon: <Users size={24} />,
-    value: "৫,০০০+",
-    label: "নিবন্ধিত চাষি",
-    trend: "+১২% গত মাসে",
-  },
-  {
-    icon: <Waves size={24} />,
-    value: "১২,০০০+",
-    label: "সক্রিয় পুকুর",
-    trend: "+৮% গত মাসে",
-  },
-  {
-    icon: <MessageSquare size={24} />,
-    value: "২৫,০০০+",
-    label: "AI পরামর্শ",
-    trend: "+১৫% গত মাসে",
-  },
-  {
-    icon: <TrendingUp size={24} />,
-    value: "৯৫%",
-    label: "সন্তুষ্ট ব্যবহারকারী",
-    trend: "+৫% গত মাসে",
-  },
+const stats: StatItem[] = [
+  { icon: <Users size={28} />, value: "৫,০০০+", label: "নিবন্ধিত চাষি", trend: "+১২%" },
+  { icon: <Waves size={28} />, value: "১২,০০০+", label: "সক্রিয় পুকুর", trend: "+৮%" },
+  { icon: <MessageSquare size={28} />, value: "২৫,০০০+", label: "AI পরামর্শ", trend: "+১৫%" },
+  { icon: <TrendingUp size={28} />, value: "৯৫%", label: "সন্তুষ্ট ব্যবহারকারী", trend: "+৫%" },
 ];
 
 export default function PlatformStatsBanner() {
   return (
-    <div className="w-full bg-gradient-to-r from-[var(--primary)]/10 via-[var(--secondary)]/10 to-[var(--primary)]/10 py-8">
+    <section className="w-full py-12 bg-[var(--surface)] border-y border-[var(--border)]/30 rounded-2xl">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockStats.map((stat, index) => (
-            <div
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {stats.map((stat, index) => (
+            <motion.div
               key={index}
-              className="flex flex-col items-center text-center p-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
             >
-              <div className="p-3 bg-[var(--primary)]/20 text-[var(--primary)] rounded-xl mb-3">
-                {stat.icon}
-              </div>
-              <h3 className="text-2xl font-black text-[var(--text)] mb-1 font-hind">
-                {stat.value}
-              </h3>
-              <p className="text-sm text-[var(--text)]/80 font-semibold font-hind mb-2">
-                {stat.label}
-              </p>
-              {stat.trend && (
-                <div className="flex items-center gap-1 text-xs text-[var(--primary)] font-bold font-hind">
-                  <TrendingUp size={12} />
-                  <span>{stat.trend}</span>
+              <Card className="bg-[var(--background)] border-none shadow-none hover:shadow-lg transition-shadow duration-300">
+                {/* এখানে CardBody এর বদলে সরাসরি div ব্যবহার করা হয়েছে */}
+                <div className="flex flex-col items-center text-center p-6 gap-2">
+                  <div className="p-3 rounded-2xl bg-[var(--primary)]/10 text-[var(--primary)] mb-2">
+                    {stat.icon}
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-black text-[var(--text)] tracking-tight">
+                    {stat.value}
+                  </h3>
+                  <p className="text-sm font-medium text-[var(--text)]/60 uppercase tracking-wide">
+                    {stat.label}
+                  </p>
+                  <div className="mt-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold flex items-center gap-1">
+                    <TrendingUp size={12} />
+                    {stat.trend}
+                  </div>
                 </div>
-              )}
-            </div>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -109,13 +109,13 @@ export default function ProfitCalculatorWidget() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 md:gap-6 items-stretch">
           
           <div className="lg:col-span-5 relative border-b md:border-b-0 lg:border border-[var(--border)] md:rounded-2xl overflow-hidden bg-black/10 dark:bg-black/40 flex flex-col justify-between p-6 group min-h-[340px] lg:min-h-full mx-0">
-            <div className="absolute inset-0 z-0 opacity-40 dark:opacity-20 group-hover:scale-105 transition-transform duration-1000">
+            <div className="absolute inset-0 z-0 opacity-50 dark:opacity-30 group-hover:scale-105 transition-transform duration-1000">
               <Image
                 src="/images/smart-pond.png"
                 alt="Smart Aquaculture Pond Grid"
                 fill
                 sizes="(min-width: 1024px) 35vw, 100vw"
-                className="object-cover"
+                className="object-cover rounded-2xl"
                 loading="lazy"
               />
             </div>
@@ -128,10 +128,10 @@ export default function ProfitCalculatorWidget() {
               >
                 <Sparkles size={11} className="inline text-[var(--secondary)]" /> Smart Analytics
               </Chip>
-              <h3 className="text-2xl md:text-3xl font-black tracking-tighter text-[var(--text)] leading-none">
+              <h3 className="text-3xl md:text-5xl font-black tracking-tighter text-[var(--text)] leading-none">
                 সঠিক হিসাবেই <br /><span className="text-[var(--primary)]">আসবে বড় সাফল্য!</span>
               </h3>
-              <p className="text-xs font-medium opacity-75 leading-relaxed max-w-xs">
+              <p className="text-md font-bold opacity-75 leading-relaxed max-w-xs">
                 অনুমানভিত্তিক চাষাবাদ বাদ দিয়ে বৈজ্ঞানিক ডাটা ও রিয়েল-টাইম হিসাবের মাধ্যমে আপনার খামারের সর্বোচ্চ লাভ নিশ্চিত করুন।
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function ProfitCalculatorWidget() {
                 <Target size={14} className="text-[var(--secondary)] animate-pulse" />
                 আপনার করণীয়:
               </div>
-              <p className="text-[11px] font-bold opacity-60 leading-normal">
+              <p className="text-[12px] font-bold opacity-60 leading-normal">
                 ডান পাশের স্লাইডারগুলো ব্যবহার করে আপনার পুকুরের সঠিক মাপ ও সংখ্যা ইনপুট দিন এবং তাৎক্ষণিক নির্ভুল ফলাফল বিশ্লেষণ দেখুন।
               </p>
             </div>
