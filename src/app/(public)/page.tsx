@@ -88,10 +88,10 @@ export default async function Home() {
 
         <FishDiseaseVisionPreview />
         <PremiumBootcampCTA />
-        <BecomeExpertCTA />
         <FarmingVideoShowcase />
         <SuccessfulFarmerStories />
         <ExpertConsultantPanel />
+        <BecomeExpertCTA />
         <PlatformStatsBanner />
       </div>
 

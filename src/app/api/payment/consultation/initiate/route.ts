@@ -96,12 +96,18 @@ export async function POST(req: NextRequest) {
       value_b: parsedData.doctorId,
     };
 
+    // ফিক্সড: URLSearchParams এর মাধ্যমে x-www-form-urlencoded ফরম্যাটে ডাটা পাঠানো
+    const formData = new URLSearchParams();
+    Object.entries(sslczData).forEach(([key, value]) => {
+      formData.append(key, String(value));
+    });
+
     const response = await fetch(SSLCOMMERZ_GATEWAY_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify(sslczData),
+      body: formData.toString(),
     });
 
     const sslczResponse = await response.json() as SSLCommerzResponse;

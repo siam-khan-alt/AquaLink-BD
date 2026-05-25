@@ -63,7 +63,6 @@ export async function POST(
     application.reviewedAt = new Date();
     await application.save();
 
-    // Create a new User with doctor role
     const temporaryPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
 
     const newUser = await User.create({
@@ -71,7 +70,10 @@ export async function POST(
       email: application.email,
       phone: application.phone,
       role: "doctor",
-      isVerified: true,
+      isVerified: true,image: application.avatarUrl,          // ড্যাশবোর্ড ও প্যানেলে ইমেজ দেখানোর জন্য অত্যন্ত জরুরি
+      certificateUrl: application.certificateUrl,
+      degree: application.degree,
+      experience: application.experience,
       specialization: application.specialization,
       licenseNumber: application.licenseNumber,
       consultationFee: application.consultationFee,

@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 export interface Expert {
   _id: string;
   name: string;
-  designation: string;
   email?: string;
   phone?: string;
   specialization: string;
-  avatarUrl: string;
+  consultationFee?: number;
+  bio?: string;
+  image?: string;
   isVerified: boolean;
   createdAt: string;
 }

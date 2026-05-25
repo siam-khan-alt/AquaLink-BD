@@ -14,6 +14,9 @@ export interface IUser extends Document {
   division?: string;
   // Doctor-specific fields
   specialization?: string;
+  degree?: string;           
+  experience?: number;        
+  certificateUrl?: string;
   licenseNumber?: string;
   consultationFee?: number;
   bio?: string;
@@ -68,6 +71,9 @@ const UserSchema = new Schema<IUser>({
   division: { type: String },
   // Doctor-specific fields
   specialization: { type: String },
+  degree: { type: String },          
+  experience: { type: Number },        
+  certificateUrl: { type: String },
   licenseNumber: { type: String },
   consultationFee: { type: Number },
   bio: { type: String },

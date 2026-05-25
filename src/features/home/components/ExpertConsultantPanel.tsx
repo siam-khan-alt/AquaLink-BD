@@ -1,117 +1,153 @@
 "use client";
 
-import React from "react";
-import { Mail, Phone, Shield, Award } from "lucide-react";
-import Button from "@/components/ui/Button";
-import { ScrollShadow, Avatar } from "@heroui/react";
-import { useExperts } from "@/shared/hooks/useExperts";
+import { memo, useCallback, useState } from "react";
+import { useSession, signIn } from "next-auth/react";
+import { Shield, Award, CreditCard, User, Loader2 } from "lucide-react";
+import { Button, ScrollShadow } from "@heroui/react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { useExperts, Expert } from "@/shared/hooks/useExperts";
 
-function getInitials(name: string): string {
-  const words = name.split(" ");
-  if (words.length >= 2) {
-    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-}
-
-export default function ExpertConsultantPanel() {
+const ExpertConsultantPanel = memo(() => {
+  const { data: session } = useSession();
   const { data: expertsData, isLoading } = useExperts();
-  const experts = expertsData?.experts || [];
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
-  if (isLoading) {
+  const experts: Expert[] = expertsData?.experts ?? [];
+
+  const handleConsultExpert = useCallback(
+    async (expert: Expert) => {
+      if (!session) {
+        toast.error("অনুগ্রহ করে পরামর্শ নেওয়ার জন্য লগইন করুন");
+        await signIn();
+        return;
+      }
+
+      setProcessingId(expert._id);
+
+      try {
+        const res = await fetch("/api/payment/consultation/initiate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // ফিক্সড: expertId এর বদলে doctorId পাঠানো হলো যা ব্যাকএন্ডের Zod স্কিমার সাথে মিলবে
+          body: JSON.stringify({ doctorId: expert._id }), 
+        });
+
+        interface PaymentResponse {
+          gatewayUrl?: string;
+          error?: string;
+        }
+
+        const data: PaymentResponse = await res.json();
+
+        if (!res.ok)
+          throw new Error(data.error ?? "পেমেন্ট ইনিশিয়েট ব্যর্থ হয়েছে");
+
+        if (data.gatewayUrl) {
+          window.location.assign(data.gatewayUrl);
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "কিছু ভুল হয়েছে";
+        toast.error(message);
+        setProcessingId(null);
+      }
+    },
+    [session]
+  );
+
+  if (isLoading)
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-xl flex items-center justify-center">
-            <Shield size={20} className="text-[var(--primary)]" />
-          </div>
-          <div>
-            <h2 className="text-xl font-black text-[var(--text)] font-hind">
-              বিশেষজ্ঞ পরামর্শ প্যানেল
-            </h2>
-            <p className="text-sm text-[var(--text)]/60 font-hind">
-              অভিজ্ঞ মৎস্য কর্মকর্তাদের সাথে সরাসরি যোগাযোগ করুন
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex-shrink-0 w-72 h-80 bg-[var(--surface)] rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      </div>
+      <div className="h-80 w-full animate-pulse bg-zinc-900/50 rounded-2xl" />
     );
-  }
 
   return (
-    <div className="space-y-6">
+    <section className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-xl flex items-center justify-center">
           <Shield size={20} className="text-[var(--primary)]" />
         </div>
         <div>
-          <h2 className="text-xl font-black text-[var(--text)] font-hind">
+          <h2 className="text-xl font-black text-[var(--text)]">
             বিশেষজ্ঞ পরামর্শ প্যানেল
           </h2>
-          <p className="text-sm text-[var(--text)]/60 font-hind">
-            অভিজ্ঞ মৎস্য কর্মকর্তাদের সাথে সরাসরি যোগাযোগ করুন
-          </p>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex-shrink-0 w-72 h-80 bg-[var(--surface)] rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <ScrollShadow orientation="horizontal" className="flex justify-between overflow-x-auto snap-x scrollbar-none gap-6 pb-4">
-          {experts.map((expert) => (
-            <div
-              key={expert._id || expert.email}
-              className="flex-shrink-0  flex flex-col items-center text-center space-y-4 snap-start"
-            >
-              <Avatar
-                className="w-32 h-32 bg-gradient-to-br from-[var(--primary)]/30 to-[var(--primary)]/10 border-4 border-[var(--primary)]/20 shadow-2xl text-3xl font-black text-[var(--primary)]"
-              >
-                {getInitials(expert.name)}
-              </Avatar>
+      <ScrollShadow orientation="horizontal" className="flex gap-6 pb-4">
+        {experts.map((expert) => {
+          const isButtonLoading = processingId === expert._id;
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <Award size={16} className="text-[var(--primary)]" />
-                  <h3 className="text-lg font-bold text-[var(--text)] font-hind">
+          return (
+            <motion.div
+              key={expert._id}
+              whileHover={{ y: -5 }}
+              className="flex-shrink-0 w-72 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)]/50 shadow-xl"
+            >
+              <div className="flex flex-col items-center text-center space-y-4">
+                
+                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--primary)]/30 bg-zinc-800 flex items-center justify-center relative group shadow-lg">
+                  {expert.image ? (
+                    /* eslint-disable-next-img-element */
+                    <img
+                      src={expert.image}
+                      alt={expert.name}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center bg-zinc-800 text-[var(--text)] font-bold text-xl"
+                    style={{ display: expert.image ? "none" : "flex" }}
+                  >
+                    {expert.name ? expert.name.replace("ডাঃ ", "").substring(0, 1) : <User size={32} />}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-black flex items-center justify-center gap-2 text-[var(--text)]">
+                    <Award size={16} className="text-[var(--primary)]" />
                     {expert.name}
                   </h3>
+                  <p className="text-xs font-bold text-[var(--primary)] mt-1">
+                    {expert.specialization}
+                  </p>
+                  <p className="text-sm font-black text-[var(--primary)] mt-2">
+                    ফি: {expert.consultationFee ?? 0} ৳
+                  </p>
                 </div>
-                <p className="text-sm text-[var(--text)]/70 font-hind">
-                  {expert.designation}
-                </p>
-              </div>
 
-              <div className="w-full space-y-2 pt-2">
+                {/* HeroUI Button */}
                 <Button
-                  variant="outline"
-                  className="w-full font-hind font-semibold text-sm"
-                  onClick={() => window.location.href = `mailto:${expert.email}`}
+                  fullWidth
+                  className="bg-[var(--primary)] text-white font-black flex items-center justify-center gap-2"
+                  isDisabled={isButtonLoading}
+                  onClick={() => handleConsultExpert(expert)}
                 >
-                  <Mail size={16} className="mr-2" />
-                  ইমেইল পাঠান
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="w-full font-hind font-semibold text-sm"
-                  onClick={() => window.location.href = `tel:${expert.phone}`}
-                >
-                  <Phone size={16} className="mr-2" />
-                  কল করুন
+                  {isButtonLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>প্রসেস হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard size={16} />
+                      <span>পরামর্শ নিন</span>
+                    </>
+                  )}
                 </Button>
               </div>
-            </div>
-          ))}
-        </ScrollShadow>
-      )}
-    </div>
+            </motion.div>
+          );
+        })}
+      </ScrollShadow>
+    </section>
   );
-}
+});
+
+ExpertConsultantPanel.displayName = "ExpertConsultantPanel";
+export default ExpertConsultantPanel;
