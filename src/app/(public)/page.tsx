@@ -6,18 +6,14 @@ import ProfitCalculatorWidget from "@/features/home/components/ProfitCalculatorW
 import SuccessfulFarmerStories from "@/features/home/components/SuccessfulFarmerStories";
 import PWAInstallBanner from "@/features/home/components/PWAInstallBanner";
 import AIChatbotCTA from "@/features/home/components/AIChatbotCTA";
-import MarketTrendsInsight from "@/features/home/components/MarketTrendsInsight";
-import PremiumBootcampCTA from "@/features/home/components/PremiumBootcampCTA";
-import FarmingVideoShowcase from "@/features/home/components/FarmingVideoShowcase";
 import PlatformStatsBanner from "@/features/home/components/PlatformStatsBanner";
 import FishDiseaseVisionPreview from "@/features/home/components/FishDiseaseVisionPreview";
 import ExpertConsultantPanel from "@/features/home/components/ExpertConsultantPanel";
-import CommunityDiscussions from "@/features/home/components/CommunityDiscussions";
 import BecomeExpertCTA from "@/features/home/components/BecomeExpertCTA";
 import { getTickerMarketPrices } from "@/features/home/services/marketQueries";
 import { Metadata } from "next";
-import VoiceSearchWrapper from "@/features/home/components/VoiceSearchWrapper";
 import type { IMarketPrice } from "@/shared/types/market";
+import PremiumBootcampCTA from "@/features/home/components/PremiumBootcampCTA";
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -77,9 +73,6 @@ export default async function Home() {
 
       <div className="container mx-auto px-4 space-y-12 py-12">
         <RealtimePriceSnapshot />
-        <CommunityDiscussions />
-        <MarketTrendsInsight />
-
         <WeatherCropAdvisory />
 
         <EmergencyDiseaseAlerts />
@@ -88,7 +81,6 @@ export default async function Home() {
 
         <FishDiseaseVisionPreview />
         <PremiumBootcampCTA />
-        <FarmingVideoShowcase />
         <SuccessfulFarmerStories />
         <ExpertConsultantPanel />
         <BecomeExpertCTA />

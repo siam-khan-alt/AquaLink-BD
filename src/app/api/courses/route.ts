@@ -12,8 +12,9 @@ const createCourseSchema = z.object({
   title: z.string().min(1, "কোর্সের শিরোনাম অবশ্যই দিতে হবে"),
   description: z.string().min(1, "কোর্সের বিবরণ অবশ্যই দিতে হবে"),
   videoUrl: z.string().url("সঠিক ভিডিও URL প্রদান করুন"),
-  price: z.number().min(0, "মূল্য ০ এর চেয়ে বেশি হতে হবে"),
+  price: z.number().min(0, "মূল্য ০ এর চেয়ে বেশি হতে হবে"),
   category: z.string().min(1, "ক্যাটাগরি অবশ্যই দিতে হবে"),
+  image: z.string().optional(),
 });
 
 export async function GET() {
@@ -45,17 +46,10 @@ export async function GET() {
       }));
     }
 
-    return NextResponse.json(
-      { success: true, courses: coursesWithEnrollmentStatus },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, courses: coursesWithEnrollmentStatus }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
-    console.error("Error fetching courses:", message);
-    return NextResponse.json(
-      { error: "Internal server error: " + message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error: " + message }, { status: 500 });
   }
 }
 
@@ -64,10 +58,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     
     if (!session || session.user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized. Admin access only." },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized. Admin access only." }, { status: 401 });
     }
 
     await connectDB();
@@ -80,25 +71,15 @@ export async function POST(req: NextRequest) {
       videoUrl: parsedData.videoUrl,
       price: parsedData.price,
       category: parsedData.category,
+      image: parsedData.image,
     });
 
-    return NextResponse.json(
-      { success: true, course: newCourse },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true, course: newCourse }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.issues[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
     }
-
     const message = error instanceof Error ? error.message : "Unknown Error";
-    console.error("Error creating course:", message);
-    return NextResponse.json(
-      { error: "Internal server error: " + message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error: " + message }, { status: 500 });
   }
 }

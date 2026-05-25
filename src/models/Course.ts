@@ -12,6 +12,7 @@ export interface ICourse extends Document {
   videoUrl: string;
   price: number;
   category: string;
+  image:string;
   quiz?: IQuizQuestion[];
   createdAt: Date;
   updatedAt: Date;
@@ -44,6 +45,11 @@ const CourseSchema = new Schema<ICourse>({
     required: [true, "কোর্সের ক্যাটাগরি অবশ্যই দিতে হবে"],
     trim: true
   },
+  image: {
+      type: String,
+      trim: true,
+      default: "" 
+    },
   quiz: [{
     question: { type: String, required: true },
     options: [{ type: String, required: true }],
