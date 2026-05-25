@@ -50,8 +50,8 @@
   --background: #f4faf8;
   --surface: #ffffff;
   --text: #052420;
-  --primary: #0293a4;
-  --secondary: #1c6b4e;
+  --primary:#0f6a6b;
+  --secondary: #10b981;
   --border: #e2f0ed;
   --hero-bg-start: #042f35;
   --hero-bg-mid: #0a5c66;
@@ -63,12 +63,12 @@
   --background: #030f12;    
   --surface: #07191e;
   --text: #e6f7f4;
-  --primary: #14b8a6;
+  --primary:#008080;
   --secondary: #34d399;
   --border: #0f2d35;
-  --hero-bg-start: #010709;
-  --hero-bg-mid: #041b21;
-  --hero-bg-end: #0a313a;
+  --hero-bg-start: #021619;
+  --hero-bg-mid: #05262a;
+  --hero-bg-end: #0c3c43;
 }
 
 body {
