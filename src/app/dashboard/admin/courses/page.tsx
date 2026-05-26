@@ -2,48 +2,28 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_CONFIG } from "@/shared/lib/constants";
 import { useSession } from "next-auth/react";
 import {
   BookOpen,
   Plus,
   X,
-  Loader2,
   Video,
   Tag,
   Trash2,
   Edit,
   Image as ImageIcon,
 } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import ImageUpload from "@/components/ui/ImageUpload";
-
-interface ICourse {
-  _id: string;
-  title: string;
-  description: string;
-  videoUrl: string;
-  price: number;
-  category: string;
-  image?: string;
-  createdAt: string;
-}
-
-interface ICoursesResponse {
-  success: boolean;
-  courses: ICourse[];
-}
-
-interface ISaveCourseInput {
-  title: string;
-  description: string;
-  videoUrl: string;
-  price: number;
-  category: string;
-  image?: string;
-}
+import type { AdminCourse, AdminCoursesResponse } from "@/shared/types/api-interfaces";
+import { courseSchema, type CourseInput } from "@/shared/lib/validation-schemas";
+import { AdminGridSkeleton } from "@/shared/components/AdminSkeleton";
+import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";
 
 const formatBDT = (val: number): string => {
   if (val === 0) return "ফ্রি";
@@ -75,7 +55,7 @@ export default function AdminCoursesPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Fetch Courses Query
-  const { data: coursesData, isLoading: isCoursesLoading } = useQuery<ICoursesResponse>({
+  const { data: coursesData, isLoading: isCoursesLoading } = useQuery<AdminCoursesResponse>({
     queryKey: ["admin-courses"],
     queryFn: async () => {
       const res = await fetch("/api/courses");
@@ -83,11 +63,12 @@ export default function AdminCoursesPage() {
       return res.json();
     },
     enabled: status === "authenticated",
+    staleTime: QUERY_CONFIG.DEFAULT_STALE_TIME,
   });
 
   // Create or Update Course Mutation
-  const saveCourseMutation = useMutation<unknown, Error, ISaveCourseInput>({
-    mutationFn: async (courseData: ISaveCourseInput) => {
+  const saveCourseMutation = useMutation<unknown, Error, CourseInput>({
+    mutationFn: async (courseData: CourseInput) => {
       const url = editCourseId ? `/api/courses/${editCourseId}` : "/api/courses";
       const method = editCourseId ? "PUT" : "POST";
 
@@ -129,7 +110,7 @@ export default function AdminCoursesPage() {
     },
   });
 
-  const openEditModal = (course: ICourse) => {
+  const openEditModal = (course: AdminCourse) => {
     setEditCourseId(course._id);
     setFormData({
       title: course.title,
@@ -177,16 +158,13 @@ export default function AdminCoursesPage() {
   };
 
   if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
-      </div>
-    );
+    return <AdminGridSkeleton count={6} />;
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="space-y-6">
+    <AdminErrorBoundary>
+      <div className="container mx-auto px-4 py-6">
+        <div className="space-y-6">
         
         {/* Top Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -210,11 +188,7 @@ export default function AdminCoursesPage() {
         {/* Main Content Grid */}
         {isCoursesLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="h-80 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-              </Card>
-            ))}
+            <SkeletonCard count={3} className="h-80" />
           </div>
         ) : !coursesData?.courses || coursesData.courses.length === 0 ? (
           <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 border-[var(--border)]">
@@ -223,7 +197,7 @@ export default function AdminCoursesPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {coursesData.courses.map((course) => (
+            {coursesData.courses.map((course: AdminCourse) => (
               <Card 
                 key={course._id} 
                 className="bg-[var(--surface)] border border-[var(--border)]/60 overflow-hidden hover:shadow-2xl hover:border-[var(--primary)]/30 transition-all duration-300 flex flex-col h-full rounded-2xl"
@@ -408,5 +382,6 @@ export default function AdminCoursesPage() {
 
       </div>
     </div>
+    </AdminErrorBoundary>
   );
 }

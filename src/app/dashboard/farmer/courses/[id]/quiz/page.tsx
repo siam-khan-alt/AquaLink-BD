@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, CheckCircle, XCircle, ArrowLeft, Loader2, Award } from "lucide-react";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
+import { BookOpen, CheckCircle, XCircle, ArrowLeft, Award } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { toast } from "sonner";
@@ -53,25 +54,32 @@ export default function CourseQuizPage() {
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
 
-  const { data: courseData, isLoading: isCourseLoading } = useQuery<ICourseResponse>({
-    queryKey: ["course", courseId],
-    queryFn: async () => {
-      const res = await fetch(`/api/courses/${courseId}`);
-      if (!res.ok) throw new Error("কোর্স লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated" && !!courseId,
+  const queryResults = useQueries({
+    queries: [
+      {
+        queryKey: ["course", courseId],
+        queryFn: async () => {
+          const res = await fetch(`/api/courses/${courseId}`);
+          if (!res.ok) throw new Error("কোর্স লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<ICourseResponse>;
+        },
+        enabled: status === "authenticated" && !!courseId,
+      },
+      {
+        queryKey: ["enrollment", courseId],
+        queryFn: async () => {
+          const res = await fetch(`/api/enrollments/course/${courseId}`);
+          if (!res.ok) throw new Error("এনরোলমেন্ট লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<IEnrollmentResponse>;
+        },
+        enabled: status === "authenticated" && !!courseId,
+      },
+    ],
   });
 
-  const { data: enrollmentData } = useQuery<IEnrollmentResponse>({
-    queryKey: ["enrollment", courseId],
-    queryFn: async () => {
-      const res = await fetch(`/api/enrollments/course/${courseId}`);
-      if (!res.ok) throw new Error("এনরোলমেন্ট লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated" && !!courseId,
-  });
+  const courseData = queryResults[0].data;
+  const isCourseLoading = queryResults[0].isLoading;
+  const enrollmentData = queryResults[1].data;
 
   const completeEnrollmentMutation = useMutation({
     mutationFn: async () => {
@@ -93,8 +101,8 @@ export default function CourseQuizPage() {
 
   if (status === "loading" || isCourseLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+      <div className="min-h-screen p-6 bg-[var(--background)]">
+        <SkeletonCard className="h-96" />
       </div>
     );
   }

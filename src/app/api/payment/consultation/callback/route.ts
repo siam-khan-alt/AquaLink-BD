@@ -56,8 +56,6 @@ async function sendConsultationNotification(farmerId: string, doctorId: string, 
       "new-message",
       messageData
     );
-
-    console.log("Consultation notification sent successfully");
   } catch (error) {
     console.error("Error sending consultation notification:", error);
   }

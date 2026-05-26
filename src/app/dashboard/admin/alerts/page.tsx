@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_CONFIG } from "@/shared/lib/constants";
 import { useSession } from "next-auth/react";
 import {
   AlertTriangle,
   Plus,
   X,
-  Loader2,
   MapPin,
   Calendar,
   Edit,
@@ -17,24 +17,15 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-interface IAlert {
-  _id: string;
-  region: string;
-  title: string;
-  detail: string;
-  level: "info" | "warning" | "danger";
-  isActive: boolean;
-  createdAt: string;
-}
-
-interface IAlertsResponse {
-  alerts: IAlert[];
-}
+import type { AdminAlert, AdminAlertsResponse } from "@/shared/types/api-interfaces";
+import { alertSchema, type AlertInput } from "@/shared/lib/validation-schemas";
+import { AdminTableSkeleton } from "@/shared/components/AdminSkeleton";
+import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";
 
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {
@@ -87,7 +78,7 @@ export default function AdminAlertsManagement() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const { data: alertsData, isLoading: isAlertsLoading } = useQuery<IAlertsResponse>({
+  const { data: alertsData, isLoading: isAlertsLoading } = useQuery<AdminAlertsResponse>({
     queryKey: ["admin-alerts"],
     queryFn: async () => {
       const res = await fetch("/api/admin/alerts");
@@ -95,16 +86,11 @@ export default function AdminAlertsManagement() {
       return res.json();
     },
     enabled: status === "authenticated",
+    staleTime: QUERY_CONFIG.DEFAULT_STALE_TIME,
   });
 
   const createAlertMutation = useMutation({
-    mutationFn: async (newAlertData: {
-      region: string;
-      title: string;
-      detail: string;
-      level: "info" | "warning" | "danger";
-      isActive: boolean;
-    }) => {
+    mutationFn: async (newAlertData: AlertInput) => {
       const res = await fetch("/api/admin/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,25 +143,19 @@ export default function AdminAlertsManagement() {
   });
 
   if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
-      </div>
-    );
+    return <AdminTableSkeleton rows={5} columns={7} />;
   }
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
 
-    if (!formData.region.trim()) {
-      errors.region = "অঞ্চল অবশ্যই দিতে হবে";
-    }
-    if (!formData.title.trim()) {
-      errors.title = "শিরোনাম অবশ্যই দিতে হবে";
-    }
-    if (formData.detail.trim().length < 10) {
-      errors.detail = "বিস্তারিত তথ্য কমপক্ষে ১০ অক্ষর হতে হবে";
+    try {
+      alertSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof Error) {
+        errors.form = error.message;
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -187,8 +167,9 @@ export default function AdminAlertsManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <AdminErrorBoundary>
+      <div className="min-h-screen bg-[var(--background)] py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border)] pb-8">
@@ -241,8 +222,8 @@ export default function AdminAlertsManagement() {
               <tbody>
                 {isAlertsLoading ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center">
-                      <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin mx-auto" />
+                    <td colSpan={7} className="py-12">
+                      <SkeletonTable rows={5} columns={7} showHeader={false} />
                     </td>
                   </tr>
                 ) : !alertsData?.alerts || alertsData.alerts.length === 0 ? (
@@ -439,5 +420,6 @@ export default function AdminAlertsManagement() {
 
       </div>
     </div>
+    </AdminErrorBoundary>
   );
 }

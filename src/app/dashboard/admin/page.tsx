@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
   Users,
@@ -10,7 +10,6 @@ import {
   Bell,
   TrendingUp,
   ShieldCheck,
-  Loader2,
   CheckCircle,
   XCircle,
   DollarSign,
@@ -20,50 +19,26 @@ import {
   X,
   Eye,
 } from "lucide-react";
+import { SkeletonCard, SkeletonStats } from "@/components/ui/SkeletonCard";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { toast } from "sonner";
+import { QUERY_CONFIG } from "@/shared/lib/constants";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { AdminStatsCardSkeleton } from "@/shared/components/AdminSkeleton";
+import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";
+import type {
+  AdminStats,
+  AdminStatsResponse,
+  Farmer,
+  FarmersResponse,
+  DoctorApplication,
+  DoctorApplicationsResponse,
+} from "@/shared/types/api-interfaces";
+import { priceUpdateSchema, type PriceUpdateInput } from "@/shared/lib/validation-schemas";
 
 const fishTypes = ["Ruhi", "Pangas", "Tilapia", "Katla", "Mrigel", "Koi", "Other"] as const;
-
-interface IAdminStats {
-  totalFarmers: number;
-  totalPonds: number;
-  activeChatChannels: number;
-  verifiedFarmers: number;
-  notificationDispatchStatus: string;
-}
-
-interface IStatsResponse {
-  stats: IAdminStats;
-}
-
-interface IFarmer {
-  _id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  isVerified: boolean;
-  createdAt: string;
-}
-
-interface IDoctorApplication {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  degree: string;
-  specialization: string;
-  licenseNumber: string;
-  experience: number;
-  consultationFee: number;
-  bio: string;
-  district?: string;
-  division?: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: string;
-}
 
 const formatNumber = (val: number): string => {
   return new Intl.NumberFormat("bn-BD").format(val);
@@ -88,36 +63,49 @@ export default function AdminDashboard() {
   });
   const [priceFormErrors, setPriceFormErrors] = useState<Record<string, string>>({});
 
-  const { data: statsData, isLoading: isStatsLoading } = useQuery<IStatsResponse>({
-    queryKey: ["admin-overview"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/overview");
-      if (!res.ok) throw new Error("পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated",
+  const queryResults = useQueries({
+    queries: [
+      {
+        queryKey: ["admin-overview"],
+        queryFn: async () => {
+          const res = await fetch("/api/admin/overview");
+          if (!res.ok) throw new Error("পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<AdminStatsResponse>;
+        },
+        enabled: status === "authenticated",
+        staleTime: QUERY_CONFIG.DEFAULT_STALE_TIME,
+      },
+      {
+        queryKey: ["admin-farmers"],
+        queryFn: async () => {
+          const res = await fetch("/api/admin/users");
+          if (!res.ok) throw new Error("চাষি তালিকা লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<FarmersResponse>;
+        },
+        enabled: status === "authenticated" && activeTab === "farmers",
+        staleTime: QUERY_CONFIG.DEFAULT_STALE_TIME,
+      },
+      {
+        queryKey: ["admin-doctor-applications"],
+        queryFn: async () => {
+          const res = await fetch("/api/admin/doctor-applications");
+          if (!res.ok) throw new Error("ডাক্তার আবেদন লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<DoctorApplicationsResponse>;
+        },
+        enabled: status === "authenticated",
+        refetchInterval: QUERY_CONFIG.DOCTOR_APPLICATIONS_REFETCH_INTERVAL,
+        staleTime: QUERY_CONFIG.DOCTOR_APPLICATIONS_REFETCH_INTERVAL
+      },
+    ],
   });
 
-  const { data: farmersData, isLoading: isFarmersLoading } = useQuery<{ farmers: IFarmer[] }>({
-    queryKey: ["admin-farmers"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/users");
-      if (!res.ok) throw new Error("চাষি তালিকা লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated" && activeTab === "farmers",
-  });
-
-  const { data: doctorApplicationsData, isLoading: isDoctorApplicationsLoading, refetch: refetchDoctorApplications } = useQuery<{ applications: IDoctorApplication[] }>({
-    queryKey: ["admin-doctor-applications"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/doctor-applications");
-      if (!res.ok) throw new Error("ডাক্তার আবেদন লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated",
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
-  });
+  const statsData = queryResults[0].data;
+  const farmersData = queryResults[1].data;
+  const doctorApplicationsData = queryResults[2].data;
+  const isStatsLoading = queryResults[0].isLoading;
+  const isFarmersLoading = queryResults[1].isLoading;
+  const isDoctorApplicationsLoading = queryResults[2].isLoading;
+  const refetchDoctorApplications = queryResults[2].refetch;
 
   const updatePriceMutation = useMutation({
     mutationFn: async (priceData: {
@@ -174,8 +162,11 @@ export default function AdminDashboard() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+      <div className="min-h-screen p-6 bg-[var(--background)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <SkeletonStats count={4} />
+        </div>
+        <SkeletonCard className="h-96" />
       </div>
     );
   }
@@ -185,12 +176,18 @@ export default function AdminDashboard() {
     const errors: Record<string, string> = {};
 
     const wholesaleNum = parseFloat(priceFormData.wholesalePrice);
-    if (isNaN(wholesaleNum) || wholesaleNum < 0) {
-      errors.wholesalePrice = "সঠিক পাইকারি দর লিখুন";
-    }
     const retailNum = parseFloat(priceFormData.retailPrice);
-    if (isNaN(retailNum) || retailNum < 0) {
-      errors.retailPrice = "সঠিক খুচরা দর লিখুন";
+
+    try {
+      priceUpdateSchema.parse({
+        fishType: priceFormData.fishType,
+        wholesalePrice: wholesaleNum,
+        retailPrice: retailNum,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        errors.price = error.message;
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -227,8 +224,9 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="space-y-6">
+    <AdminErrorBoundary>
+      <div className="container mx-auto px-4 py-6">
+        <div className="space-y-6">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -243,7 +241,10 @@ export default function AdminDashboard() {
         </div>
 
         {/* Row 1: System Analytics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {isStatsLoading ? (
+          <AdminStatsCardSkeleton count={4} />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Card 1: Total Farmers */}
           <Card className="hover:scale-[1.02] transition-transform duration-300">
@@ -251,11 +252,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">মোট চাষি</p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
-                  {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-                  ) : (
-                    formatNumber(stats.totalFarmers)
-                  )}
+                  {formatNumber(stats.totalFarmers)}
                 </h3>
               </div>
               <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl border border-[var(--primary)]/20">
@@ -271,11 +268,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">মোট পুকুর</p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
-                  {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-                  ) : (
-                    formatNumber(stats.totalPonds)
-                  )}
+                  {formatNumber(stats.totalPonds)}
                 </h3>
               </div>
               <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl border border-[var(--primary)]/20">
@@ -291,11 +284,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">সক্রিয় চ্যাট</p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
-                  {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-                  ) : (
-                    formatNumber(stats.activeChatChannels)
-                  )}
+                  {formatNumber(stats.activeChatChannels)}
                 </h3>
               </div>
               <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl border border-[var(--primary)]/20">
@@ -311,11 +300,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-semibold text-[var(--text)]/60 font-hind">ভেরিফাইড চাষি</p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
-                  {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-                  ) : (
-                    formatNumber(stats.verifiedFarmers)
-                  )}
+                  {formatNumber(stats.verifiedFarmers)}
                 </h3>
               </div>
               <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl border border-[var(--primary)]/20">
@@ -326,6 +311,8 @@ export default function AdminDashboard() {
           </Card>
 
         </div>
+        )}
+
 
         {/* Row 2: Tabbed Dashboard Hub */}
         <Card className="p-6">
@@ -376,8 +363,8 @@ export default function AdminDashboard() {
               </div>
 
               {isFarmersLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+                <div className="py-12">
+                  <SkeletonTable rows={5} columns={7} />
                 </div>
               ) : !farmersData?.farmers || farmersData.farmers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -467,8 +454,8 @@ export default function AdminDashboard() {
               </div>
 
               {isDoctorApplicationsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+                <div className="py-12">
+                  <SkeletonTable rows={5} columns={7} />
                 </div>
               ) : !doctorApplicationsData?.applications || doctorApplicationsData.applications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -663,5 +650,6 @@ export default function AdminDashboard() {
 
       </div>
     </div>
+    </AdminErrorBoundary>
   );
 }

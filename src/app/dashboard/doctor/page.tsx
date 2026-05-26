@@ -3,8 +3,29 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Transaction } from "@/models/Transaction";
+import type { ITransaction } from "@/models/Transaction";
 import { Stethoscope, Clock, DollarSign, TrendingUp } from "lucide-react";
 import Card from "@/components/ui/Card";
+
+// Interface for Mongoose lean results (plain JS objects without Document methods)
+interface TransactionLean {
+  _id: { toString(): string };
+  transactionId: string;
+  userId: string;
+  type: "course" | "consultation";
+  itemId: string;
+  amount: number;
+  currency: string;
+  status: "pending" | "paid" | "failed" | "refunded";
+  paymentMethod?: string;
+  paymentGateway?: string;
+  doctorId?: string;
+  adminCommission?: number;
+  doctorEarnings?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 async function DoctorDashboard() {
   const session = await getServerSession(authOptions);
@@ -22,7 +43,7 @@ async function DoctorDashboard() {
   const totalEarnings = transactions.reduce((sum, t) => sum + (t.doctorEarnings || 0), 0);
   const totalConsultations = transactions.length;
   const monthlyEarnings = transactions
-    .filter((t: any) => {
+    .filter((t: TransactionLean) => {
       const transactionDate = new Date(t.createdAt);
       const now = new Date();
       return (
@@ -30,7 +51,7 @@ async function DoctorDashboard() {
         transactionDate.getFullYear() === now.getFullYear()
       );
     })
-    .reduce((sum: number, t: any) => sum + (t.doctorEarnings || 0), 0);
+    .reduce((sum: number, t: TransactionLean) => sum + (t.doctorEarnings || 0), 0);
 
   // Fetch pending consultations count
   const pendingConsultations = await Transaction.countDocuments({
@@ -85,11 +106,11 @@ async function DoctorDashboard() {
     .limit(5)
     .lean();
 
-  const recentConsultationsFormatted = recentConsultations.map((c: any) => ({
+  const recentConsultationsFormatted = recentConsultations.map((c: TransactionLean) => ({
     id: c._id.toString(),
-    farmerName: c.metadata?.farmerName || "অজানা",
-    pondName: c.metadata?.pondName || "পুকুর",
-    issue: c.metadata?.issue || "সাধারণ পরামর্শ",
+    farmerName: (c.metadata?.farmerName as string) || "অজানা",
+    pondName: (c.metadata?.pondName as string) || "পুকুর",
+    issue: (c.metadata?.issue as string) || "সাধারণ পরামর্শ",
     status: c.status,
     date: new Date(c.createdAt).toLocaleDateString("bn-BD"),
   }));

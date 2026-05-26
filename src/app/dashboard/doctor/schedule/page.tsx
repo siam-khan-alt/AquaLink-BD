@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Clock, ToggleLeft, ToggleRight, Calendar, Save } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import { toast } from "sonner";
 
 interface WeeklySchedule {
   monday: { start: string; end: string; enabled: boolean };
@@ -16,6 +19,20 @@ interface WeeklySchedule {
 }
 
 export default function DoctorSchedule() {
+  const { data: session, status } = useSession();
+  const queryClient = useQueryClient();
+
+  // Fetch existing schedule
+  const { data: availabilityData } = useQuery({
+    queryKey: ["doctor-availability"],
+    queryFn: async () => {
+      const res = await fetch("/api/doctor/availability");
+      if (!res.ok) throw new Error("উপলব্ধতা লোড করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
+    enabled: status === "authenticated",
+  });
+
   const [isAvailable, setIsAvailable] = useState(true);
   const [schedule, setSchedule] = useState<WeeklySchedule>({
     monday: { start: "09:00", end: "17:00", enabled: true },
@@ -25,6 +42,46 @@ export default function DoctorSchedule() {
     friday: { start: "09:00", end: "17:00", enabled: true },
     saturday: { start: "09:00", end: "13:00", enabled: true },
     sunday: { start: "", end: "", enabled: false },
+  });
+
+  // Initialize state with fetched data
+  useEffect(() => {
+    if (availabilityData?.availability) {
+      const { isAvailable: fetchedAvailable, weeklySchedule } = availabilityData.availability;
+      setIsAvailable(fetchedAvailable ?? true);
+      
+      if (weeklySchedule) {
+        setSchedule({
+          monday: { start: weeklySchedule.monday?.start || "09:00", end: weeklySchedule.monday?.end || "17:00", enabled: !!weeklySchedule.monday?.start },
+          tuesday: { start: weeklySchedule.tuesday?.start || "09:00", end: weeklySchedule.tuesday?.end || "17:00", enabled: !!weeklySchedule.tuesday?.start },
+          wednesday: { start: weeklySchedule.wednesday?.start || "09:00", end: weeklySchedule.wednesday?.end || "17:00", enabled: !!weeklySchedule.wednesday?.start },
+          thursday: { start: weeklySchedule.thursday?.start || "09:00", end: weeklySchedule.thursday?.end || "17:00", enabled: !!weeklySchedule.thursday?.start },
+          friday: { start: weeklySchedule.friday?.start || "09:00", end: weeklySchedule.friday?.end || "17:00", enabled: !!weeklySchedule.friday?.start },
+          saturday: { start: weeklySchedule.saturday?.start || "09:00", end: weeklySchedule.saturday?.end || "13:00", enabled: !!weeklySchedule.saturday?.start },
+          sunday: { start: weeklySchedule.sunday?.start || "", end: weeklySchedule.sunday?.end || "", enabled: !!weeklySchedule.sunday?.start },
+        });
+      }
+    }
+  }, [availabilityData]);
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: async (data: { isAvailable: boolean; weeklySchedule: any }) => {
+      const res = await fetch("/api/doctor/availability", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("সময়সূচি সংরক্ষণ করতে ব্যর্থ হয়েছে");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("সময়সূচি সফলভাবে সংরক্ষণ করা হয়েছে");
+      queryClient.invalidateQueries({ queryKey: ["doctor-availability"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
   });
 
   const days = [
@@ -58,8 +115,21 @@ export default function DoctorSchedule() {
   };
 
   const handleSave = () => {
-    // TODO: Save to backend
-    console.log("Saving schedule:", { isAvailable, schedule });
+    // Transform schedule to match API format (remove 'enabled' field)
+    const weeklySchedule = {
+      monday: { start: schedule.monday.start, end: schedule.monday.end },
+      tuesday: { start: schedule.tuesday.start, end: schedule.tuesday.end },
+      wednesday: { start: schedule.wednesday.start, end: schedule.wednesday.end },
+      thursday: { start: schedule.thursday.start, end: schedule.thursday.end },
+      friday: { start: schedule.friday.start, end: schedule.friday.end },
+      saturday: { start: schedule.saturday.start, end: schedule.saturday.end },
+      sunday: { start: schedule.sunday.start, end: schedule.sunday.end },
+    };
+
+    saveMutation.mutate({
+      isAvailable,
+      weeklySchedule,
+    });
   };
 
   return (
@@ -182,10 +252,20 @@ export default function DoctorSchedule() {
         <div className="mt-6 flex justify-end">
           <Button
             onClick={handleSave}
-            className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6 py-2 rounded-lg font-hind font-bold flex items-center gap-2"
+            disabled={saveMutation.isPending}
+            className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6 py-2 rounded-lg font-hind font-bold flex items-center gap-2 disabled:opacity-50"
           >
-            <Save size={16} />
-            সংরক্ষণ করুন
+            {saveMutation.isPending ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                সংরক্ষণ করছে...
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                সংরক্ষণ করুন
+              </>
+            )}
           </Button>
         </div>
       </Card>

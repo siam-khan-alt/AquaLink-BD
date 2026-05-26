@@ -7,13 +7,14 @@ import {
   BookOpen,
   Plus,
   X,
-  Loader2,
   Edit,
   Trash2,
   Video,
   FileText,
   Image as ImageIcon,
 } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -205,8 +206,8 @@ export default function AdminStoriesManagement() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+      <div className="min-h-screen p-6 bg-[var(--background)]">
+        <SkeletonCard className="h-96" />
       </div>
     );
   }
@@ -248,8 +249,8 @@ export default function AdminStoriesManagement() {
               <tbody>
                 {isStoriesLoading ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center">
-                      <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin mx-auto" />
+                    <td colSpan={7} className="py-12">
+                      <SkeletonTable rows={5} columns={7} showHeader={false} />
                     </td>
                   </tr>
                 ) : !storiesData?.stories || storiesData.stories.length === 0 ? (

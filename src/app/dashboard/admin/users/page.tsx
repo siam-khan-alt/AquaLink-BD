@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_CONFIG } from "@/shared/lib/constants";
 import {
   Users,
   ShieldCheck,
@@ -17,21 +18,10 @@ import {
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-
-interface IUser {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  isVerified: boolean;
-  role: string;
-  createdAt: string;
-}
-
-interface IUsersResponse {
-  success: boolean;
-  farmers: IUser[];
-}
+import type { User, UsersResponse } from "@/shared/types/api-interfaces";
+import { userRoleChangeSchema, userVerificationSchema } from "@/shared/lib/validation-schemas";
+import { AdminTableSkeleton } from "@/shared/components/AdminSkeleton";
+import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";
 
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {
@@ -46,7 +36,7 @@ export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: usersData, isLoading: isUsersLoading } = useQuery<IUsersResponse>({
+  const { data: usersData, isLoading: isUsersLoading } = useQuery<UsersResponse>({
     queryKey: ["admin-users"],
     queryFn: async () => {
       const res = await fetch("/api/admin/users");
@@ -54,6 +44,7 @@ export default function AdminUsersPage() {
       return res.json();
     },
     enabled: status === "authenticated",
+    staleTime: QUERY_CONFIG.DEFAULT_STALE_TIME,
   });
 
   const toggleRoleMutation = useMutation({
@@ -94,22 +85,19 @@ export default function AdminUsersPage() {
     },
   });
 
-  const filteredUsers = usersData?.farmers?.filter((user) =>
+  const filteredUsers = usersData?.farmers?.filter((user: User) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.phone.includes(searchQuery)
   ) || [];
 
   if (status === "loading" || isUsersLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]" />
-      </div>
-    );
+    return <AdminTableSkeleton rows={5} columns={6} />;
   }
 
   return (
-    <div className="space-y-6">
+    <AdminErrorBoundary>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -162,7 +150,7 @@ export default function AdminUsersPage() {
             <div>
               <p className="text-sm text-[var(--text)]/60 font-hind">যাচাইকৃত</p>
               <p className="text-2xl font-bold text-[var(--text)] font-hind">
-                {usersData?.farmers?.filter((u) => u.isVerified).length || 0}
+                {usersData?.farmers?.filter((u: User) => u.isVerified).length || 0}
               </p>
             </div>
           </div>
@@ -176,7 +164,7 @@ export default function AdminUsersPage() {
             <div>
               <p className="text-sm text-[var(--text)]/60 font-hind">অযাচাইকৃত</p>
               <p className="text-2xl font-bold text-[var(--text)] font-hind">
-                {usersData?.farmers?.filter((u) => !u.isVerified).length || 0}
+                {usersData?.farmers?.filter((u: User) => !u.isVerified).length || 0}
               </p>
             </div>
           </div>
@@ -211,7 +199,7 @@ export default function AdminUsersPage() {
             </thead>
             <tbody>
               {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
+                filteredUsers.map((user: User) => (
                   <tr key={user._id} className="border-b border-[var(--border)] hover:bg-[var(--border)]/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -315,5 +303,6 @@ export default function AdminUsersPage() {
         </div>
       </Card>
     </div>
+    </AdminErrorBoundary>
   );
 }

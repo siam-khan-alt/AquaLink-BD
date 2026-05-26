@@ -1,48 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
   DollarSign,
   Plus,
   Filter,
   X,
-  Loader2,
   Calendar,
   TrendingDown,
 } from "lucide-react";
+import { SkeletonCard, SkeletonStats } from "@/components/ui/SkeletonCard";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import type {
+  ExpenseTrackerItem,
+  ExpenseTrackerResponse,
+  PondListItem,
+  PondListResponse,
+} from "@/shared/types/api-interfaces";
 
 const expenseTypes = ["Feed", "Seed/Pona", "Medicine", "Fertilizer", "Other"] as const;
 
 type ExpenseType = typeof expenseTypes[number];
-
-interface IExpense {
-  _id: string;
-  pondId: string;
-  pondName: string;
-  type: string;
-  amount: number;
-  date: string;
-  note?: string;
-}
-
-interface IPond {
-  _id: string;
-  name: string;
-}
-
-interface IExpensesResponse {
-  expenses: IExpense[];
-}
-
-interface IPondsResponse {
-  ponds: IPond[];
-}
 
 const formatBDT = (val: number): string => {
   return "৳ " + new Intl.NumberFormat("bn-BD", {
@@ -75,25 +59,32 @@ export default function ExpensesPage() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const { data: expensesData, isLoading: isExpensesLoading } = useQuery<IExpensesResponse>({
-    queryKey: ["expenses"],
-    queryFn: async () => {
-      const res = await fetch("/api/ponds/expenses");
-      if (!res.ok) throw new Error("খরচের তথ্য লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated",
+  const queryResults = useQueries({
+    queries: [
+      {
+        queryKey: ["expenses"],
+        queryFn: async () => {
+          const res = await fetch("/api/ponds/expenses");
+          if (!res.ok) throw new Error("খরচের তথ্য লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<ExpenseTrackerResponse>;
+        },
+        enabled: status === "authenticated",
+      },
+      {
+        queryKey: ["ponds-list"],
+        queryFn: async () => {
+          const res = await fetch("/api/ponds");
+          if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<PondListResponse>;
+        },
+        enabled: status === "authenticated",
+      },
+    ],
   });
 
-  const { data: pondsData } = useQuery<IPondsResponse>({
-    queryKey: ["ponds-list"],
-    queryFn: async () => {
-      const res = await fetch("/api/ponds");
-      if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated",
-  });
+  const expensesData = queryResults[0].data;
+  const isExpensesLoading = queryResults[0].isLoading;
+  const pondsData = queryResults[1].data;
 
   const addExpenseMutation = useMutation({
     mutationFn: async (newExpenseData: {
@@ -134,8 +125,11 @@ export default function ExpensesPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+      <div className="min-h-screen p-6 bg-[var(--background)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <SkeletonStats count={4} />
+        </div>
+        <SkeletonCard className="h-96" />
       </div>
     );
   }
@@ -233,7 +227,7 @@ export default function ExpensesPage() {
                 <p className="text-white/80 text-sm font-semibold font-hind">মোট বিনিয়োগ</p>
                 <h2 className="text-4xl font-black mt-1 font-hind tracking-tight">
                   {isExpensesLoading ? (
-                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <div className="w-20 h-8 bg-white/30 rounded animate-pulse" />
                   ) : (
                     formatBDT(totalExpenses)
                   )}
@@ -292,8 +286,8 @@ export default function ExpensesPage() {
           </div>
 
           {isExpensesLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+            <div className="py-12">
+              <SkeletonTable rows={5} columns={5} />
             </div>
           ) : filteredExpenses.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">

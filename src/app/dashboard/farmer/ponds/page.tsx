@@ -17,24 +17,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import ImageUpload from "@/components/ui/ImageUpload";
-
-interface IPond {
-  _id: string;
-  name: string;
-  area: number;
-  fishType: string[];
-  waterQuality: {
-    pH: number;
-    dissolvedO2: number;
-    lastTested: string;
-  };
-  createdAt: string;
-}
-
-interface IPondsResponse {
-  success: boolean;
-  ponds: IPond[];
-}
+import type { Pond, PondsResponse } from "@/shared/types/api-interfaces";
 
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {
@@ -57,7 +40,7 @@ export default function PondsPage() {
     imageUrl: "",
   });
 
-  const { data: pondsData, isLoading: isPondsLoading } = useQuery<IPondsResponse>({
+  const { data: pondsData, isLoading: isPondsLoading } = useQuery<PondsResponse>({
     queryKey: ["ponds"],
     queryFn: async () => {
       const res = await fetch("/api/ponds");
@@ -192,7 +175,7 @@ export default function PondsPage() {
                     <div className="flex-1">
                       <p className="text-xs text-[var(--text)]/60 font-hind">pH মান</p>
                       <p className="text-sm font-semibold text-[var(--text)] font-hind">
-                        {pond.waterQuality.pH}
+                        {pond.waterQuality?.pH || 0}
                       </p>
                     </div>
                   </div>

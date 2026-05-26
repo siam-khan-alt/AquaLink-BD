@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
-import { UserCircle, Stethoscope, DollarSign, Save, Camera, Loader2 } from "lucide-react";
+import { UserCircle, Stethoscope, DollarSign, Save, Camera } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { toast } from "sonner";
@@ -229,7 +229,7 @@ export default function DoctorProfile() {
         >
           {isSaving ? (
             <>
-              <Loader2 size={16} className="animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               সংরক্ষণ করছে...
             </>
           ) : (

@@ -3,6 +3,7 @@
 import React, { memo, useState, useMemo, ChangeEvent } from "react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
+import { QUERY_CONFIG } from "@/shared/lib/constants";
 import { useSession, signIn } from "next-auth/react";
 import { BookOpen, Search, Video, Tag, ArrowRight, Loader2, X } from "lucide-react";
 import { Card, Button, Input, Chip } from "@heroui/react";
@@ -40,7 +41,7 @@ export const PublicCoursesClient = memo(() => {
       if (!res.ok) throw new Error("কোর্স ডাটা লোড করতে ব্যর্থ হয়েছে");
       return res.json();
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: QUERY_CONFIG.DEFAULT_STALE_TIME,
   });
 
   const courses = coursesData?.courses ?? [];

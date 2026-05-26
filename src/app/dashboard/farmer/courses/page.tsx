@@ -7,31 +7,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   BookOpen,
   Play,
-  Loader2,
   Video,
   DollarSign,
   X,
   CheckCircle,
   ExternalLink,
 } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-
-interface ICourse {
-  _id: string;
-  title: string;
-  description: string;
-  videoUrl: string;
-  price: number;
-  category: string;
-  isEnrolled: boolean;
-  createdAt: string;
-}
-
-interface ICoursesResponse {
-  courses: ICourse[];
-}
+import type { Course, CoursesResponse } from "@/shared/types/api-interfaces";
 
 const formatBDT = (val: number): string => {
   if (val === 0) return "ফ্রি";
@@ -52,7 +38,7 @@ export default function FarmerCoursesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const success = searchParams.get("success");
@@ -75,7 +61,7 @@ export default function FarmerCoursesPage() {
     }
   }, [success, error, router, queryClient]);
 
-  const { data: coursesData, isLoading: isCoursesLoading } = useQuery<ICoursesResponse>({
+  const { data: coursesData, isLoading: isCoursesLoading } = useQuery<CoursesResponse>({
     queryKey: ["farmer-courses"],
     queryFn: async () => {
       const res = await fetch("/api/courses");
@@ -113,18 +99,20 @@ export default function FarmerCoursesPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+      <div className="min-h-screen p-6 bg-[var(--background)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <SkeletonCard count={3} className="h-80" />
+        </div>
       </div>
     );
   }
 
-  const handleWatchVideo = (course: ICourse) => {
+  const handleWatchVideo = (course: Course) => {
     setSelectedCourse(course);
     setIsVideoModalOpen(true);
   };
 
-  const handlePurchase = (course: ICourse) => {
+  const handlePurchase = (course: Course) => {
     initiatePaymentMutation.mutate(course._id);
   };
 
@@ -147,11 +135,7 @@ export default function FarmerCoursesPage() {
         {/* Course Grid */}
         {isCoursesLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="h-80 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-              </Card>
-            ))}
+            <SkeletonCard count={3} className="h-80" />
           </div>
         ) : !coursesData?.courses || coursesData.courses.length === 0 ? (
           <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 border-[var(--border)]">

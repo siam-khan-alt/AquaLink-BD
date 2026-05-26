@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Stethoscope, Search, MapPin, Phone, Mail, DollarSign, Filter, Loader2 } from "lucide-react";
+import { Stethoscope, Search, MapPin, Phone, Mail, DollarSign, Filter } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -94,8 +95,8 @@ export default function FarmerExpertsPage() {
 
       {/* Experts Grid */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-12">
+          <SkeletonCard count={3} className="h-64" />
         </div>
       ) : filteredExperts.length === 0 ? (
         <Card className="p-12 text-center">

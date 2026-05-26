@@ -1,33 +1,21 @@
 "use client";
 
-import React, {  useState } from "react";
+import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Calculator, TrendingUp, DollarSign, Fish, Droplets, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-
-interface FeedCalculationResult {
-  biomass: number;
-  dailyFeedKg: number;
-  dailyFeedCost: number;
-  monthlyFeedCost: number;
-  feedRate: number;
-}
-
-interface FishTypeConfig {
-  name: string;
-  feedRate: number;
-  feedPricePerKg: number;
-  icon: React.ReactNode;
-}
+import type { FeedCalculationResult, FishTypeConfig } from "@/shared/types/api-interfaces";
 
 const fishTypes: FishTypeConfig[] = [
-  { name: "রুই", feedRate: 3.0, feedPricePerKg: 45, icon: <Fish size={20} /> },
-  { name: "কাতল", feedRate: 2.8, feedPricePerKg: 48, icon: <Fish size={20} /> },
-  { name: "মৃগেল", feedRate: 2.5, feedPricePerKg: 50, icon: <Fish size={20} /> },
-  { name: "তেলাপিয়া", feedRate: 4.0, feedPricePerKg: 35, icon: <Fish size={20} /> },
-  { name: "পাঙ্গাস", feedRate: 3.5, feedPricePerKg: 40, icon: <Fish size={20} /> },
-  { name: "সর্পুতি", feedRate: 3.2, feedPricePerKg: 42, icon: <Fish size={20} /> },
+  { name: "রুই", feedRate: 3.0, feedPricePerKg: 45 },
+  { name: "কাতল", feedRate: 2.8, feedPricePerKg: 48 },
+  { name: "মৃগেল", feedRate: 2.5, feedPricePerKg: 50 },
+  { name: "তেলাপিয়া", feedRate: 4.0, feedPricePerKg: 35 },
+  { name: "পাঙ্গাস", feedRate: 3.5, feedPricePerKg: 40 },
+  { name: "সর্পুতি", feedRate: 3.2, feedPricePerKg: 42 },
 ];
 
 const formatBDT = (val: number): string => {
@@ -49,44 +37,45 @@ export default function FeedCalculatorPage() {
   const [fishCount, setFishCount] = useState<string>("");
   const [avgWeight, setAvgWeight] = useState<string>("");
   const [waterTemp, setWaterTemp] = useState<string>("");
-  const [result, setResult] = useState<FeedCalculationResult | null>(null);
 
+  const calculateMutation = useMutation({
+    mutationFn: async (data: { fishType: string; fishCount: number; avgWeight: number; waterTemp?: number }) => {
+      const res = await fetch("/api/feed-calculator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const errorData = (await res.json()) as { error?: string };
+        throw new Error(errorData.error || "হিসাব করতে ব্যর্থ হয়েছে");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast.success("হিসাব সফলভাবে সম্পন্ন হয়েছে");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   const selectedFish = fishTypes.find((f) => f.name === fishType) || fishTypes[0];
 
   const calculateFeed = () => {
     const count = parseFloat(fishCount);
     const weight = parseFloat(avgWeight);
-    const temp = waterTemp ? parseFloat(waterTemp) : 28;
+    const temp = waterTemp ? parseFloat(waterTemp) : undefined;
 
     if (isNaN(count) || isNaN(weight) || count <= 0 || weight <= 0) {
+      toast.error("সঠিক ইনপুট প্রদান করুন");
       return;
     }
 
-    // Calculate biomass in kg
-    const biomass = (count * weight) / 1000;
-
-    // Adjust feed rate based on water temperature
-    let adjustedFeedRate = selectedFish.feedRate;
-    if (temp < 20) {
-      adjustedFeedRate *= 0.7; // Reduce feed in cold water
-    } else if (temp > 32) {
-      adjustedFeedRate *= 0.8; // Reduce feed in hot water
-    }
-
-    // Calculate daily feed required in kg
-    const dailyFeedKg = (biomass * adjustedFeedRate) / 100;
-
-    // Calculate costs
-    const dailyFeedCost = dailyFeedKg * selectedFish.feedPricePerKg;
-    const monthlyFeedCost = dailyFeedCost * 30;
-
-    setResult({
-      biomass,
-      dailyFeedKg,
-      dailyFeedCost,
-      monthlyFeedCost,
-      feedRate: adjustedFeedRate,
+    calculateMutation.mutate({
+      fishType,
+      fishCount: count,
+      avgWeight: weight,
+      waterTemp: temp,
     });
   };
 
@@ -94,7 +83,6 @@ export default function FeedCalculatorPage() {
     setFishCount("");
     setAvgWeight("");
     setWaterTemp("");
-    setResult(null);
   };
 
   return (
@@ -217,7 +205,7 @@ export default function FeedCalculatorPage() {
               ফলাফল ও খরচ বিশ্লেষণ
             </h2>
 
-            {result ? (
+            {calculateMutation.data?.result ? (
               <div className="space-y-4">
                 {/* Biomass Card */}
                 <div className="p-4 bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-xl space-y-2">
@@ -226,7 +214,7 @@ export default function FeedCalculatorPage() {
                     <span className="text-sm font-semibold font-hind">মোট বায়োমাস</span>
                   </div>
                   <p className="text-2xl font-bold text-[var(--text)] font-hind">
-                    {formatNumber(result.biomass)} কেজি
+                    {formatNumber(calculateMutation.data.result.biomass)} কেজি
                   </p>
                 </div>
 
@@ -237,10 +225,10 @@ export default function FeedCalculatorPage() {
                     <span className="text-sm font-semibold font-hind">দৈনিক ফিড প্রয়োজন</span>
                   </div>
                   <p className="text-2xl font-bold text-[var(--text)] font-hind">
-                    {formatNumber(result.dailyFeedKg)} কেজি
+                    {formatNumber(calculateMutation.data.result.dailyFeedKg)} কেজি
                   </p>
                   <p className="text-xs text-[var(--text)]/60 font-hind">
-                    ফিড রেট: {result.feedRate.toFixed(1)}%
+                    ফিড রেট: {calculateMutation.data.result.feedRate.toFixed(1)}%
                   </p>
                 </div>
 
@@ -252,7 +240,7 @@ export default function FeedCalculatorPage() {
                       <span className="text-sm font-semibold font-hind">দৈনিক খরচ</span>
                     </div>
                     <p className="text-2xl font-bold text-[var(--text)] font-hind">
-                      {formatBDT(result.dailyFeedCost)}
+                      {formatBDT(calculateMutation.data.result.dailyFeedCost)}
                     </p>
                   </div>
 
@@ -262,7 +250,7 @@ export default function FeedCalculatorPage() {
                       <span className="text-sm font-semibold font-hind">মাসিক খরচ (আনুমানিক)</span>
                     </div>
                     <p className="text-2xl font-bold text-[var(--text)] font-hind">
-                      {formatBDT(result.monthlyFeedCost)}
+                      {formatBDT(calculateMutation.data.result.monthlyFeedCost)}
                     </p>
                   </div>
                 </div>

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import {
   LineChart,
   Line,
@@ -20,10 +20,12 @@ import {
   AlertTriangle,
   Plus,
   X,
-  Loader2,
   TrendingUp,
   ArrowLeft,
 } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
+import { QUERY_CONFIG } from "@/shared/lib/constants";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -82,26 +84,34 @@ export default function PondAnalyticsPage() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const { data: pondData, isLoading: isPondLoading } = useQuery<IPondResponse>({
-    queryKey: ["pond", pondId],
-    queryFn: async () => {
-      const res = await fetch(`/api/ponds/${pondId}`);
-      if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated" && !!pondId,
+  const queryResults = useQueries({
+    queries: [
+      {
+        queryKey: ["pond", pondId],
+        queryFn: async () => {
+          const res = await fetch(`/api/ponds/${pondId}`);
+          if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<IPondResponse>;
+        },
+        enabled: status === "authenticated" && !!pondId,
+      },
+      {
+        queryKey: ["water-quality-logs", pondId],
+        queryFn: async () => {
+          const res = await fetch(`/api/water-quality?pondId=${pondId}&days=30`);
+          if (!res.ok) throw new Error("পানির গুণমান লগ লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<ILogsResponse>;
+        },
+        enabled: status === "authenticated" && !!pondId,
+        refetchInterval: QUERY_CONFIG.DEFAULT_STALE_TIME,
+      },
+    ],
   });
 
-  const { data: logsData, isLoading: isLogsLoading } = useQuery<ILogsResponse>({
-    queryKey: ["water-quality-logs", pondId],
-    queryFn: async () => {
-      const res = await fetch(`/api/water-quality?pondId=${pondId}&days=30`);
-      if (!res.ok) throw new Error("পানির গুণমান লগ লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated" && !!pondId,
-    refetchInterval: 60000,
-  });
+  const pondData = queryResults[0].data;
+  const isPondLoading = queryResults[0].isLoading;
+  const logsData = queryResults[1].data;
+  const isLogsLoading = queryResults[1].isLoading;
 
   const addLogMutation = useMutation({
     mutationFn: async (logData: {
@@ -135,8 +145,12 @@ export default function PondAnalyticsPage() {
 
   if (status === "loading" || isPondLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+      <div className="min-h-screen p-6 bg-[var(--background)]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <SkeletonCard className="h-80" />
+          <SkeletonCard className="h-80" />
+        </div>
+        <SkeletonCard className="h-96" />
       </div>
     );
   }
@@ -350,7 +364,7 @@ export default function PondAnalyticsPage() {
 
           {isLogsLoading ? (
             <div className="h-96 flex items-center justify-center">
-              <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+              <div className="w-full h-64 bg-[var(--border)]/20 rounded animate-pulse" />
             </div>
           ) : chartData.length === 0 ? (
             <div className="h-96 flex flex-col items-center justify-center text-center">

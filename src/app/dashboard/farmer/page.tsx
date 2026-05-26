@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -10,7 +10,6 @@ import {
   Activity,
   Plus,
   X,
-  Loader2,
   Waves,
   Calendar,
   Info,
@@ -18,6 +17,7 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
+import { SkeletonStats, SkeletonCard } from "@/components/ui/SkeletonCard";
 import { toast } from "sonner";
 import {
   AreaChart,
@@ -31,76 +31,16 @@ import {
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-interface IExpense {
-  _id: string;
-  type: string;
-  amount: number;
-  date: string;
-}
-
-interface IWaterQuality {
-  pH: number;
-  dissolvedO2?: number;
-  lastTested?: string;
-}
-
-interface IPond {
-  _id: string;
-  name: string;
-  area: number;
-  fishType: string[];
-  waterQuality?: IWaterQuality;
-  expenses?: IExpense[];
-  createdAt: string;
-}
-
-interface IPondsResponse {
-  ponds: IPond[];
-}
-
-interface IDashboardStats {
-  totalPonds: number;
-  totalActiveSpecies: number;
-  totalExpenses: number;
-  averagePH: number;
-}
-
-interface IStatsResponse {
-  stats: IDashboardStats;
-}
-
-interface IChartMonth {
-  key: string;
-  name: string;
-}
-
-interface IMonthExpenseAccumulator {
-  Feed: number;
-  Fertilizer: number;
-  Other: number;
-}
-
-interface IChartDataRow {
-  name: string;
-  "খাদ্য (Feed)": number;
-  "সার (Fertilizer)": number;
-  "অন্যান্য (Other)": number;
-}
-
-interface IAlert {
-  _id: string;
-  title: string;
-  region: string;
-  severity: "info" | "warning" | "danger";
-  detail: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-interface IAlertsResponse {
-  alerts: IAlert[];
-}
+import type {
+  Pond,
+  PondsResponse,
+  DashboardStats,
+  StatsResponse,
+  ChartDataRow,
+  Alert,
+  AlertsResponse,
+  ChartDataResponse,
+} from "@/shared/types/api-interfaces";
 
 const formatBDT = (val: number): string => {
   return (
@@ -141,38 +81,54 @@ export default function FarmerDashboard() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const { data: statsData, isLoading: isStatsLoading } =
-    useQuery<IStatsResponse>({
-      queryKey: ["ponds-stats"],
-      queryFn: async () => {
-        const res = await fetch("/api/ponds/stats");
-        if (!res.ok) throw new Error("পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে");
-        return res.json();
+  const queryResults = useQueries({
+    queries: [
+      {
+        queryKey: ["ponds-stats"],
+        queryFn: async () => {
+          const res = await fetch("/api/ponds/stats");
+          if (!res.ok) throw new Error("পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<StatsResponse>;
+        },
+        enabled: status === "authenticated",
       },
-      enabled: status === "authenticated",
-    });
-
-  const { data: pondsData, isLoading: isPondsLoading } =
-    useQuery<IPondsResponse>({
-      queryKey: ["ponds-list"],
-      queryFn: async () => {
-        const res = await fetch("/api/ponds");
-        if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
-        return res.json();
+      {
+        queryKey: ["ponds-list"],
+        queryFn: async () => {
+          const res = await fetch("/api/ponds");
+          if (!res.ok) throw new Error("পুকুরের তথ্য লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<PondsResponse>;
+        },
+        enabled: status === "authenticated",
       },
-      enabled: status === "authenticated",
-    });
-
-  const { data: alertsData } = useQuery<IAlertsResponse>({
-    queryKey: ["alerts"],
-    queryFn: async () => {
-      const res = await fetch("/api/home/alerts");
-      if (!res.ok) throw new Error("সতর্কতা লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated",
-    refetchInterval: 60000, // Refetch every minute
+      {
+        queryKey: ["alerts"],
+        queryFn: async () => {
+          const res = await fetch("/api/home/alerts");
+          if (!res.ok) throw new Error("সতর্কতা লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<AlertsResponse>;
+        },
+        enabled: status === "authenticated",
+        refetchInterval: 60000, // Refetch every minute
+      },
+      {
+        queryKey: ["chart-data"],
+        queryFn: async () => {
+          const res = await fetch("/api/ponds/chart-data");
+          if (!res.ok) throw new Error("চার্ট ডেটা লোড করতে ব্যর্থ হয়েছে");
+          return res.json() as Promise<ChartDataResponse>;
+        },
+        enabled: status === "authenticated",
+      },
+    ],
   });
+
+  const statsData = queryResults[0].data;
+  const pondsData = queryResults[1].data;
+  const alertsData = queryResults[2].data;
+  const chartDataResponse = queryResults[3].data;
+  const isStatsLoading = queryResults[0].isLoading;
+  const isPondsLoading = queryResults[1].isLoading;
 
   const addPondMutation = useMutation({
     mutationFn: async (newPondData: {
@@ -207,8 +163,15 @@ export default function FarmerDashboard() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <Loader2 className="w-12 h-12 text-[var(--primary)] animate-spin" />
+      <div className="min-h-screen p-6 bg-[var(--background)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <SkeletonStats count={4} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <SkeletonCard className="lg:col-span-2 h-80" />
+          <SkeletonCard className="h-80" />
+        </div>
+        <SkeletonCard className="h-96" />
       </div>
     );
   }
@@ -218,54 +181,7 @@ export default function FarmerDashboard() {
     return null;
   }
 
-  const getMonthlyExpensesData = (): IChartDataRow[] => {
-    if (!pondsData?.ponds || pondsData.ponds.length === 0) {
-      return [];
-    }
-
-    const chartDataMap: Record<string, IMonthExpenseAccumulator> = {};
-    const last6Months: IChartMonth[] = [];
-    const now = new Date();
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const name = `${MONTHS_BN[d.getMonth()]} ${d
-        .getFullYear()
-        .toString()
-        .slice(-2)}`;
-      last6Months.push({ key, name });
-      chartDataMap[key] = { Feed: 0, Fertilizer: 0, Other: 0 };
-    }
-
-    pondsData.ponds.forEach((pond: IPond) => {
-      if (pond.expenses) {
-        pond.expenses.forEach((expense: IExpense) => {
-          const expDate = new Date(expense.date);
-          const key = `${expDate.getFullYear()}-${expDate.getMonth()}`;
-          if (chartDataMap[key] !== undefined) {
-            const type = expense.type.toLowerCase();
-            if (type.includes("feed") || type.includes("খাদ্য")) {
-              chartDataMap[key].Feed += expense.amount;
-            } else if (type.includes("fertilizer") || type.includes("সার")) {
-              chartDataMap[key].Fertilizer += expense.amount;
-            } else {
-              chartDataMap[key].Other += expense.amount;
-            }
-          }
-        });
-      }
-    });
-
-    return last6Months.map((m) => ({
-      name: m.name,
-      "খাদ্য (Feed)": chartDataMap[m.key].Feed,
-      "সার (Fertilizer)": chartDataMap[m.key].Fertilizer,
-      "অন্যান্য (Other)": chartDataMap[m.key].Other,
-    }));
-  };
-
-  const chartData = getMonthlyExpensesData();
+  const chartData = chartDataResponse?.data || [];
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,7 +220,7 @@ export default function FarmerDashboard() {
     });
   };
 
-  const stats: IDashboardStats = statsData?.stats || {
+  const stats: DashboardStats = statsData?.stats || {
     totalPonds: 0,
     totalActiveSpecies: 0,
     totalExpenses: 0,
@@ -374,7 +290,7 @@ export default function FarmerDashboard() {
                 </p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
                   {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
+                    <div className="w-20 h-8 bg-[var(--border)]/30 rounded animate-pulse" />
                   ) : (
                     <TriangleDataCounter value={stats.totalPonds} />
                   )}
@@ -398,7 +314,7 @@ export default function FarmerDashboard() {
                 </p>
                 <h3 className="text-3xl font-black text-[var(--text)] mt-3 font-hind tracking-tight">
                   {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
+                    <div className="w-20 h-8 bg-[var(--border)]/30 rounded animate-pulse" />
                   ) : (
                     formatBDT(stats.totalExpenses)
                   )}
@@ -422,7 +338,7 @@ export default function FarmerDashboard() {
                 </p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
                   {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
+                    <div className="w-20 h-8 bg-[var(--border)]/30 rounded animate-pulse" />
                   ) : (
                     new Intl.NumberFormat("bn-BD").format(
                       stats.totalActiveSpecies
@@ -448,7 +364,7 @@ export default function FarmerDashboard() {
                 </p>
                 <h3 className="text-4xl font-black text-[var(--text)] mt-2 font-hind tracking-tight">
                   {isStatsLoading ? (
-                    <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
+                    <div className="w-20 h-8 bg-[var(--border)]/30 rounded animate-pulse" />
                   ) : stats.averagePH > 0 ? (
                     new Intl.NumberFormat("bn-BD").format(stats.averagePH)
                   ) : (
@@ -571,7 +487,7 @@ export default function FarmerDashboard() {
           <div className="h-80 w-full">
             {isPondsLoading ? (
               <div className="h-full flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+                <div className="w-full h-64 bg-[var(--border)]/20 rounded animate-pulse" />
               </div>
             ) : chartData.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
@@ -682,11 +598,7 @@ export default function FarmerDashboard() {
 
           {isPondsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="h-64 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
-                </Card>
-              ))}
+              <SkeletonCard count={3} className="h-64" />
             </div>
           ) : !pondsData?.ponds || pondsData.ponds.length === 0 ? (
             <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 border-[var(--border)]">
@@ -711,7 +623,7 @@ export default function FarmerDashboard() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pondsData.ponds.map((pond: IPond) => {
+              {pondsData.ponds.map((pond: Pond) => {
                 const ph = pond.waterQuality?.pH || 0;
                 const statusLabel = getPHStatusLabel(ph);
 
