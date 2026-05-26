@@ -5,6 +5,8 @@ import { WaterQualityLog } from "@/models/WaterQualityLog";
 import { Pond } from "@/models/Pond";
 import { z } from "zod";
 import { Types } from "mongoose";
+import { NotificationType, NotificationPriority } from "@/models/Notification";
+import { createNotification } from "@/shared/lib/notificationHelpers";
 
 interface WaterQualityInput {
   pondId: string;
@@ -134,6 +136,27 @@ export async function POST(req: NextRequest) {
       ammonia: data.ammonia,
       loggedAt: new Date(),
     });
+
+    // Check for critical water quality parameters
+    const isCritical = data.ph < 6 || data.ph > 9 || data.dissolvedOxygen < 4 || data.ammonia > 1;
+    
+    if (isCritical) {
+      await createNotification({
+        userId: token.id as string,
+        type: NotificationType.ALERT_WATER_QUALITY,
+        priority: NotificationPriority.URGENT,
+        title: "পানির গুণমান সতর্কতা",
+        message: `পুকুর #${data.pondId}-এ pH/অক্সিজেন/অ্যামোনিয়া মাত্রা বিপজ্জনক। দ্রুত ব্যবস্থা নিন।`,
+        link: `/dashboard/farmer/ponds/${data.pondId}/analytics`,
+        metadata: {
+          pondId: data.pondId,
+          ph: data.ph,
+          dissolvedOxygen: data.dissolvedOxygen,
+          ammonia: data.ammonia,
+          loggedAt: new Date(),
+        },
+      });
+    }
 
     return NextResponse.json(
       { success: true, log },

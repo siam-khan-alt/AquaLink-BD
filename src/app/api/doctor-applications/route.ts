@@ -3,6 +3,8 @@ import { connectDB } from "@/shared/lib/db";
 import { DoctorApplication } from "@/models/DoctorApplication";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { createNotification } from "@/shared/lib/notificationHelpers";
 
 const applicationSchema = z.object({
   name: z.string().min(2, "নাম কমপক্ষে ২ অক্ষরের হতে হবে"),
@@ -56,6 +58,23 @@ export async function POST(request: Request) {
       ...validatedData,
       password: hashedPassword,
       status: "pending",
+    });
+
+    // Create notification for admin
+    await createNotification({
+      role: UserRole.ADMIN,
+      type: NotificationType.USER_REGISTRATION,
+      priority: NotificationPriority.MEDIUM,
+      title: "নতুন ডাক্তার আবেদন",
+      message: `${validatedData.name} (${validatedData.specialization}) ডাক্তার হিসেবে আবেদন করেছেন।`,
+      link: "/dashboard/admin/experts",
+      metadata: {
+        applicationId: application._id.toString(),
+        name: validatedData.name,
+        email: validatedData.email,
+        specialization: validatedData.specialization,
+        experience: validatedData.experience,
+      },
     });
 
     return NextResponse.json(

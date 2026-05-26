@@ -8,6 +8,8 @@ import { Chat } from "@/models/Chat";
 import { Message } from "@/models/Message";
 import { pusherServer } from "@/shared/lib/pusher";
 import { Types } from "mongoose";
+import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { createNotification } from "@/shared/lib/notificationHelpers";
 
 interface PaymentCallbackBody {
   tran_id: string;
@@ -116,6 +118,24 @@ export async function POST(req: NextRequest) {
           doctorName,
           doctorSpecialization
         );
+
+        // Create notification for doctor
+        await createNotification({
+          userId: transaction.doctorId.toString(),
+          type: NotificationType.CONSULTATION_REQUEST,
+          priority: NotificationPriority.HIGH,
+          title: "নতুন কনসালটেশন রিকোয়েস্ট",
+          message: `${farmerName} আপনার সাথে ${doctorSpecialization} বিষয়ে পরামর্শ নিতে চান। পেমেন্ট সফলভাবে সম্পন্ন হয়েছে।`,
+          link: "/dashboard/doctor/consultations",
+          metadata: {
+            farmerId: transaction.userId.toString(),
+            farmerName,
+            doctorId: transaction.doctorId.toString(),
+            doctorName,
+            specialization: doctorSpecialization,
+            transactionId: transaction.transactionId,
+          },
+        });
       }
 
       return NextResponse.redirect(
@@ -193,6 +213,24 @@ export async function GET(req: NextRequest) {
           doctorName,
           doctorSpecialization
         );
+
+        // Create notification for doctor
+        await createNotification({
+          userId: transaction.doctorId.toString(),
+          type: NotificationType.CONSULTATION_REQUEST,
+          priority: NotificationPriority.HIGH,
+          title: "নতুন কনসালটেশন রিকোয়েস্ট",
+          message: `${farmerName} আপনার সাথে ${doctorSpecialization} বিষয়ে পরামর্শ নিতে চান। পেমেন্ট সফলভাবে সম্পন্ন হয়েছে।`,
+          link: "/dashboard/doctor/consultations",
+          metadata: {
+            farmerId: transaction.userId.toString(),
+            farmerName,
+            doctorId: transaction.doctorId.toString(),
+            doctorName,
+            specialization: doctorSpecialization,
+            transactionId: transaction.transactionId,
+          },
+        });
       }
 
       return NextResponse.redirect(

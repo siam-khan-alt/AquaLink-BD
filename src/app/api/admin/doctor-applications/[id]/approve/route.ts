@@ -6,6 +6,8 @@ import { User } from "@/models/User";
 import { authOptions } from "../../../../auth/[...nextauth]/route";
 import { z } from "zod";
 import mongoose from "mongoose";
+import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { createNotification } from "@/shared/lib/notificationHelpers";
 
 const approveSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -45,6 +47,22 @@ export async function POST(
       application.reviewedBy = authSession.user.id;
       application.reviewedAt = new Date();
       await application.save();
+
+      // Create notification for rejected applicant
+      await createNotification({
+        role: UserRole.DOCTOR,
+        type: NotificationType.APPLICATION_REJECTED,
+        priority: NotificationPriority.MEDIUM,
+        title: "আবেদন বাতিল",
+        message: `আপনার ডাক্তার আবেদন বাতিল করা হয়েছে। কারণ: ${validatedData.rejectionReason || "প্রদত্ত নয়"}`,
+        link: "/",
+        metadata: {
+          applicationId: application._id.toString(),
+          name: application.name,
+          rejectionReason: validatedData.rejectionReason,
+        },
+      });
+
       return NextResponse.json({ message: "আবেদন বাতিল করা হয়েছে" });
     }
 
@@ -102,6 +120,22 @@ export async function POST(
 
       await mongoSession.commitTransaction();
       mongoSession.endSession();
+
+      // Create notification for approved doctor
+      await createNotification({
+        userId: newUser[0]._id.toString(),
+        type: NotificationType.APPLICATION_APPROVED,
+        priority: NotificationPriority.HIGH,
+        title: "আবেদন অনুমোদিত",
+        message: "আপনার ডাক্তার আবেদন সফলভাবে অনুমোদিত হয়েছে। এখন আপনি লগইন করতে পারবেন।",
+        link: "/login",
+        metadata: {
+          applicationId: application._id.toString(),
+          userId: newUser[0]._id.toString(),
+          name: application.name,
+          specialization: application.specialization,
+        },
+      });
 
       return NextResponse.json({
         message: "আবেদন অনুমোদিত হয়েছে",

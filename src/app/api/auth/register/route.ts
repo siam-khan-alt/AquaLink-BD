@@ -3,6 +3,8 @@ import { connectDB } from "@/shared/lib/db";
 import { User } from "@/models/User";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { createNotification } from "@/shared/lib/notificationHelpers";
 
 
 const registerSchema = z.object({
@@ -53,7 +55,7 @@ if (parsedData.email) {
 
     const hashedPassword = await bcrypt.hash(parsedData.password, 12);
     
-    await User.create({
+    const newUser = await User.create({
       name: parsedData.name,
       phone: parsedData.phone,
       email: parsedData.email,
@@ -61,6 +63,24 @@ if (parsedData.email) {
       image: parsedData.image,
       role: "farmer",
       isVerified: true,
+    });
+
+    // Create notification for admin
+    await createNotification({
+      role: UserRole.ADMIN,
+      type: NotificationType.USER_REGISTRATION,
+      priority: NotificationPriority.LOW,
+      title: "নতুন ইউজার রেজিস্ট্রেশন",
+      message: `${parsedData.name} (farmer) নতুন অ্যাকাউন্ট তৈরি করেছেন।`,
+      link: "/dashboard/admin/users",
+      metadata: {
+        userId: newUser._id.toString(),
+        name: parsedData.name,
+        email: parsedData.email,
+        phone: parsedData.phone,
+        role: "farmer",
+        registeredAt: new Date(),
+      },
     });
 
     return NextResponse.json(

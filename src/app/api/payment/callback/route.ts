@@ -4,6 +4,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Enrollment } from "@/models/Enrollment";
+import { Course } from "@/models/Course";
+import { NotificationType, NotificationPriority } from "@/models/Notification";
+import { createNotification } from "@/shared/lib/notificationHelpers";
 
 interface PaymentCallbackBody {
   tran_id: string;
@@ -51,6 +54,25 @@ export async function POST(req: NextRequest) {
     if (status === "VALID" || status === "VALIDATED") {
       enrollment.paymentStatus = "paid";
       await enrollment.save();
+
+      // Fetch course details for notification
+      const course = await Course.findById(enrollment.courseId);
+      if (course) {
+        await createNotification({
+          userId: enrollment.userId.toString(),
+          type: NotificationType.COURSE_ENROLLMENT,
+          priority: NotificationPriority.MEDIUM,
+          title: "কোর্স ভর্তি সফল",
+          message: `আপনি সফলভাবে ${course.title} কোর্সে ভর্তি হয়েছেন।`,
+          link: `/dashboard/farmer/courses/${course._id}`,
+          metadata: {
+            courseId: course._id.toString(),
+            courseTitle: course.title,
+            enrollmentId: enrollment._id.toString(),
+            transactionId: enrollment.transactionId,
+          },
+        });
+      }
 
       return NextResponse.redirect(
         new URL("/dashboard/farmer/courses?success=true", req.url)
@@ -113,6 +135,25 @@ export async function GET(req: NextRequest) {
     if (status === "VALID" || status === "VALIDATED") {
       enrollment.paymentStatus = "paid";
       await enrollment.save();
+
+      // Fetch course details for notification
+      const course = await Course.findById(enrollment.courseId);
+      if (course) {
+        await createNotification({
+          userId: enrollment.userId.toString(),
+          type: NotificationType.COURSE_ENROLLMENT,
+          priority: NotificationPriority.MEDIUM,
+          title: "কোর্স ভর্তি সফল",
+          message: `আপনি সফলভাবে ${course.title} কোর্সে ভর্তি হয়েছেন।`,
+          link: `/dashboard/farmer/courses/${course._id}`,
+          metadata: {
+            courseId: course._id.toString(),
+            courseTitle: course.title,
+            enrollmentId: enrollment._id.toString(),
+            transactionId: enrollment.transactionId,
+          },
+        });
+      }
 
       return NextResponse.redirect(
         new URL("/dashboard/farmer/courses?success=true", req.url)
