@@ -34,7 +34,6 @@ interface NotificationsResponse {
   unreadCount: number;
 }
 
-// Icon Mapping-এ সরাসরি LucideIcon টাইপ ব্যবহার করা হয়েছে
 const getNotificationIcon = (type: NotificationType): LucideIcon => {
   const icons: Record<NotificationType, LucideIcon> = {
     [NotificationType.ALERT_WATER_QUALITY]: AlertTriangle,

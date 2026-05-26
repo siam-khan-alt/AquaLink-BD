@@ -3,7 +3,7 @@ import { connectDB } from "@/shared/lib/db";
 import { DoctorApplication } from "@/models/DoctorApplication";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { NotificationType, NotificationPriority, UserRole } from "@/shared/types/notification.types";
 import { createNotification } from "@/shared/lib/notificationHelpers";
 
 const applicationSchema = z.object({

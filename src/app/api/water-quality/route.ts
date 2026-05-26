@@ -5,7 +5,7 @@ import { WaterQualityLog } from "@/models/WaterQualityLog";
 import { Pond } from "@/models/Pond";
 import { z } from "zod";
 import { Types } from "mongoose";
-import { NotificationType, NotificationPriority } from "@/models/Notification";
+import { NotificationType, NotificationPriority } from "@/shared/types/notification.types";
 import { createNotification } from "@/shared/lib/notificationHelpers";
 
 interface WaterQualityInput {

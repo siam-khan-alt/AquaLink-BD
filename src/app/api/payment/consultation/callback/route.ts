@@ -8,7 +8,7 @@ import { Chat } from "@/models/Chat";
 import { Message } from "@/models/Message";
 import { pusherServer } from "@/shared/lib/pusher";
 import { Types } from "mongoose";
-import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { NotificationType, NotificationPriority, UserRole } from "@/shared/types/notification.types";
 import { createNotification } from "@/shared/lib/notificationHelpers";
 
 interface PaymentCallbackBody {

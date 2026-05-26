@@ -1,6 +1,5 @@
 import { NotificationPriority, NotificationType, UserRole } from "@/shared/types/notification.types";
 import { Schema, model, models, Document, Model, Types } from "mongoose";
-// নতুন ফাইল থেকে টাইপগুলো ইমপোর্ট করছি
 
 
 export interface INotification extends Document {

@@ -3,7 +3,7 @@ import { connectDB } from "@/shared/lib/db";
 import { User } from "@/models/User";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { NotificationType, NotificationPriority, UserRole } from "@/shared/types/notification.types";
 import { createNotification } from "@/shared/lib/notificationHelpers";
 
 

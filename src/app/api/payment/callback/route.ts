@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Enrollment } from "@/models/Enrollment";
 import { Course } from "@/models/Course";
-import { NotificationType, NotificationPriority } from "@/models/Notification";
+import { NotificationType, NotificationPriority } from "@/shared/types/notification.types";
 import { createNotification } from "@/shared/lib/notificationHelpers";
 
 interface PaymentCallbackBody {

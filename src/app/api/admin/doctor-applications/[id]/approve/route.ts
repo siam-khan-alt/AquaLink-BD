@@ -6,8 +6,8 @@ import { User } from "@/models/User";
 import { authOptions } from "../../../../auth/[...nextauth]/route";
 import { z } from "zod";
 import mongoose from "mongoose";
-import { NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
 import { createNotification } from "@/shared/lib/notificationHelpers";
+import { NotificationType, NotificationPriority, UserRole } from "@/shared/types/notification.types";
 
 const approveSchema = z.object({
   action: z.enum(["approve", "reject"]),

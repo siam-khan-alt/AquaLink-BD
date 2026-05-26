@@ -1,4 +1,5 @@
-import { Notification, NotificationType, NotificationPriority, UserRole } from "@/models/Notification";
+import { Notification } from "@/models/Notification";
+import {  NotificationType, NotificationPriority, UserRole } from "@/shared/types/notification.types";
 import { Types } from "mongoose";
 
 interface CreateNotificationParams {
