@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { DoctorApplication } from "@/models/DoctorApplication";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 const applicationSchema = z.object({
   name: z.string().min(2, "নাম কমপক্ষে ২ অক্ষরের হতে হবে"),
@@ -47,9 +48,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create new application
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(validatedData.password, 12);
+
+    // Create new application with hashed password
     const application = await DoctorApplication.create({
       ...validatedData,
+      password: hashedPassword,
       status: "pending",
     });
 

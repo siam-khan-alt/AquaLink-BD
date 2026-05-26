@@ -5,6 +5,7 @@ import { DoctorApplication } from "@/models/DoctorApplication";
 import { User } from "@/models/User";
 import { authOptions } from "../../../../auth/[...nextauth]/route";
 import { z } from "zod";
+import mongoose from "mongoose";
 
 const approveSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -57,52 +58,80 @@ export async function POST(
       return NextResponse.json({ message: "আবেদন বাতিল করা হয়েছে" });
     }
 
-    // Approve the application
-    application.status = "approved";
-    application.reviewedBy = session.user.id;
-    application.reviewedAt = new Date();
-    await application.save();
+    // Approve the application using transaction for atomicity
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const temporaryPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    try {
+      // Update application status
+      application.status = "approved";
+      application.reviewedBy = session.user.id;
+      application.reviewedAt = new Date();
+      await application.save({ session });
 
-    const newUser = await User.create({
-      name: application.name,
-      email: application.email,
-      phone: application.phone,
-      role: "doctor",
-      isVerified: true,image: application.avatarUrl,          // ড্যাশবোর্ড ও প্যানেলে ইমেজ দেখানোর জন্য অত্যন্ত জরুরি
-      certificateUrl: application.certificateUrl,
-      degree: application.degree,
-      experience: application.experience,
-      specialization: application.specialization,
-      licenseNumber: application.licenseNumber,
-      consultationFee: application.consultationFee,
-      bio: application.bio,
-      district: application.district,
-      division: application.division,
-      password: temporaryPassword,
-      availability: {
-        isAvailable: true,
-        weeklySchedule: {
-          monday: { start: "09:00", end: "17:00" },
-          tuesday: { start: "09:00", end: "17:00" },
-          wednesday: { start: "09:00", end: "17:00" },
-          thursday: { start: "09:00", end: "17:00" },
-          friday: { start: "09:00", end: "17:00" },
-          saturday: { start: "09:00", end: "13:00" },
-          sunday: { start: "", end: "" },
-        },
-      },
-    });
+      // Check if user already exists with this email
+      const existingUser = await User.findOne({ email: application.email }).session(session);
+      if (existingUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return NextResponse.json(
+          { error: "এই ইমেইল দিয়ে ইতিমধ্যে একটি ইউজার অ্যাকাউন্ট রয়েছে" },
+          { status: 400 }
+        );
+      }
 
-    // TODO: Send email notification to the doctor with their credentials
-    // This would require setting up an email service like SendGrid or Nodemailer
+      // Create user with the doctor's already-hashed password from application
+      const newUser = await User.create(
+        [
+          {
+            name: application.name,
+            email: application.email,
+            phone: application.phone,
+            role: "doctor",
+            isVerified: true,
+            image: application.avatarUrl,
+            certificateUrl: application.certificateUrl,
+            degree: application.degree,
+            experience: application.experience,
+            specialization: application.specialization,
+            licenseNumber: application.licenseNumber,
+            consultationFee: application.consultationFee,
+            bio: application.bio,
+            district: application.district,
+            division: application.division,
+            password: application.password, // Already hashed from application
+            availability: {
+              isAvailable: true,
+              weeklySchedule: {
+                monday: { start: "09:00", end: "17:00" },
+                tuesday: { start: "09:00", end: "17:00" },
+                wednesday: { start: "09:00", end: "17:00" },
+                thursday: { start: "09:00", end: "17:00" },
+                friday: { start: "09:00", end: "17:00" },
+                saturday: { start: "09:00", end: "13:00" },
+                sunday: { start: "", end: "" },
+              },
+            },
+          },
+        ],
+        { session }
+      );
 
-    return NextResponse.json({
-      message: "আবেদন অনুমোদিত হয়েছে",
-      userId: newUser._id,
-      temporaryPassword, // In production, send this via email only
-    });
+      await session.commitTransaction();
+      session.endSession();
+
+      // TODO: Send email notification to the doctor that their application is approved
+      // They can login with the password they provided during application
+
+      return NextResponse.json({
+        message: "আবেদন অনুমোদিত হয়েছে",
+        userId: newUser[0]._id,
+      });
+    } catch (transactionError) {
+      await session.abortTransaction();
+      session.endSession();
+      throw transactionError;
+    }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

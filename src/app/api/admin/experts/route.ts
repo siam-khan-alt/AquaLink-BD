@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { DoctorApplication } from "@/models/DoctorApplication";
 import { User } from "@/models/User";
-import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 export async function GET() {
   try {
@@ -69,32 +69,72 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === "approve") {
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(application.password, 10);
-      
-      // Create user in users collection
-      const existingUser = await User.findOne({ email: application.email });
-      if (!existingUser) {
-        await User.create({
-          name: application.name,
-          email: application.email,
-          phone: application.phone,
-          password: hashedPassword,
-          role: "doctor",
-          specialization: application.specialization,
-          consultationFee: application.consultationFee,
-          bio: application.bio,
-          image: application.avatarUrl,
-          district: application.district,
-          division: application.division,
-          isVerified: true,
-        });
+      // Use transaction for atomicity
+      const dbSession = await mongoose.startSession();
+      dbSession.startTransaction();
+
+      try {
+        // Check if user already exists with this email
+        const existingUser = await User.findOne({ email: application.email }).session(dbSession);
+        if (existingUser) {
+          await dbSession.abortTransaction();
+          dbSession.endSession();
+          return NextResponse.json(
+            { error: "এই ইমেইল দিয়ে ইতিমধ্যে একটি ইউজার অ্যাকাউন্ট রয়েছে" },
+            { status: 400 }
+          );
+        }
+
+        // Create user with the doctor's already-hashed password from application
+        await User.create(
+          [
+            {
+              name: application.name,
+              email: application.email,
+              phone: application.phone,
+              password: application.password, // Already hashed from application
+              role: "doctor",
+              specialization: application.specialization,
+              consultationFee: application.consultationFee,
+              bio: application.bio,
+              image: application.avatarUrl,
+              district: application.district,
+              division: application.division,
+              isVerified: true,
+              certificateUrl: application.certificateUrl,
+              degree: application.degree,
+              experience: application.experience,
+              licenseNumber: application.licenseNumber,
+              availability: {
+                isAvailable: true,
+                weeklySchedule: {
+                  monday: { start: "09:00", end: "17:00" },
+                  tuesday: { start: "09:00", end: "17:00" },
+                  wednesday: { start: "09:00", end: "17:00" },
+                  thursday: { start: "09:00", end: "17:00" },
+                  friday: { start: "09:00", end: "17:00" },
+                  saturday: { start: "09:00", end: "13:00" },
+                  sunday: { start: "", end: "" },
+                },
+              },
+            },
+          ],
+          { session: dbSession }
+        );
+
+        // Update application status
+        application.status = "approved";
+        application.reviewedBy = session.user?.id as string;
+        application.reviewedAt = new Date();
+        await application.save({ session: dbSession });
+
+        await dbSession.commitTransaction();
+        dbSession.endSession();
+      } catch (transactionError) {
+        await dbSession.abortTransaction();
+        dbSession.endSession();
+        throw transactionError;
       }
-      
-      application.status = "approved";
-      application.reviewedBy = session.user?.id as string;
-      application.reviewedAt = new Date();
-      await application.save();
     } else if (action === "reject") {
       application.status = "rejected";
       application.rejectionReason = rejectionReason;
