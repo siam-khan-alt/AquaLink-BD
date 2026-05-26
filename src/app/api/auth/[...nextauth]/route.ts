@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    
+
     // password login with email or phone
     CredentialsProvider({
       id: "credentials",
@@ -26,36 +26,43 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.password) {
           throw new Error("পাসওয়ার্ড প্রয়োজন");
         }
-        
+
         if (!credentials?.phone && !credentials?.email) {
           throw new Error("ফোন বা ইমেইল প্রয়োজন");
         }
-        
+
         await connectDB();
-        
+
         // Build query conditions
-        const queryConditions: any[] = [];
+        const queryConditions: { $or: { phone?: string; email?: string }[] } = {
+          $or: [],
+        };
+
         if (credentials.phone) {
-          queryConditions.push({ phone: credentials.phone });
+          queryConditions.$or.push({ phone: credentials.phone });
         }
         if (credentials.email) {
-          queryConditions.push({ email: credentials.email });
+          queryConditions.$or.push({ email: credentials.email });
         }
-        
+
         // Find user by phone or email
-        const user = queryConditions.length > 0
-          ? await User.findOne({ $or: queryConditions }).select("+password")
-          : null;
-        
+        const user =
+          queryConditions.$or.length > 0
+            ? await User.findOne(queryConditions).select("+password")
+            : null;
+
         if (!user || !user.password) {
           throw new Error("এই তথ্যে কোনো অ্যাকাউন্ট পাওয়া যায়নি");
         }
-        
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
         if (!isValid) {
           throw new Error("পাসওয়ার্ড সঠিক নয়");
         }
-        
+
         return {
           id: user._id.toString(),
           name: user.name ?? "অজানা চাষি",
@@ -69,7 +76,8 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         await connectDB();
-        if (!user.email) throw new Error("গুগল অ্যাকাউন্ট থেকে ইমেইল পাওয়া যায়নি");
+        if (!user.email)
+          throw new Error("গুগল অ্যাকাউন্ট থেকে ইমেইল পাওয়া যায়নি");
         const existingUser = await User.findOne({ email: user.email });
         if (!existingUser) {
           await User.create({

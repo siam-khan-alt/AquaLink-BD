@@ -4,14 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import {
-  Phone,
-  Mail,
-  Lock,
-  LogIn,
-  UserCheck,
-  ShieldCheck,
-} from "lucide-react";
+import { Phone, Mail, Lock, LogIn, UserCheck, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -26,29 +19,32 @@ export default function LoginPage() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
   };
 
-  const handleDemoLogin = (role: "farmer" | "admin") => {
+  const handleDemoLogin = (role: "farmer" | "admin" | "doctor") => {
     if (role === "farmer") {
       setFormData({ identity: "01300000000", password: "farmer123" });
       toast.info("চাষি অ্যাকাউন্টের তথ্য দেয়া হয়েছে");
+    } else if (role === "doctor") {
+      setFormData({ identity: "01711000003", password: "siam12" }); // আপনার ডাটাবেসের ডক্টর পাসওয়ার্ড
+      toast.info("ডক্টর অ্যাকাউন্টের তথ্য দেয়া হয়েছে");
     } else {
-      setFormData({ identity: "admin@motsyo.com", password: "admin123" });
+      setFormData({ identity: "01800000000", password: "admin123" });
       toast.info("অ্যাডমিন অ্যাকাউন্টের তথ্য দেয়া হয়েছে");
     }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.identity.trim() || !formData.password.trim()) {
       toast.error("ফোন/ইমেইল এবং পাসওয়ার্ড দিন");
       return;
     }
 
     setLoading(true);
-    
+
     try {
       const isEmailInput = isEmail(formData.identity);
-      
+
       const res = await signIn("credentials", {
         phone: isEmailInput ? undefined : formData.identity,
         email: isEmailInput ? formData.identity : undefined,
@@ -81,7 +77,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="flex gap-3 mb-8">
+        <div className="grid grid-cols-3 gap-2 mb-8">
           <Button
             type="button"
             variant="secondary"
@@ -89,7 +85,16 @@ export default function LoginPage() {
             className="flex-1 font-hind text-xs"
             onClick={() => handleDemoLogin("farmer")}
           >
-            <UserCheck size={16} /> চাষি ডেমো
+            <UserCheck size={14} /> চাষি ডেমো
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="font-hind text-xs"
+            onClick={() => handleDemoLogin("doctor")}
+          >
+            <UserCheck size={14} /> ডক্টর
           </Button>
           <Button
             type="button"
@@ -98,7 +103,7 @@ export default function LoginPage() {
             className="flex-1 font-hind text-xs"
             onClick={() => handleDemoLogin("admin")}
           >
-            <ShieldCheck size={16} /> অ্যাডমিন ডেমো
+            <ShieldCheck size={14} /> অ্যাডমিন ডেমো
           </Button>
         </div>
 
@@ -110,7 +115,13 @@ export default function LoginPage() {
               setFormData({ ...formData, identity: e.target.value })
             }
             placeholder="01XXXXXXXXX বা example@email.com"
-            icon={isEmail(formData.identity) ? <Mail size={18} /> : <Phone size={18} />}
+            icon={
+              isEmail(formData.identity) ? (
+                <Mail size={18} />
+              ) : (
+                <Phone size={18} />
+              )
+            }
           />
           <Input
             label="পাসওয়ার্ড"

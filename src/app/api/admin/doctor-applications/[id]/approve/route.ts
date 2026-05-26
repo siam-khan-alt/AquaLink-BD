@@ -17,13 +17,10 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const authSession = await getServerSession(authOptions);
 
-    if (!session || session.user?.role !== "admin") {
-      return NextResponse.json(
-        { error: "অনুমতি নেই" },
-        { status: 403 }
-      );
+    if (!authSession || authSession.user?.role !== "admin") {
+      return NextResponse.json({ error: "অনুমতি নেই" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -35,52 +32,38 @@ export async function POST(
     const application = await DoctorApplication.findById(id);
 
     if (!application) {
-      return NextResponse.json(
-        { error: "আবেদন পাওয়া যায়নি" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "আবেদন পাওয়া যায়নি" }, { status: 404 });
     }
 
     if (application.status !== "pending") {
-      return NextResponse.json(
-        { error: "এই আবেদনটি ইতিমধ্যে প্রক্রিয়া করা হয়েছে" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "ইতিমধ্যে প্রক্রিয়া করা হয়েছে" }, { status: 400 });
     }
 
     if (validatedData.action === "reject") {
       application.status = "rejected";
       application.rejectionReason = validatedData.rejectionReason;
-      application.reviewedBy = session.user.id;
+      application.reviewedBy = authSession.user.id;
       application.reviewedAt = new Date();
       await application.save();
-
       return NextResponse.json({ message: "আবেদন বাতিল করা হয়েছে" });
     }
 
-    // Approve the application using transaction for atomicity
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const mongoSession = await mongoose.startSession();
+    mongoSession.startTransaction();
 
     try {
-      // Update application status
       application.status = "approved";
-      application.reviewedBy = session.user.id;
+      application.reviewedBy = authSession.user.id;
       application.reviewedAt = new Date();
-      await application.save({ session });
+      await application.save({ session: mongoSession });
 
-      // Check if user already exists with this email
-      const existingUser = await User.findOne({ email: application.email }).session(session);
+      const existingUser = await User.findOne({ email: application.email }).session(mongoSession);
       if (existingUser) {
-        await session.abortTransaction();
-        session.endSession();
-        return NextResponse.json(
-          { error: "এই ইমেইল দিয়ে ইতিমধ্যে একটি ইউজার অ্যাকাউন্ট রয়েছে" },
-          { status: 400 }
-        );
+        await mongoSession.abortTransaction();
+        mongoSession.endSession();
+        return NextResponse.json({ error: "এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট আছে" }, { status: 400 });
       }
 
-      // Create user with the doctor's already-hashed password from application
       const newUser = await User.create(
         [
           {
@@ -99,7 +82,7 @@ export async function POST(
             bio: application.bio,
             district: application.district,
             division: application.division,
-            password: application.password, // Already hashed from application
+            password: application.password,
             availability: {
               isAvailable: true,
               weeklySchedule: {
@@ -114,35 +97,26 @@ export async function POST(
             },
           },
         ],
-        { session }
+        { session: mongoSession }
       );
 
-      await session.commitTransaction();
-      session.endSession();
-
-      // TODO: Send email notification to the doctor that their application is approved
-      // They can login with the password they provided during application
+      await mongoSession.commitTransaction();
+      mongoSession.endSession();
 
       return NextResponse.json({
         message: "আবেদন অনুমোদিত হয়েছে",
         userId: newUser[0]._id,
       });
     } catch (transactionError) {
-      await session.abortTransaction();
-      session.endSession();
+      await mongoSession.abortTransaction();
+      mongoSession.endSession();
       throw transactionError;
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.issues[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
     }
-    console.error("Error approving doctor application:", error);
-    return NextResponse.json(
-      { error: "আবেদন অনুমোদন করতে ব্যর্থ হয়েছে" },
-      { status: 500 }
-    );
+    console.error("Error:", error);
+    return NextResponse.json({ error: "সিস্টেম এরর" }, { status: 500 });
   }
 }

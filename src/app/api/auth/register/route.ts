@@ -4,6 +4,7 @@ import { User } from "@/models/User";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+
 const registerSchema = z.object({
   name: z.string().min(2, "নাম কমপক্ষে ২ অক্ষরের হতে হবে"),
   phone: z.string().regex(/^01[3-9]\d{8}$/, "সঠিক বাংলাদেশী নাম্বার দিন").optional(),
@@ -22,18 +23,18 @@ export async function POST(req: Request) {
     const parsedData = registerSchema.parse(body);
 
     // Build query conditions
-    const queryConditions: any[] = [];
-    if (parsedData.phone) {
-      queryConditions.push({ phone: parsedData.phone });
-    }
-    if (parsedData.email) {
-      queryConditions.push({ email: parsedData.email });
-    }
+const queryConditions: { $or: { phone?: string; email?: string }[] } = { $or: [] };
+if (parsedData.phone) {
+  queryConditions.$or.push({ phone: parsedData.phone });
+}
+if (parsedData.email) {
+  queryConditions.$or.push({ email: parsedData.email });
+}
 
     // Check if user already exists with phone or email
-    const existingUser = queryConditions.length > 0
-      ? await User.findOne({ $or: queryConditions })
-      : null;
+  const existingUser = queryConditions.$or.length > 0 
+  ? await User.findOne(queryConditions) 
+  : null;
 
     if (existingUser) {
       if (existingUser.phone === parsedData.phone) {
