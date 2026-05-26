@@ -3,15 +3,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@heroui/react";
 import { 
   Bell, AlertTriangle, Info, Calendar, DollarSign, Activity, 
-  Shield, Database, CreditCard, UserPlus, FileText, 
-  X, LucideIcon 
+  Shield, Database, CreditCard, UserPlus, FileText, X, LucideIcon 
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { NotificationPriority, NotificationType } from "../types/notification.types";
-
 
 interface Notification {
   _id: string;
@@ -35,7 +35,7 @@ interface NotificationsResponse {
 }
 
 const getNotificationIcon = (type: NotificationType): LucideIcon => {
-  const icons: Record<NotificationType, LucideIcon> = {
+  const icons: Record<string, LucideIcon> = {
     [NotificationType.ALERT_WATER_QUALITY]: AlertTriangle,
     [NotificationType.ALERT_DISEASE]: AlertTriangle,
     [NotificationType.WEATHER_ALERT]: AlertTriangle,
@@ -68,20 +68,10 @@ const getPriorityColor = (priority: NotificationPriority): string => {
   const colors: Record<NotificationPriority, string> = {
     [NotificationPriority.URGENT]: "bg-red-500",
     [NotificationPriority.HIGH]: "bg-orange-500",
-    [NotificationPriority.MEDIUM]: "bg-yellow-500",
-    [NotificationPriority.LOW]: "bg-gray-400",
+    [NotificationPriority.MEDIUM]: "bg-[var(--primary)]",
+    [NotificationPriority.LOW]: "bg-[var(--border)]",
   };
   return colors[priority];
-};
-
-const formatTimestamp = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  const diffMins = Math.floor((new Date().getTime() - date.getTime()) / 60000);
-  
-  if (diffMins < 1) return "এখনই";
-  if (diffMins < 60) return `${diffMins} মিনিট আগে`;
-  if (diffMins < 1440) return `${Math.floor(diffMins / 60)} ঘন্টা আগে`;
-  return date.toLocaleDateString("bn-BD", { month: "long", day: "numeric" });
 };
 
 export default function NotificationDropdown() {
@@ -92,9 +82,9 @@ export default function NotificationDropdown() {
 
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
-    queryFn: async () => {
+    queryFn: async (): Promise<NotificationsResponse> => {
       const res = await fetch("/api/notifications?limit=20");
-      if (!res.ok) throw new Error("Network response was not ok");
+      if (!res.ok) throw new Error("Network error");
       return res.json();
     },
     refetchInterval: 60000,
@@ -119,43 +109,64 @@ export default function NotificationDropdown() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button onClick={() => setIsOpen(!isOpen)} className="relative p-2 hover:bg-slate-100 rounded-full">
-        <Bell size={20} />
+      <Button 
+        isIconOnly 
+        variant="primary" 
+        className="relative rounded-full text-[var(--text)] hover:bg-[var(--border)]"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Bell size={22} />
         {data && data.unreadCount > 0 && (
-          <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+          <motion.span 
+            initial={{ scale: 0 }} animate={{ scale: 1 }}
+            className="absolute top-1 right-1 bg-[var(--secondary)] text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold text-white"
+          >
             {data.unreadCount > 9 ? "9+" : data.unreadCount}
-          </span>
+          </motion.span>
         )}
-      </button>
+      </Button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
-          <div className="p-4 border-b flex justify-between items-center">
-            <h3 className="font-bold">নোটিফিকেশন</h3>
-            <button onClick={() => setIsOpen(false)}><X size={16} /></button>
-          </div>
-          
-          <div className="max-h-96 overflow-y-auto">
-            {isLoading ? <p className="p-4 text-center text-sm">লোড হচ্ছে...</p> : 
-             !data?.notifications.length ? <p className="p-4 text-center text-sm text-gray-500">কোনো নোটিফিকেশন নেই</p> :
-             data.notifications.map((n) => {
-               const Icon = getNotificationIcon(n.type);
-               return (
-                 <button key={n._id} onClick={() => { if(!n.isRead) markAsRead.mutate(n._id); if(n.link) router.push(n.link); setIsOpen(false); }} className="w-full p-4 flex gap-3 hover:bg-gray-50 text-left">
-                   <div className={cn("p-2 rounded-full text-white", getPriorityColor(n.priority))}>
-                     <Icon size={14} />
-                   </div>
-                   <div className="flex-1">
-                     <p className="text-sm font-semibold">{n.title}</p>
-                     <p className="text-xs text-gray-500 truncate">{n.message}</p>
-                     <span className="text-[10px] text-gray-400">{formatTimestamp(n.createdAt)}</span>
-                   </div>
-                 </button>
-               );
-             })}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+            className="absolute right-0 mt-3 w-96 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl z-50 overflow-hidden"
+          >
+            <div className="p-5 border-b border-[var(--border)] flex justify-between items-center bg-[var(--background)]">
+              <h3 className="font-bold text-[var(--text)]">নোটিফিকেশন</h3>
+              <Button isIconOnly variant="primary" size="sm" onClick={() => setIsOpen(false)}><X size={18} /></Button>
+            </div>
+            
+            <div className="max-h-[400px] overflow-y-auto p-2">
+              {isLoading ? (
+                <p className="p-8 text-center text-sm text-[var(--text)]/60">লোড হচ্ছে...</p>
+              ) : !data?.notifications.length ? (
+                <p className="p-8 text-center text-sm text-[var(--text)]/60">কোনো নোটিফিকেশন নেই</p>
+              ) : (
+                data.notifications.map((n: Notification) => {
+                  const Icon = getNotificationIcon(n.type);
+                  return (
+                    <motion.div key={n._id} whileHover={{ x: 5 }}>
+                      <button 
+                        onClick={() => { if(!n.isRead) markAsRead.mutate(n._id); if(n.link) router.push(n.link); setIsOpen(false); }}
+                        className={cn("w-full p-4 flex gap-4 hover:bg-[var(--background)] rounded-xl transition-all", !n.isRead && "bg-[var(--border)]/30")}
+                      >
+                        <div className={cn("p-2.5 rounded-full text-white shrink-0", getPriorityColor(n.priority))}>
+                          <Icon size={16} />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-bold text-[var(--text)]">{n.title}</p>
+                          <p className="text-xs text-[var(--text)]/70 mt-0.5 line-clamp-2">{n.message}</p>
+                        </div>
+                      </button>
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
