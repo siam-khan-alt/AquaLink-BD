@@ -6,9 +6,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { DASHBOARD_NAV } from "@/config/dashboard-nav";
 import { 
-  Menu, X, Waves, User, Bell, LogOut, Home, ChevronLeft 
+  Menu, X, Waves, User, LogOut, Home, ChevronLeft 
 } from "lucide-react";
 import { ThemeToggle } from "@/shared/components/ui/ThemeToggle";
+import NotificationDropdown from "@/shared/components/NotificationDropdown";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
@@ -77,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           <div className="flex items-center gap-4">
              <ThemeToggle />
-             <Bell size={20} />
+             <NotificationDropdown />
              <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold">
                {session?.user?.name?.charAt(0) || "U"}
              </div>
