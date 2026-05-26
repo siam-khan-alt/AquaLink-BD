@@ -1,87 +1,98 @@
-"use client";
-
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/shared/lib/db";
+import { Transaction } from "@/models/Transaction";
 import { Stethoscope, Clock, DollarSign, TrendingUp } from "lucide-react";
 import Card from "@/components/ui/Card";
 
-export default function DoctorDashboard() {
-  const { data: session, status } = useSession();
+async function DoctorDashboard() {
+  const session = await getServerSession(authOptions);
+  
+  await connectDB();
+  const doctorId = session?.user?.id as string;
 
-  const { data: earningsData, isLoading: isEarningsLoading } = useQuery({
-    queryKey: ["doctor-earnings"],
-    queryFn: async () => {
-      const res = await fetch("/api/doctor/earnings");
-      if (!res.ok) throw new Error("উপার্জন লোড করতে ব্যর্থ হয়েছে");
-      return res.json();
-    },
-    enabled: status === "authenticated",
+  // Fetch earnings data server-side
+  const transactions = await Transaction.find({
+    doctorId,
+    type: "consultation",
+    status: "paid",
+  }).lean();
+
+  const totalEarnings = transactions.reduce((sum, t) => sum + (t.doctorEarnings || 0), 0);
+  const totalConsultations = transactions.length;
+  const monthlyEarnings = transactions
+    .filter((t: any) => {
+      const transactionDate = new Date(t.createdAt);
+      const now = new Date();
+      return (
+        transactionDate.getMonth() === now.getMonth() &&
+        transactionDate.getFullYear() === now.getFullYear()
+      );
+    })
+    .reduce((sum: number, t: any) => sum + (t.doctorEarnings || 0), 0);
+
+  // Fetch pending consultations count
+  const pendingConsultations = await Transaction.countDocuments({
+    doctorId,
+    type: "consultation",
+    status: "pending",
   });
 
   const formatNumber = (val: number): string => {
     return new Intl.NumberFormat("bn-BD").format(val);
   };
 
-  const earnings = earningsData || {
-    totalEarnings: 0,
-    totalConsultations: 0,
-    monthlyEarnings: 0,
+  const earnings = {
+    totalEarnings,
+    totalConsultations,
+    monthlyEarnings,
   };
 
   const stats = [
     {
       label: "মোট কনসালটেশন",
-      value: isEarningsLoading ? "..." : formatNumber(earnings.totalConsultations),
+      value: formatNumber(earnings.totalConsultations),
       icon: <Stethoscope size={24} className="text-[var(--primary)]" />,
       trend: "+১২%",
     },
     {
       label: "পেন্ডিং রিকোয়েস্ট",
-      value: "৮",
+      value: formatNumber(pendingConsultations),
       icon: <Clock size={24} className="text-orange-500" />,
       trend: "+৩",
     },
     {
       label: "মাসিক আয়",
-      value: isEarningsLoading ? "..." : `৳ ${formatNumber(earnings.monthlyEarnings)}`,
+      value: `৳ ${formatNumber(earnings.monthlyEarnings)}`,
       icon: <DollarSign size={24} className="text-green-500" />,
       trend: "+২৫%",
     },
     {
       label: "মোট আয়",
-      value: isEarningsLoading ? "..." : `৳ ${formatNumber(earnings.totalEarnings)}`,
+      value: `৳ ${formatNumber(earnings.totalEarnings)}`,
       icon: <TrendingUp size={24} className="text-blue-500" />,
       trend: "+৪০%",
     },
   ];
 
-  const recentConsultations = [
-    {
-      id: "1",
-      farmerName: "রহিম উদ্দিন",
-      pondName: "পুকুর-১",
-      issue: "মাছের ক্ষত",
-      status: "pending",
-      date: "২০২৬-০৫-২৪",
-    },
-    {
-      id: "2",
-      farmerName: "করিম শেখ",
-      pondName: "পুকুর-২",
-      issue: "পানির গুণমান",
-      status: "approved",
-      date: "২০২৬-০৫-২৩",
-    },
-    {
-      id: "3",
-      farmerName: "আব্দুল হাকিম",
-      pondName: "পুকুর-৩",
-      issue: "খাবার সমস্যা",
-      status: "completed",
-      date: "২০২৬-০৫-২২",
-    },
-  ];
+  // Fetch recent consultations
+  const recentConsultations = await Transaction.find({
+    doctorId,
+    type: "consultation",
+  })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .lean();
+
+  const recentConsultationsFormatted = recentConsultations.map((c: any) => ({
+    id: c._id.toString(),
+    farmerName: c.metadata?.farmerName || "অজানা",
+    pondName: c.metadata?.pondName || "পুকুর",
+    issue: c.metadata?.issue || "সাধারণ পরামর্শ",
+    status: c.status,
+    date: new Date(c.createdAt).toLocaleDateString("bn-BD"),
+  }));
 
   return (
     <div className="space-y-6">
@@ -144,7 +155,7 @@ export default function DoctorDashboard() {
               </tr>
             </thead>
             <tbody>
-              {recentConsultations.map((consultation) => (
+              {recentConsultationsFormatted.map((consultation) => (
                 <tr key={consultation.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--surface)]">
                   <td className="py-3 px-4 text-sm font-bold text-[var(--text)] font-hind">
                     {consultation.farmerName}
@@ -160,14 +171,14 @@ export default function DoctorDashboard() {
                       className={`px-3 py-1 rounded-full text-xs font-bold font-hind ${
                         consultation.status === "pending"
                           ? "bg-orange-500/10 text-orange-500"
-                          : consultation.status === "approved"
+                          : consultation.status === "paid"
                           ? "bg-blue-500/10 text-blue-500"
                           : "bg-green-500/10 text-green-500"
                       }`}
                     >
                       {consultation.status === "pending"
                         ? "পেন্ডিং"
-                        : consultation.status === "approved"
+                        : consultation.status === "paid"
                         ? "অনুমোদিত"
                         : "সম্পন্ন"}
                     </span>
@@ -184,3 +195,5 @@ export default function DoctorDashboard() {
     </div>
   );
 }
+
+export default DoctorDashboard;

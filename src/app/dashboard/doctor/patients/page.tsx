@@ -1,67 +1,56 @@
-"use client";
-
 import React from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/shared/lib/db";
+import { Transaction } from "@/models/Transaction";
+import { User } from "@/models/User";
 import { Users, Phone, Calendar, MapPin, FileText } from "lucide-react";
 import Card from "@/components/ui/Card";
 
-interface Patient {
-  id: string;
-  name: string;
-  phone: string;
-  location: string;
-  totalConsultations: number;
-  lastConsultation: string;
-  lastIssue: string;
-}
+async function DoctorPatients() {
+  const session = await getServerSession(authOptions);
+  
+  await connectDB();
+  const doctorId = session?.user?.id as string;
 
-export default function DoctorPatients() {
-  const patients: Patient[] = [
-    {
-      id: "1",
-      name: "রহিম উদ্দিন",
-      phone: "+8801712345678",
-      location: "ঢাকা",
-      totalConsultations: 5,
-      lastConsultation: "২০২৬-০৫-২৪",
-      lastIssue: "মাছের ক্ষত",
-    },
-    {
-      id: "2",
-      name: "করিম শেখ",
-      phone: "+8801712345679",
-      location: "বগুড়া",
-      totalConsultations: 3,
-      lastConsultation: "২০২৬-০৫-২৩",
-      lastIssue: "পানির গুণমান",
-    },
-    {
-      id: "3",
-      name: "আব্দুল হাকিম",
-      phone: "+8801712345680",
-      location: "রাজশাহী",
-      totalConsultations: 7,
-      lastConsultation: "২০২৬-০৫-২২",
-      lastIssue: "খাবার সমস্যা",
-    },
-    {
-      id: "4",
-      name: "জাহাঙ্গীর আলম",
-      phone: "+8801712345681",
-      location: "খুলনা",
-      totalConsultations: 2,
-      lastConsultation: "২০২৬-০৫-২১",
-      lastIssue: "অক্সিজেন সমস্যা",
-    },
-    {
-      id: "5",
-      name: "মোহাম্মদ আলী",
-      phone: "+8801712345682",
-      location: "সিলেট",
-      totalConsultations: 4,
-      lastConsultation: "২০২৬-০৫-২০",
-      lastIssue: "মাছের রোগ",
-    },
-  ];
+  // Fetch all consultation transactions for this doctor
+  const consultations = await Transaction.find({
+    doctorId,
+    type: "consultation",
+    status: "paid",
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // Group consultations by user (farmer) and aggregate data
+  const patientMap = new Map<string, any>();
+
+  for (const consultation of consultations) {
+    const userId = consultation.userId.toString();
+    
+    if (!patientMap.has(userId)) {
+      const user = await User.findById(userId).select("name phone district division").lean();
+      
+      patientMap.set(userId, {
+        id: userId,
+        name: user?.name || "অজানা",
+        phone: user?.phone || "",
+        location: user?.district || "অজানা",
+        totalConsultations: 0,
+        lastConsultation: consultation.createdAt,
+        lastIssue: consultation.metadata?.issue || "সাধারণ পরামর্শ",
+      });
+    }
+
+    const patient = patientMap.get(userId);
+    patient.totalConsultations += 1;
+  }
+
+  const patients = Array.from(patientMap.values());
+
+  const formatDate = (date: Date): string => {
+    return new Date(date).toLocaleDateString("bn-BD");
+  };
 
   return (
     <div className="space-y-6">
@@ -136,7 +125,7 @@ export default function DoctorPatients() {
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2 text-sm text-[var(--text)]/80 font-hind">
                       <Calendar size={16} />
-                      {patient.lastConsultation}
+                      {formatDate(patient.lastConsultation)}
                     </div>
                   </td>
                   <td className="py-4 px-4">
@@ -154,3 +143,5 @@ export default function DoctorPatients() {
     </div>
   );
 }
+
+export default DoctorPatients;
