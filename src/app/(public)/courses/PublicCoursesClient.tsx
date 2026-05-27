@@ -44,7 +44,7 @@ export const PublicCoursesClient = memo(() => {
     staleTime: QUERY_CONFIG.DEFAULT_STALE_TIME,
   });
 
-  const courses = coursesData?.courses ?? [];
+ const courses = useMemo(() => coursesData?.courses ?? [], [coursesData?.courses]);
 
   const categories = useMemo(() => {
     return ["সব", ...Array.from(new Set(courses.map((c) => c.category)))];
@@ -64,7 +64,7 @@ export const PublicCoursesClient = memo(() => {
     if (!session) {
       toast.error("অনুগ্রহ করে কোর্সে অংশ নিতে প্রথমে লগইন করুন!");
       setTimeout(() => {
-        signIn(undefined, { callbackUrl: `/dashboard/farmer/courses` });
+        signIn(undefined, { callbackUrl: `/dashboard/farmer/courses/${courseId}` });
       }, 1000);
       return;
     }

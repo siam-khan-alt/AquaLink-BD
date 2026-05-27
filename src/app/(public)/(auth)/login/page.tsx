@@ -24,7 +24,7 @@ export default function LoginPage() {
       setFormData({ identity: "01300000000", password: "farmer123" });
       toast.info("চাষি অ্যাকাউন্টের তথ্য দেয়া হয়েছে");
     } else if (role === "doctor") {
-      setFormData({ identity: "01711000003", password: "siam12" }); // আপনার ডাটাবেসের ডক্টর পাসওয়ার্ড
+      setFormData({ identity: "01711000003", password: "siam12" }); 
       toast.info("ডক্টর অ্যাকাউন্টের তথ্য দেয়া হয়েছে");
     } else {
       setFormData({ identity: "01800000000", password: "admin123" });
@@ -60,6 +60,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       toast.error("প্রবেশ করতে ব্যর্থ হয়েছে!");
+      console.error(error);
     } finally {
       setLoading(false);
     }

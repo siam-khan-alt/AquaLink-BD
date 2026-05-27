@@ -6,6 +6,7 @@ import { Transaction } from "@/models/Transaction";
 import { User } from "@/models/User";
 import { Users, Phone, Calendar, MapPin, FileText } from "lucide-react";
 import Card from "@/components/ui/Card";
+import { IDoctorPatient } from "@/shared/types/api-interfaces";
 
 async function DoctorPatients() {
   const session = await getServerSession(authOptions);
@@ -23,7 +24,7 @@ async function DoctorPatients() {
     .lean();
 
   // Group consultations by user (farmer) and aggregate data
-  const patientMap = new Map<string, any>();
+  const patientMap = new Map<string, IDoctorPatient>();
 
   for (const consultation of consultations) {
     const userId = consultation.userId.toString();
@@ -38,15 +39,18 @@ async function DoctorPatients() {
         location: user?.district || "অজানা",
         totalConsultations: 0,
         lastConsultation: consultation.createdAt,
-        lastIssue: consultation.metadata?.issue || "সাধারণ পরামর্শ",
-      });
+lastIssue: typeof consultation.metadata?.issue === 'string' 
+          ? consultation.metadata.issue 
+          : "সাধারণ পরামর্শ",      });
     }
 
     const patient = patientMap.get(userId);
-    patient.totalConsultations += 1;
+    if (patient) {
+      patient.totalConsultations += 1;
+    }
   }
 
-  const patients = Array.from(patientMap.values());
+  const patients: IDoctorPatient[] = Array.from(patientMap.values());
 
   const formatDate = (date: Date): string => {
     return new Date(date).toLocaleDateString("bn-BD");

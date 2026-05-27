@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, GraduationCap, FileText, DollarSign, Send, Loader2, Lock, Image as ImageIcon, FileCheck } from "lucide-react";
+import { User, GraduationCap, FileText, DollarSign, Send, Loader2, Image as ImageIcon } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";

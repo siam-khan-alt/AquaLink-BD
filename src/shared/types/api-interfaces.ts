@@ -263,3 +263,63 @@ export type AdminCoursesResponse = {
   success: boolean;
   courses: AdminCourse[];
 };
+
+// ============================================================================
+// patient consultation types
+// ============================================================================
+
+
+export interface IPatientConsultation {
+  id: string;
+  issue: string;
+  status: string;
+  date: Date;
+  fee: number;
+}
+
+export interface IPatientProfile {
+  id: string;
+  name: string;
+  phone: string;
+  location: string;
+  totalConsultations: number;
+  lastConsultation: Date;
+  lastIssue: string;
+  consultations: IPatientConsultation[];
+}
+
+
+// ============================================================================
+// doctor patient types
+// ============================================================================
+
+export interface IDoctorPatient {
+  id: string;
+  name: string;
+  phone: string;
+  location: string;
+  totalConsultations: number;
+  lastConsultation: Date;
+  lastIssue: string;
+}
+
+
+// ============================================================================
+// doctor schedule types
+// ============================================================================
+
+export interface IDaySchedule {
+  start: string;
+  end: string;
+  enabled: boolean;
+}
+
+export interface IWeeklySchedule {
+  monday: IDaySchedule;
+  tuesday: IDaySchedule;
+  wednesday: IDaySchedule;
+  thursday: IDaySchedule;
+  friday: IDaySchedule;
+  saturday: IDaySchedule;
+  sunday: IDaySchedule;
+}

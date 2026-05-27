@@ -37,6 +37,7 @@ export async function PUT(req: NextRequest,context: RouteContext) {
 
     return NextResponse.json({ success: true, course: updatedCourse });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -57,6 +58,7 @@ export async function DELETE(req: NextRequest,context: RouteContext) {
 
     return NextResponse.json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

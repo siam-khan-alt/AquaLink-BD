@@ -56,6 +56,7 @@ export async function GET(request: Request) {
       unreadCount 
     });
   } catch (error) {
+      console.error(error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -97,6 +98,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { Camera, ArrowRight, Activity, Microscope } from "lucide-react";
+import { ArrowRight, Activity, Microscope } from "lucide-react";
 import { Button } from "@heroui/react";
 import { motion } from "framer-motion";
 

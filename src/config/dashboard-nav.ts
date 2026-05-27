@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator, Calendar, Stethoscope, UserCircle, Waves } from "lucide-react";
+import { LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator, Calendar, Stethoscope, Waves } from "lucide-react";
 
 export const DASHBOARD_NAV = {
   farmer: [

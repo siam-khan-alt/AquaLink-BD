@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User as UserIcon, Phone, Mail, Lock, Image as ImageIcon } from "lucide-react";
+import { User as UserIcon, Phone, Mail, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -77,6 +77,7 @@ export default function RegisterPage() {
       }
     } catch (error) {
       toast.error("নিবন্ধন ব্যর্থ হয়েছে!");
+      console.error(error);
     } finally {
       setLoading(false);
     }

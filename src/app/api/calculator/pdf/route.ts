@@ -25,7 +25,6 @@ export async function POST(req: Request) {
     const {
       pondSize,
       fishCount,
-      feedCostPerKg,
       expectedGrowth,
       marketPricePerKg,
       totalFishWeight,

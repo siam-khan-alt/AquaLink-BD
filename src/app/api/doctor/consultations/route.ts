@@ -4,7 +4,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Transaction } from "@/models/Transaction";
 import { User } from "@/models/User";
-import { Pond } from "@/models/Pond";
 
 export async function GET() {
   try {

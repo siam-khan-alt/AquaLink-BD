@@ -30,6 +30,7 @@ async function getStories(): Promise<Story[]> {
     const data = (await res.json()) as IStoriesResponse;
     return data.stories || [];
   } catch (error) {
+    console.error("Error fetching stories:", error);
     return [];
   }
 }
