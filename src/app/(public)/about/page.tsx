@@ -1,5 +1,5 @@
 import React from "react";
-import { Target, Zap, Shield, Users, Globe, Heart } from "lucide-react";
+import { Target, Zap, Shield, Users, Globe, Heart, Stethoscope } from "lucide-react";
 import Card from "@/components/ui/Card";
 
 export default function AboutPage() {
@@ -27,7 +27,7 @@ export default function AboutPage() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="bg-[var(--surface)] border border-[var(--border)] p-6 space-y-4">
             <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl w-fit">
               <Zap size={24} />
@@ -64,6 +64,19 @@ export default function AboutPage() {
             <p className="text-sm text-[var(--text)]/60 font-hind">
               চাষিদের একটি শক্তিশালী সম্প্রদায় গঠন করা যেখানে তারা পরস্পর
               সহযোগিতা করতে পারে এবং জ্ঞান বিনিময় করতে পারে।
+            </p>
+          </Card>
+
+          <Card className="bg-[var(--surface)] border border-[var(--border)] p-6 space-y-4">
+            <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl w-fit">
+              <Stethoscope size={24} />
+            </div>
+            <h3 className="text-lg font-bold text-[var(--text)] font-hind">
+              বিশেষজ্ঞ পরামর্শ
+            </h3>
+            <p className="text-sm text-[var(--text)]/60 font-hind">
+              অভিজ্ঞ মৎস্য বিশেষজ্ঞদের সাথে সরাসরি পরামর্শ নিয়ে রোগ নির্ণয়
+              এবং চিকিৎসার সঠিক সমাধান পাওয়া।
             </p>
           </Card>
         </div>
@@ -119,6 +132,27 @@ export default function AboutPage() {
               পুকুরের পানির গুণমান, খরচ ট্র্যাকিং এবং উৎপাদন পরিসংখ্যান
               ডিজিটালভাবে পরিচালনা করা হয়। এটি চাষিদের তাদের পুকুর সহজে
               ব্যবস্থাপনা করতে সহায়তা করে।
+            </p>
+          </Card>
+
+          <Card className="bg-[var(--surface)] border border-[var(--border)] p-6 space-y-4">
+            <h3 className="text-lg font-bold text-[var(--text)] font-hind">
+              বিশেষজ্ঞ পরামর্শ সেবা
+            </h3>
+            <p className="text-sm text-[var(--text)]/60 font-hind">
+              অভিজ্ঞ মৎস্য বিশেষজ্ঞদের সাথে সরাসরি চ্যাট করে রোগ নির্ণয় এবং
+              চিকিৎসার পরামর্শ পাওয়া যায়। বিশেষজ্ঞরা তাদের সময়সূচি অনুযায়ী
+              পরামর্শ প্রদান করেন।
+            </p>
+          </Card>
+
+          <Card className="bg-[var(--surface)] border border-[var(--border)] p-6 space-y-4">
+            <h3 className="text-lg font-bold text-[var(--text)] font-hind">
+              সময়সূচি ব্যবস্থাপনা
+            </h3>
+            <p className="text-sm text-[var(--text)]/60 font-hind">
+              বিশেষজ্ঞরা তাদের সাপ্তাহিক কাজের সময় এবং উপলব্ধতা সেট করতে পারেন।
+              চাষিরা বিশেষজ্ঞের উপলব্ধতা দেখে পরামর্শ বুক করতে পারেন।
             </p>
           </Card>
         </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { FileText, Shield, AlertTriangle, Users, Gavel, CheckCircle } from "lucide-react";
+import { FileText, Shield, AlertTriangle, Users, Gavel, CheckCircle, Clock, CreditCard, Stethoscope } from "lucide-react";
 import Card from "@/components/ui/Card";
 
 export default function TermsPage() {
@@ -192,6 +192,86 @@ export default function TermsPage() {
           <p className="text-sm text-[var(--text)]/60 font-hind leading-relaxed mt-4">
             আপনি যেকোনো সময় আপনার অ্যাকাউন্ট মুছে ফেলতে পারেন।
           </p>
+        </Card>
+      </section>
+
+      {/* Consultation Services Section */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl">
+            <Stethoscope size={24} />
+          </div>
+          <h2 className="text-2xl font-black text-[var(--text)] font-hind">
+            পরামর্শ সেবা
+          </h2>
+        </div>
+
+        <Card className="bg-[var(--surface)] border border-[var(--border)] p-6 space-y-4">
+          <p className="text-sm text-[var(--text)]/80 font-hind leading-relaxed">
+            বিশেষজ্ঞ পরামর্শ সেবা ব্যবহারের জন্য নিম্নলিখিত শর্তাবলী প্রযোজ্য:
+          </p>
+          <ul className="space-y-2 text-sm text-[var(--text)]/70 font-hind">
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              পরামর্শ ফি বুকিংয়ের আগে নিশ্চিত করতে হবে
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              পরামর্শ সময় সম্মান করতে হবে
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              বিশেষজ্ঞের পরামর্শ শুধুমাত্র নির্দেশিকা
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              পরামর্শ চ্যাট রেকর্ড করা হয়
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              অপব্যবহারের ক্ষেত্রে সেবা বাতিল হতে পারে
+            </li>
+          </ul>
+        </Card>
+      </section>
+
+      {/* Schedule Management Section */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-xl">
+            <Clock size={24} />
+          </div>
+          <h2 className="text-2xl font-black text-[var(--text)] font-hind">
+            সময়সূচি ব্যবস্থাপনা
+          </h2>
+        </div>
+
+        <Card className="bg-[var(--surface)] border border-[var(--border)] p-6 space-y-4">
+          <p className="text-sm text-[var(--text)]/80 font-hind leading-relaxed">
+            বিশেষজ্ঞদের সময়সূচি ব্যবস্থাপনার জন্য নিম্নলিখিত শর্তাবলী প্রযোজ্য:
+          </p>
+          <ul className="space-y-2 text-sm text-[var(--text)]/70 font-hind">
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              সময়সূচি সঠিক এবং আপডেট রাখতে হবে
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              উপলব্ধতা টগল সঠিকভাবে ব্যবহার করতে হবে
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              বুকিং সময় সম্মান করতে হবে
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              জরুরি পরিস্থিতিতে সময়সূচি পরিবর্তন করা যাবে
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              মিথ্যা সময়সূচি প্রদান করা নিষিদ্ধ
+            </li>
+          </ul>
         </Card>
       </section>
 

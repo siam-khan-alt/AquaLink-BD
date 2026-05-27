@@ -48,6 +48,14 @@ export default function PrivacyPage() {
               <span className="text-[var(--primary)]">•</span>
               পেমেন্ট তথ্য এবং লেনদেন ইতিহাস
             </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              বিশেষজ্ঞদের সময়সূচি এবং উপলব্ধতা তথ্য
+            </li>
+            <li className="flex gap-2">
+              <span className="text-[var(--primary)]">•</span>
+              পরামর্শ চ্যাট এবং যোগাযোগ ইতিহাস
+            </li>
           </ul>
         </Card>
       </section>

@@ -23,15 +23,26 @@ The farmer role operates as the primary production unit within the AquaLink BD p
 - AI Disease Diagnosis: Multi-modal image analysis capabilities for early detection of fish diseases using Google Generative AI Vision SDK
 - Real-Time Communication: Instant messaging system with admin support channels and peer-to-peer farmer networking via Pusher Channels
 
+**Doctor Consultation Ecosystem**
+
+The doctor role provides expert consultation services to farmers, enabling:
+
+- Schedule Management: Configure weekly availability with time slots for consultation bookings
+- Real-Time Availability: Toggle availability status to control when farmers can book consultations
+- Consultation Chat: Secure messaging with farmers for diagnosis and treatment recommendations
+- Earnings Tracking: Monitor consultation revenue and payment history
+- Profile Management: Update professional credentials and consultation rates
+
 **Admin Regulatory Panel**
 
 The admin role serves as the platform governance and quality control authority. Admins possess elevated privileges enabling:
 
-- System Overview: Comprehensive analytics dashboard displaying total registered farmers, active pond counts, verified user statistics, and chat channel activity metrics
-- User Management: Verification workflows for farmer accounts, role assignment capabilities, and user activity monitoring
+- System Overview: Comprehensive analytics dashboard displaying total registered farmers, active pond counts, verified user statistics, doctor applications, and chat channel activity metrics
+- User Management: Verification workflows for farmer accounts, doctor application approvals, role assignment capabilities, and user activity monitoring
 - Market Rate Control: Centralized management of fish market pricing data with immediate ISR (Incremental Static Regeneration) propagation across public-facing pages
 - Course Administration: Creation, pricing, and management of premium training content and bootcamp programs
 - Notification Dispatch: Platform-wide announcement system for critical updates, policy changes, and educational content distribution
+- Doctor Applications: Review and approve expert applications for doctor role with credential verification
 
 ### Revenue Generation Mechanics
 
@@ -66,16 +77,27 @@ The disease detection module utilizes Google Generative AI Vision SDK to analyze
 - Treatment recommendation generation
 - Historical disease pattern tracking
 - Regional outbreak monitoring
+- Integration with doctor consultation services for expert verification
 
-Future subscription tiers will provide enhanced diagnostic accuracy, unlimited analysis quotas, and integration with veterinary consultation services.
+Future subscription tiers will provide enhanced diagnostic accuracy, unlimited analysis quotas, and priority consultation access.
 
 ---
 
 ## Complete Feature Breakdown
 
+### Performance Optimization
+
+The platform implements advanced performance optimizations for enhanced user experience:
+
+- Parallel Query Execution: Utilizes TanStack Query's `useQueries` for concurrent data fetching, reducing load times across dashboards
+- Skeleton Loading States: Replaced traditional spinners with modern skeleton components for improved perceived performance
+- Centralized Configuration: Shared constants for React Query settings (staleTime, refetchInterval) ensure consistent caching behavior
+- Type-Safe Architecture: Strict TypeScript typing with zero `any` types ensures compile-time error detection and better IDE support
+- Code Quality: Removed debug statements and implemented standardized error handling for production readiness
+
 ### Role-Based Access Control
 
-The platform implements a robust authentication and authorization system using NextAuth.js with multiple provider support. Role-based access control ensures that farmers and admins have appropriate permissions for their respective functions. The system includes:
+The platform implements a robust authentication and authorization system using NextAuth.js with multiple provider support. Role-based access control ensures that farmers, doctors, and admins have appropriate permissions for their respective functions. The system includes:
 
 - Secure session management with JWT tokens
 - Multi-factor authentication support
@@ -101,7 +123,7 @@ The notification system utilizes TanStack Query for efficient data fetching and 
 - Real-time notification delivery
 - User-specific notification filtering
 - Read/unread status tracking
-- Notification categorization (system updates, payment confirmations, course announcements)
+- Notification categorization (system updates, payment confirmations, course announcements, consultation bookings)
 - Batch notification processing
 - Notification persistence across sessions
 
