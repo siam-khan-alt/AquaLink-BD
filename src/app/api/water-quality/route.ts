@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (pond.owner.toString() !== token.id) {
-      console.error(`Unauthorized access attempt: User ${token.id} tried to access pond ${pondId} owned by ${pond.owner}`);
+      console.error(`Unauthorized access attempt detected for pond ${pondId}`);
       return NextResponse.json(
         { error: "Unauthorized. You do not own this pond." },
         { status: 403 }
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (pond.owner.toString() !== token.id) {
-      console.error(`Unauthorized access attempt: User ${token.id} tried to modify pond ${data.pondId} owned by ${pond.owner}`);
+      console.error(`Unauthorized access attempt detected for pond ${data.pondId}`);
       return NextResponse.json(
         { error: "Unauthorized. You do not own this pond." },
         { status: 403 }

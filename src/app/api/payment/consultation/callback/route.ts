@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     // IDOR Fix: Verify the authenticated user owns this transaction
     if (transaction.userId.toString() !== session.user.id) {
-      console.error(`IDOR attempt: User ${session.user.id} tried to access transaction ${transaction._id} owned by ${transaction.userId}`);
+      console.error(`IDOR attempt detected for transaction ${transaction._id}`);
       return NextResponse.redirect(
         new URL("/dashboard/farmer/experts?error=unauthorized", req.url)
       );
@@ -188,7 +188,7 @@ export async function GET(req: NextRequest) {
 
     // IDOR Fix: Verify the authenticated user owns this transaction
     if (transaction.userId.toString() !== session.user.id) {
-      console.error(`IDOR attempt: User ${session.user.id} tried to access transaction ${transaction._id} owned by ${transaction.userId}`);
+      console.error(`IDOR attempt detected for transaction ${transaction._id}`);
       return NextResponse.redirect(
         new URL("/dashboard/farmer/experts?error=unauthorized", req.url)
       );

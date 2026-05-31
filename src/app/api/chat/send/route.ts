@@ -6,6 +6,7 @@ import { getToken } from "next-auth/jwt";
 import { pusherServer } from "@/shared/lib/pusher";
 import type { NextRequest } from "next/server";
 import { Types, Document } from "mongoose";
+import { messageSchemaValidation } from "@/shared/lib/chatValidation";
 
 interface IChatSchema extends Document {
   isGroup: boolean;
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const chat = await Chat.findById(chatId) as IChatSchema | null;
+    const chat = await Chat.findById(chatId).lean();
     if (!chat) {
       return NextResponse.json(
         { error: "Chat not found" },
@@ -88,16 +89,25 @@ export async function POST(req: NextRequest) {
       createdAt: message.createdAt || new Date(),
     };
 
+    const validatedMessage = messageSchemaValidation.safeParse(messageData);
+    if (!validatedMessage.success) {
+      console.error("Message validation error:", validatedMessage.error);
+      return NextResponse.json(
+        { error: "Failed to validate message data" },
+        { status: 500 }
+      );
+    }
+
     await pusherServer.trigger(
       `chat-${chatId}`,
       "new-message",
-      messageData
+      validatedMessage.data
     );
 
     return NextResponse.json(
       {
         success: true,
-        message: messageData,
+        message: validatedMessage.data,
       },
       { status: 200 }
     );

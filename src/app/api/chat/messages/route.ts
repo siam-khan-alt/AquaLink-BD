@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     );
 
     if (!isParticipant) {
-      console.error(`Unauthorized access attempt: User ${token.id} tried to access chat ${chatId} without being a participant`);
+      console.error(`Unauthorized access attempt detected for chat ${chatId}`);
       return NextResponse.json(
         { error: "Unauthorized. You are not a participant in this chat." },
         { status: 403 }

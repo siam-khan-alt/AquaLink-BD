@@ -49,28 +49,42 @@ export default function ChatLayout() {
   const fetchChats = useCallback(async () => {
     if (!session?.user?.id) return;
     
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
     try {
-      const response = await fetch(`/api/chat/chats?type=${activeTab}`);
+      const response = await fetch(`/api/chat/chats?type=${activeTab}`, { signal });
       const data = await response.json();
       if (data.chats) {
         setChats(data.chats);
       }
     } catch (error) {
-      console.error("Error fetching chats:", error);
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error("Error fetching chats:", error);
+      }
     }
+    
+    return () => controller.abort();
   }, [activeTab, session?.user?.id]);
 
   const fetchMessages = useCallback(async (chatId: string) => {
     if (!chatId) return;
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
     try {
-      const response = await fetch(`/api/chat/messages?chatId=${chatId}`);
+      const response = await fetch(`/api/chat/messages?chatId=${chatId}`, { signal });
       const data = await response.json();
       if (data.messages) {
         setMessages(data.messages);
       }
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error("Error fetching messages:", error);
+      }
     }
+    
+    return () => controller.abort();
   }, []);
 
   // Pusher connection with proper cleanup

@@ -6,6 +6,7 @@ import { User } from "@/models/User";
 import { getToken } from "next-auth/jwt";
 import { Document, Types } from "mongoose";
 import { ChatMessage } from "@/shared/types/chat";
+import { chatResponseSchema } from "@/shared/lib/chatValidation";
 
 interface IPopulatedParticipant {
   _id: string;
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
 
     const userId = token.id as string;
     const userRole = token.role as string;
-    let chats: IChatDocument[];
+    let chats: any[];
 
     // ADMIN VIEW
     if (userRole === "admin") {
@@ -73,7 +74,8 @@ export async function GET(req: NextRequest) {
           isAdminSupport: true,
         })
           .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       } else if (type === "direct") {
         // Direct messages with farmers
         const farmers = await User.find({ role: "farmer" }).select("_id");
@@ -86,7 +88,8 @@ export async function GET(req: NextRequest) {
           participants: { $in: farmerIds },
         })
           .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       } else if (type === "community") {
         // Community channels for moderation
         chats = await Chat.find({
@@ -95,7 +98,8 @@ export async function GET(req: NextRequest) {
         })
           .populate("participants", "name email phone image role")
           .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       } else {
         // All chats for admin
         chats = await Chat.find({
@@ -112,7 +116,8 @@ export async function GET(req: NextRequest) {
         })
           .populate("participants", "name email phone image role")
           .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       }
     } 
     // FARMER VIEW
@@ -126,7 +131,8 @@ export async function GET(req: NextRequest) {
           participants: userId,
         })
           .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       } else if (type === "community") {
         // Public community channels
         chats = await Chat.find({
@@ -135,7 +141,8 @@ export async function GET(req: NextRequest) {
         })
           .populate("participants", "name email phone image role")
           .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       } else if (type === "support") {
         // Support tickets with admin
         chats = await Chat.find({
@@ -143,7 +150,8 @@ export async function GET(req: NextRequest) {
           participants: userId,
         })
           .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       } else {
         // All chats for farmer
         chats = await Chat.find({
@@ -154,7 +162,8 @@ export async function GET(req: NextRequest) {
         })
           .populate("participants", "name email phone image role")
           .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 }) as unknown as IChatDocument[];
+          .sort({ updatedAt: -1 })
+          .lean();
       }
     }
 
@@ -211,7 +220,16 @@ export async function GET(req: NextRequest) {
       return plainChat;
     });
 
-    return NextResponse.json({ chats: chatsWithLastMessage }, { status: 200 });
+    const validatedChats = chatResponseSchema.safeParse(chatsWithLastMessage);
+    if (!validatedChats.success) {
+      console.error("Chat validation error:", validatedChats.error);
+      return NextResponse.json(
+        { error: "Failed to validate chat data" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ chats: validatedChats.data }, { status: 200 });
   } catch (error) {
     console.error("Error fetching chats:", error);
     return NextResponse.json(

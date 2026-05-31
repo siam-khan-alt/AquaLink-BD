@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     // IDOR Fix: Verify the authenticated user owns this enrollment
     if (enrollment.userId.toString() !== session.user.id) {
-      console.error(`IDOR attempt: User ${session.user.id} tried to access enrollment ${enrollment._id} owned by ${enrollment.userId}`);
+      console.error(`IDOR attempt detected for enrollment ${enrollment._id}`);
       return NextResponse.redirect(
         new URL("/dashboard/farmer/courses?error=unauthorized", req.url)
       );
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
 
     // IDOR Fix: Verify the authenticated user owns this enrollment
     if (enrollment.userId.toString() !== session.user.id) {
-      console.error(`IDOR attempt: User ${session.user.id} tried to access enrollment ${enrollment._id} owned by ${enrollment.userId}`);
+      console.error(`IDOR attempt detected for enrollment ${enrollment._id}`);
       return NextResponse.redirect(
         new URL("/dashboard/farmer/courses?error=unauthorized", req.url)
       );
