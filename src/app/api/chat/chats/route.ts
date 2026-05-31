@@ -4,11 +4,12 @@ import { Chat } from "@/models/Chat";
 import { Message } from "@/models/Message";
 import { User } from "@/models/User";
 import { getToken } from "next-auth/jwt";
-import { Document, Types } from "mongoose";
+import { Types } from "mongoose";
 import { ChatMessage } from "@/shared/types/chat";
 import { chatResponseSchema } from "@/shared/lib/chatValidation";
 
-interface IPopulatedParticipant {
+// Participant Interface
+interface IParticipant {
   _id: string;
   name: string;
   email: string;
@@ -17,44 +18,26 @@ interface IPopulatedParticipant {
   role: string;
 }
 
-interface IChatDocument extends Document {
+// Chat Document Interface for Lean query
+interface IChatLean {
   _id: Types.ObjectId;
   type: "direct" | "group" | "support" | "community";
   isGroup: boolean;
   isAdminSupport: boolean;
   isPublic?: boolean;
-  participants: Types.ObjectId[] | IPopulatedParticipant[];
-  groupAdmin?: Types.ObjectId | IPopulatedParticipant;
+  participants: IParticipant[];
+  groupAdmin?: IParticipant;
   groupName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-type ChatResponseObject = {
-  _id: string;
-  type: "direct" | "group" | "support" | "community";
-  isGroup: boolean;
-  isAdminSupport: boolean;
-  isPublic?: boolean;
-  participants: IPopulatedParticipant[];
-  groupAdmin?: IPopulatedParticipant;
-  groupName?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  lastMessage: ChatMessage | null;
-  unreadCount?: number;
-  memberCount?: number;
-};
-
 export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     
-    if (!token || !token.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!token?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -64,177 +47,92 @@ export async function GET(req: NextRequest) {
 
     const userId = token.id as string;
     const userRole = token.role as string;
-    let chats: any[];
+    
+    let chats: IChatLean[] = [];
 
-    // ADMIN VIEW
+    // Base query options
+    const populateFields = ["participants", "groupAdmin"];
+
     if (userRole === "admin") {
       if (type === "support") {
-        // Support inbox: all farmer support tickets
-        chats = await Chat.find({
-          isAdminSupport: true,
-        })
-          .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
+        chats = await Chat.find({ isAdminSupport: true }).populate(populateFields).lean<IChatLean[]>();
       } else if (type === "direct") {
-        // Direct messages with farmers
-        const farmers = await User.find({ role: "farmer" }).select("_id");
-        const farmerIds = farmers.map((f) => f._id);
-        
+        const farmerIds = await User.find({ role: "farmer" }).distinct("_id");
         chats = await Chat.find({
           type: "direct",
           isGroup: false,
           isAdminSupport: false,
           participants: { $in: farmerIds },
-        })
-          .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
+        }).populate(populateFields).lean<IChatLean[]>();
       } else if (type === "community") {
-        // Community channels for moderation
-        chats = await Chat.find({
-          type: "community",
-          isPublic: true,
-        })
-          .populate("participants", "name email phone image role")
-          .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
+        chats = await Chat.find({ type: "community", isPublic: true }).populate(populateFields).lean<IChatLean[]>();
       } else {
-        // All chats for admin
+        const farmerIds = await User.find({ role: "farmer" }).distinct("_id");
         chats = await Chat.find({
           $or: [
             { isAdminSupport: true },
             { type: "community", isPublic: true },
-            { 
-              type: "direct",
-              isGroup: false, 
-              isAdminSupport: false,
-              participants: { $in: await User.find({ role: "farmer" }).select("_id").then(f => f.map(u => u._id)) },
-            },
+            { type: "direct", isGroup: false, isAdminSupport: false, participants: { $in: farmerIds } },
           ],
-        })
-          .populate("participants", "name email phone image role")
-          .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
+        }).populate(populateFields).lean<IChatLean[]>();
       }
-    } 
-    // FARMER VIEW
-    else {
-      if (type === "direct") {
-        // Direct messages (farmer-to-farmer and farmer-to-admin)
-        chats = await Chat.find({
-          type: "direct",
-          isGroup: false,
-          isAdminSupport: false,
-          participants: userId,
-        })
-          .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
-      } else if (type === "community") {
-        // Public community channels
-        chats = await Chat.find({
-          type: "community",
-          isPublic: true,
-        })
-          .populate("participants", "name email phone image role")
-          .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
-      } else if (type === "support") {
-        // Support tickets with admin
-        chats = await Chat.find({
-          isAdminSupport: true,
-          participants: userId,
-        })
-          .populate("participants", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
-      } else {
-        // All chats for farmer
-        chats = await Chat.find({
-          $or: [
-            { participants: userId },
-            { type: "community", isPublic: true },
-          ],
-        })
-          .populate("participants", "name email phone image role")
-          .populate("groupAdmin", "name email phone image role")
-          .sort({ updatedAt: -1 })
-          .lean();
-      }
+    } else {
+      // FARMER VIEW
+      const query = type === "direct" 
+        ? { type: "direct", isGroup: false, isAdminSupport: false, participants: userId }
+        : type === "community" 
+        ? { type: "community", isPublic: true }
+        : type === "support" 
+        ? { isAdminSupport: true, participants: userId }
+        : { $or: [{ participants: userId }, { type: "community", isPublic: true }] };
+
+      chats = await Chat.find(query).populate(populateFields).lean<IChatLean[]>();
     }
 
-    // OPTIMIZATION: Fetch all last messages in a single query instead of N+1
     const chatIds = chats.map(c => c._id);
     const lastMessages = await Message.find({ chatId: { $in: chatIds } })
       .sort({ createdAt: -1 })
-      .lean();
+      .lean<{ _id: Types.ObjectId, chatId: Types.ObjectId, sender: Types.ObjectId, text: string, createdAt: Date }[]>();
 
-    // Create a map for quick lookup with proper type conversion
     const lastMessageMap = new Map<string, ChatMessage>();
     lastMessages.forEach(msg => {
       const chatId = msg.chatId.toString();
       if (!lastMessageMap.has(chatId)) {
-        // Convert Mongoose lean document to ChatMessage interface
-        const chatMessage: ChatMessage = {
+        lastMessageMap.set(chatId, {
           _id: msg._id.toString(),
           chatId: chatId,
           sender: msg.sender.toString(),
           text: msg.text,
           createdAt: msg.createdAt,
-        };
-        lastMessageMap.set(chatId, chatMessage);
+        });
       }
     });
 
-    // Calculate unread counts
-    const unreadCounts = await Message.aggregate([
-      { $match: { chatId: { $in: chatIds }, sender: { $ne: userId } } },
+    const unreadCounts = await Message.aggregate<{ _id: Types.ObjectId, count: number }>([
+      { $match: { chatId: { $in: chatIds }, sender: { $ne: new Types.ObjectId(userId) } } },
       { $group: { _id: "$chatId", count: { $sum: 1 } } }
     ]);
     const unreadCountMap = new Map(unreadCounts.map(u => [u._id.toString(), u.count]));
 
-    const chatsWithLastMessage: ChatResponseObject[] = chats.map((chat) => {
-      const rawObject = chat.toObject();
-      const chatId = rawObject._id.toString();
-      
-      const plainChat = {
-        ...rawObject,
-        _id: chatId,
-        type: rawObject.type || (rawObject.isGroup ? "group" : "direct"),
-        groupAdmin: rawObject.groupAdmin 
-          ? { ...rawObject.groupAdmin, _id: rawObject.groupAdmin._id?.toString() || rawObject.groupAdmin._id }
-          : undefined,
-        participants: (rawObject.participants || []).map((p: Record<string, unknown>) => ({
-          ...p,
-          _id: p._id ? p._id.toString() : "",
-        })),
-        lastMessage: lastMessageMap.get(chatId) || null,
-        unreadCount: unreadCountMap.get(chatId) || 0,
-        memberCount: rawObject.isPublic ? (rawObject.participants || []).length : undefined,
-      } as ChatResponseObject;
+    const formattedChats = chats.map((chat) => ({
+      ...chat,
+      _id: chat._id.toString(),
+      participants: chat.participants.map(p => ({ ...p, _id: p._id.toString() })),
+      groupAdmin: chat.groupAdmin ? { ...chat.groupAdmin, _id: chat.groupAdmin._id.toString() } : undefined,
+      lastMessage: lastMessageMap.get(chat._id.toString()) || null,
+      unreadCount: unreadCountMap.get(chat._id.toString()) || 0,
+      memberCount: chat.isPublic ? chat.participants.length : undefined,
+    }));
 
-      return plainChat;
-    });
-
-    const validatedChats = chatResponseSchema.safeParse(chatsWithLastMessage);
+    const validatedChats = chatResponseSchema.safeParse(formattedChats);
+    
     if (!validatedChats.success) {
-      console.error("Chat validation error:", validatedChats.error);
-      return NextResponse.json(
-        { error: "Failed to validate chat data" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Validation failed" }, { status: 500 });
     }
 
     return NextResponse.json({ chats: validatedChats.data }, { status: 200 });
   } catch (error) {
     console.error("Error fetching chats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch chats" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch chats" }, { status: 500 });
   }
 }
