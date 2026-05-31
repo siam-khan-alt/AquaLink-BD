@@ -140,7 +140,7 @@ export default function MarketTrendsInsight() {
               <span className="text-[var(--text)]/80">রুই মাছ</span>
             </div>
             <span className="font-bold text-[var(--text)]">
-              {formatBDT(priceData[priceData.length - 1].price)} / কেজি
+              {priceData.length > 0 ? `${formatBDT(priceData[priceData.length - 1].price)} / কেজি` : 'N/A'}
             </span>
           </div>
 

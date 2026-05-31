@@ -15,9 +15,11 @@ export async function middleware(request: NextRequest) {
     '/api/auth',
   ];
 
-  const isPublicPath = publicPaths.some(path => 
-    pathname === path || pathname.startsWith(path)
-  );
+  const isPublicPath = publicPaths.some(path => {
+    if (pathname === path) return true;
+    if (path.endsWith('/')) return pathname.startsWith(path);
+    return pathname === path || pathname.startsWith(path + '/');
+  });
 
   if (isPublicPath) {
     return NextResponse.next();

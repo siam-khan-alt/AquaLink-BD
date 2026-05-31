@@ -56,10 +56,11 @@ const UserSchema = new Schema<IUser>({
     type: String, 
     select: false 
   },
-  image: { type: String },firebaseUid: { 
-    type: String, 
-    unique: true, 
-    sparse: true 
+  image: { type: String },
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true
   },
   role: { 
     type: String, 

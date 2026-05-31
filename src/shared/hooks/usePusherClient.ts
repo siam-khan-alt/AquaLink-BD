@@ -25,5 +25,5 @@ export function usePusherClient(chatId: string, onMessage: (message: ChatMessage
       channel.unsubscribe();
       pusherClient.disconnect();
     };
-  }, [chatId, onMessage]);
+  }, [chatId]);
 }

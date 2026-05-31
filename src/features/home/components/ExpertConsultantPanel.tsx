@@ -17,7 +17,8 @@ const ExpertConsultantPanel = memo(() => {
 
   const handleConsultExpert = useCallback(
     async (expert: Expert) => {
-      if (!session) {
+      const currentSession = session;
+      if (!currentSession) {
         toast.error("অনুগ্রহ করে পরামর্শ নেওয়ার জন্য লগইন করুন");
         await signIn();
         return;
@@ -29,8 +30,7 @@ const ExpertConsultantPanel = memo(() => {
         const res = await fetch("/api/payment/consultation/initiate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          // ফিক্সড: expertId এর বদলে doctorId পাঠানো হলো যা ব্যাকএন্ডের Zod স্কিমার সাথে মিলবে
-          body: JSON.stringify({ doctorId: expert._id }), 
+          body: JSON.stringify({ doctorId: expert._id }),
         });
 
         interface PaymentResponse {

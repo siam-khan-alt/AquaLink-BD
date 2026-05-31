@@ -97,6 +97,9 @@ export default function NotificationDropdown() {
       headers: { "Content-Type": "application/json" }
     }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onError: (error) => {
+      console.error("Failed to mark notification as read:", error);
+    },
   });
 
   useEffect(() => {

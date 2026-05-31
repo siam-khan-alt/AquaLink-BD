@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     creator: "@AquaLinkBD",
   },
   verification: {
-    google: "your-google-verification-code",
+    google: process.env.GOOGLE_SITE_VERIFICATION || "",
   },
 };
 

@@ -87,7 +87,12 @@ export default function EmergencyDiseaseAlerts() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
-    fetchActiveAlerts().then(setAlerts);
+    fetchActiveAlerts()
+      .then(setAlerts)
+      .catch((error) => {
+        console.error("Failed to fetch alerts:", error);
+        setAlerts([]);
+      });
   }, []);
 
   return (
