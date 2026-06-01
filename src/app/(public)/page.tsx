@@ -14,6 +14,9 @@ import { getTickerMarketPrices } from "@/features/home/services/marketQueries";
 import { Metadata } from "next";
 import type { IMarketPrice } from "@/shared/types/market";
 import PremiumBootcampCTA from "@/features/home/components/PremiumBootcampCTA";
+import { HowToSection } from "@/features/home/components/HowToSection";
+import { NewsletterSection } from "@/features/home/components/NewsletterSection";
+import { FAQSection } from "@/features/home/components/FAQSection";
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -73,18 +76,18 @@ export default async function Home() {
 
       <div className="container mx-auto px-4 space-y-12 py-12">
         <RealtimePriceSnapshot />
+        <HowToSection />
         <WeatherCropAdvisory />
-
         <EmergencyDiseaseAlerts />
-
         <ProfitCalculatorWidget />
-
         <FishDiseaseVisionPreview />
         <PremiumBootcampCTA />
         <SuccessfulFarmerStories />
         <ExpertConsultantPanel />
         <BecomeExpertCTA />
         <PlatformStatsBanner />
+        <NewsletterSection />
+        <FAQSection />
       </div>
 
       <PWAInstallBanner />

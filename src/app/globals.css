@@ -77,3 +77,9 @@ body {
   font-family: var(--font-hind-siliguri);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+html {
+  scroll-behavior: smooth;
+}
+#expert-panel {
+  scroll-margin-top: 100px; 
+}

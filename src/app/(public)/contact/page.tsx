@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 
 const contactSchema = z.object({
   name: z.string().min(2, "নাম অন্তত ২ অক্ষরের হতে হবে"),
@@ -73,19 +74,11 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] py-16 flex items-center">
       <div className="container mx-auto px-4 container">
-        <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-xs font-black uppercase tracking-widest font-hind">
-            যোগাযোগ মাধ্যম
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-[var(--text)] font-hind">
-            আমাদের সাথে{" "}
-            <span className="text-[var(--primary)]">যোগাযোগ করুন</span>
-          </h1>
-          <p className="text-sm md:text-base text-[var(--text)]/60 max-w-md mx-auto font-hind">
-            আপনার যেকোনো প্রশ্ন, মতামত বা পরামর্শ আমাদের জানাতে পারেন। আমরা
-            দ্রুত সাড়া দিতে বদ্ধপরিকর।
-          </p>
-        </div>
+        <PageHeader
+          badge="যোগাযোগ মাধ্যম"
+          title="আমাদের সাথে যোগাযোগ করুন"
+          subtitle="আপনার যেকোনো প্রশ্ন, মতামত বা পরামর্শ আমাদের জানাতে পারেন।"
+        />
 
         <div className="grid lg:grid-cols-12 gap-8 items-stretch">
           {/* বাম পাশ: তথ্য কার্ড */}

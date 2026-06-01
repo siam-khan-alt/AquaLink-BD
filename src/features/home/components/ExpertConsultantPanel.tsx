@@ -61,7 +61,7 @@ const ExpertConsultantPanel = memo(() => {
     );
 
   return (
-    <section className="space-y-6">
+    <section id="expert-panel" className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-xl flex items-center justify-center">
           <Shield size={20} className="text-[var(--primary)]" />

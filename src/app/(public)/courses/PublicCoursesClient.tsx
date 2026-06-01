@@ -6,8 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import { QUERY_CONFIG } from "@/shared/lib/constants";
 import { useSession, signIn } from "next-auth/react";
 import { BookOpen, Search, Video, Tag, ArrowRight, Loader2, X } from "lucide-react";
-import { Card, Button, Input, Chip } from "@heroui/react";
+import { Card, Button, Input } from "@heroui/react";
 import { toast } from "sonner";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 
 interface ICourse {
   _id: string;
@@ -76,23 +77,11 @@ export const PublicCoursesClient = memo(() => {
     <div className="min-h-screen bg-[var(--background)] py-12 px-4 transition-colors duration-300">
       <div className="container mx-auto space-y-10">
         
-        <div className="text-center max-w-2xl mx-auto space-y-4">
-          <Chip
-            size="sm"
-            className="bg-[var(--primary)]/10 text-[var(--primary)] font-black border border-[var(--primary)]/20 px-3 py-1 font-hind"
-          >
-            আমাদের অনলাইন লার্নিং প্ল্যাটফর্ম
-          </Chip>
-          <h1 className="text-3xl md:text-5xl font-black text-[var(--text)] tracking-tight font-hind leading-tight">
-            আধুনিক মৎস্য চাষের <br />
-            <span className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent">
-              সেরা বুটক্যাম্প ও কোর্সসমূহ
-            </span>
-          </h1>
-          <p className="text-sm md:text-base text-[var(--text)]/60 font-medium font-hind">
-            যেকোনো স্থান থেকে মৎস্য বিশেষজ্ঞদের বৈজ্ঞানিক গাইডলাইন এবং আধুনিক চাষ পদ্ধতি শিখে নিজের খামারকে লাভজনক করুন।
-          </p>
-        </div>
+        <PageHeader 
+          badge="আমাদের অনলাইন লার্নিং প্ল্যাটফর্ম"
+          title="আধুনিক মৎস্য চাষের সেরা কোর্স"
+          subtitle="বিশেষজ্ঞদের বৈজ্ঞানিক গাইডলাইন এবং আধুনিক পদ্ধতি শিখে আপনার খামারকে লাভজনক করুন।"
+        />
 
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between p-4 bg-[var(--surface)] border border-[var(--border)]/60 rounded-2xl shadow-xl transform-gpu">
           <div className="w-full md:w-80 relative flex items-center">

@@ -1,20 +1,17 @@
 import React from "react";
 import { Target, Zap, Shield, Users, Globe, Heart, Stethoscope } from "lucide-react";
 import Card from "@/components/ui/Card";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 
 export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-12 space-y-12">
       {/* Hero Section */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-black text-[var(--text)] font-hind">
-          মৎস্য বন্ধু সম্পর্কে
-        </h1>
-        <p className="text-lg text-[var(--text)]/60 max-w-2xl mx-auto font-hind">
-          বাংলাদেশের মাছ চাষিদের জন্য আধুনিক ডিজিটাল সমাধান। আমরা প্রযুক্তির মাধ্যমে
-          মাছ চাষকে লাভজনক এবং সহজ করে তুলছি।
-        </p>
-      </div>
+      <PageHeader 
+        badge="মৎস্য বন্ধু সম্পর্কে"
+        title="আধুনিক মৎস্য চাষের ডিজিটাল সঙ্গী"
+        subtitle="বাংলাদেশের মাছ চাষিদের জন্য আধুনিক ডিজিটাল সমাধান। আমরা প্রযুক্তির মাধ্যমে মাছ চাষকে লাভজনক এবং সহজ করে তুলছি।"
+      />
 
       {/* Mission Section */}
       <section className="space-y-6">

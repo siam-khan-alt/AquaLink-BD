@@ -176,7 +176,7 @@ export default function ProfitCalculatorWidget() {
             <Button
               onClick={handleDownloadPDF}
               isDisabled={isDownloading}
-              className="w-full py-5 rounded-xl bg-[var(--primary)] text-white font-black text-xs tracking-wider hover:opacity-95 active:scale-[0.99] transition-all shadow-lg"
+              className="w-full py-5 rounded-xl hidden bg-[var(--primary)] text-white font-black text-xs tracking-wider hover:opacity-95 active:scale-[0.99] transition-all shadow-lg"
             >
               {isDownloading ? (
                 <>
