@@ -14,13 +14,20 @@ export const NewsletterSection = () => {
     try {
       const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      
+      if (res.status === 201) {
         toast.success("সফলভাবে সাবস্ক্রাইব করেছেন!");
         setEmail("");
+      } else if (res.status === 409) {
+        toast.info("আপনি ইতিমধ্যে সাবস্ক্রাইব করেছেন!");
+      } else if (res.status === 400) {
+        toast.error("সঠিক ইমেইল ঠিকানা দিন।");
       } else {
-        toast.error("কিছু ভুল হয়েছে, আবার চেষ্টা করুন।");
+        toast.error(data.error || "কিছু ভুল হয়েছে, আবার চেষ্টা করুন।");
       }
     } catch {
       toast.error("সার্ভার এরর!");

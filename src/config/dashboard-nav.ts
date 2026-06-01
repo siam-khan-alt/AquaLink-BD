@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator, Calendar, Stethoscope, Waves } from "lucide-react";
+import { LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator, Calendar, Stethoscope, Waves, Mail } from "lucide-react";
 
 export const DASHBOARD_NAV = {
   farmer: [
@@ -16,6 +16,7 @@ export const DASHBOARD_NAV = {
     { label: "বিশেষজ্ঞ ব্যবস্থাপনা", href: "/dashboard/admin/experts", icon: UserCheck },
     { label: "জরুরি সতর্কতা", href: "/dashboard/admin/alerts", icon: AlertTriangle },
     { label: "বুটক্যাম্প ব্যবস্থাপনা", href: "/dashboard/admin/courses", icon: BookOpen },
+    { label: "নিউজলেটার ব্যবস্থাপনা", href: "/dashboard/admin/newsletter", icon: Mail },
     { label: "সাপোর্ট ইনবক্স", href: "/dashboard/chat", icon: MessageSquare },
   ],
   doctor: [
