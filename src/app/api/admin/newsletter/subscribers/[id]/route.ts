@@ -6,7 +6,7 @@ import { Types } from "mongoose";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -20,7 +20,7 @@ export async function DELETE(
 
     await connectDB();
 
-    const subscriber = await Subscriber.findByIdAndDelete(params.id);
+    const subscriber = await Subscriber.findByIdAndDelete((await params).id);
     if (!subscriber) {
       return NextResponse.json(
         { error: "Subscriber not found" },

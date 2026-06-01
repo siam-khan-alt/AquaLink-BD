@@ -4,6 +4,7 @@ import { connectDB } from "@/shared/lib/db";
 import { Pond } from "@/models/Pond";
 import { getToken } from "next-auth/jwt";
 import { Types } from "mongoose";
+import { ApiResponse } from "@/shared/types/api-responses";
 
 const MONTHS_BN = [
   "জানুয়ারি",
@@ -34,50 +35,115 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const farmerId = token.id as string;
 
-    const ponds = await Pond.find({ owner: new Types.ObjectId(farmerId) })
-      .select("expenses")
-      .lean();
+    // OPTIMIZED: Use MongoDB aggregation pipeline for server-side grouping
+    // Reduces complexity from O(n*m) to O(n) where n=ponds
+    const chartData = await Pond.aggregate([
+      { $match: { owner: new Types.ObjectId(farmerId) } },
+      { $unwind: "$expenses" },
+      {
+        $project: {
+          year: { $year: "$expenses.date" },
+          month: { $month: "$expenses.date" },
+          type: "$expenses.type",
+          amount: "$expenses.amount",
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: "$year",
+            month: "$month",
+          },
+          Feed: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: [{ $toLower: "$type" }, "feed"] },
+                    { $eq: [{ $toLower: "$type" }, "খাদ্য"] },
+                  ],
+                },
+                "$amount",
+                0,
+              ],
+            },
+          },
+          Fertilizer: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: [{ $toLower: "$type" }, "fertilizer"] },
+                    { $eq: [{ $toLower: "$type" }, "সার"] },
+                  ],
+                },
+                "$amount",
+                0,
+              ],
+            },
+          },
+          Other: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: [{ $toLower: "$type" }, "feed"] },
+                    { $eq: [{ $toLower: "$type" }, "খাদ্য"] },
+                    { $eq: [{ $toLower: "$type" }, "fertilizer"] },
+                    { $eq: [{ $toLower: "$type" }, "সার"] },
+                  ],
+                },
+                0,
+                "$amount",
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      { $limit: 6 },
+    ]);
 
-    // Generate chart data for last 6 months
-    const chartDataMap: Record<string, { Feed: number; Fertilizer: number; Other: number }> = {};
-    const last6Months: { key: string; name: string }[] = [];
+    // Generate month labels for last 6 months
     const now = new Date();
-
+    const last6Months: { key: string; name: string }[] = [];
+    
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       const name = `${MONTHS_BN[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`;
       last6Months.push({ key, name });
-      chartDataMap[key] = { Feed: 0, Fertilizer: 0, Other: 0 };
     }
 
-    ponds.forEach((pond) => {
-      if (pond.expenses) {
-        pond.expenses.forEach((expense) => {
-          const expDate = new Date(expense.date);
-          const key = `${expDate.getFullYear()}-${expDate.getMonth()}`;
-          if (chartDataMap[key] !== undefined) {
-            const type = expense.type.toLowerCase();
-            if (type.includes("feed") || type.includes("খাদ্য")) {
-              chartDataMap[key].Feed += expense.amount;
-            } else if (type.includes("fertilizer") || type.includes("সার")) {
-              chartDataMap[key].Fertilizer += expense.amount;
-            } else {
-              chartDataMap[key].Other += expense.amount;
-            }
-          }
-        });
-      }
+    // Create a map for quick lookup
+    const chartDataMap = new Map<string, { Feed: number; Fertilizer: number; Other: number }>();
+    chartData.forEach((item) => {
+      const key = `${item._id.year}-${item._id.month}`;
+      chartDataMap.set(key, {
+        Feed: item.Feed || 0,
+        Fertilizer: item.Fertilizer || 0,
+        Other: item.Other || 0,
+      });
     });
 
-    const chartData = last6Months.map((m) => ({
+    // Build final response with all months (including zeros)
+    const finalChartData = last6Months.map((m) => ({
       name: m.name,
-      "খাদ্য (Feed)": chartDataMap[m.key].Feed,
-      "সার (Fertilizer)": chartDataMap[m.key].Fertilizer,
-      "অন্যান্য (Other)": chartDataMap[m.key].Other,
+      "খাদ্য (Feed)": chartDataMap.get(m.key)?.Feed || 0,
+      "সার (Fertilizer)": chartDataMap.get(m.key)?.Fertilizer || 0,
+      "অন্যান্য (Other)": chartDataMap.get(m.key)?.Other || 0,
     }));
 
-    return NextResponse.json({ data: chartData }, { status: 200 });
+    const response: ApiResponse<{ data: typeof finalChartData }> = {
+      success: true,
+      data: { data: finalChartData },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: crypto.randomUUID(),
+      },
+    };
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
     console.error("Error fetching chart data:", message);
