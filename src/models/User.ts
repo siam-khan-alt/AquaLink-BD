@@ -1,4 +1,5 @@
 import { Schema, model, models, Document, Model } from "mongoose";
+import { encryptPatientData, decryptPatientData, isEncrypted } from "@/app/dashboard/doctor/lib/encryption";
 
 
 export interface IUser extends Document {
@@ -33,6 +34,9 @@ export interface IUser extends Document {
     };
   };
   createdAt: Date;
+  // Encrypted fields storage
+  _phoneEncrypted?: string;
+  _districtEncrypted?: string;
 }
 
 
@@ -46,12 +50,8 @@ const UserSchema = new Schema<IUser>({
     unique: true, 
     sparse: true 
   },
-  phone: { 
-    type: String, 
-    unique: true, 
-    sparse: true,
-    index: true 
-  },
+  // Store encrypted phone in _phoneEncrypted, provide virtual getter/setter for phone
+  _phoneEncrypted: { type: String, select: false },
   password: { 
     type: String, 
     select: false 
@@ -68,7 +68,8 @@ const UserSchema = new Schema<IUser>({
     default: "farmer" 
   },
   isVerified: { type: Boolean, default: false },
-  district: { type: String },
+  // Store encrypted district in _districtEncrypted
+  _districtEncrypted: { type: String, select: false },
   division: { type: String },
   // Doctor-specific fields
   specialization: { type: String },
@@ -91,6 +92,80 @@ const UserSchema = new Schema<IUser>({
     },
   },
   createdAt: { type: Date, default: Date.now },
+});
+
+// Virtual getter for phone - decrypts on read
+UserSchema.virtual('phone').get(function(this: IUser) {
+  if (!this._phoneEncrypted) return undefined;
+  try {
+    return decryptPatientData(this._phoneEncrypted);
+  } catch (error) {
+    console.error('Failed to decrypt phone:', error);
+    return this._phoneEncrypted; // Return encrypted if decryption fails
+  }
+});
+
+// Virtual setter for phone - encrypts on write
+UserSchema.virtual('phone').set(function(this: IUser, value: string | undefined) {
+  if (!value) {
+    this._phoneEncrypted = undefined;
+    return;
+  }
+  try {
+    this._phoneEncrypted = encryptPatientData(value);
+  } catch (error) {
+    console.error('Failed to encrypt phone:', error);
+    this._phoneEncrypted = value; // Fallback to plain text if encryption fails
+  }
+});
+
+// Virtual getter for district - decrypts on read
+UserSchema.virtual('district').get(function(this: IUser) {
+  if (!this._districtEncrypted) return undefined;
+  try {
+    return decryptPatientData(this._districtEncrypted);
+  } catch (error) {
+    console.error('Failed to decrypt district:', error);
+    return this._districtEncrypted;
+  }
+});
+
+// Virtual setter for district - encrypts on write
+UserSchema.virtual('district').set(function(this: IUser, value: string | undefined) {
+  if (!value) {
+    this._districtEncrypted = undefined;
+    return;
+  }
+  try {
+    this._districtEncrypted = encryptPatientData(value);
+  } catch (error) {
+    console.error('Failed to encrypt district:', error);
+    this._districtEncrypted = value;
+  }
+});
+
+// Ensure virtuals are included in JSON output
+UserSchema.set('toJSON', {
+  virtuals: true,
+  transform: function(doc, ret) {
+    const retObj = ret as unknown as Record<string, unknown>;
+    delete retObj._phoneEncrypted;
+    delete retObj._districtEncrypted;
+    delete retObj.__v;
+    return retObj;
+  },
+});
+
+// Ensure virtuals are included in Object output
+UserSchema.set('toObject', {
+  virtuals: true,
+  transform: function(doc, ret) {
+    const retObj = ret as unknown as Record<string, unknown>;
+    delete retObj._phoneEncrypted;
+    delete retObj._districtEncrypted;
+    delete retObj.__v;
+    return retObj;
+  },
 });
 
 

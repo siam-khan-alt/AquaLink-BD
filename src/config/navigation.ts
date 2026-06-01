@@ -24,7 +24,18 @@ export const AUTH_LINKS = {
   dashboard: { 
     href: "/dashboard",
     icon: Waves,
-    getName: (role?: string) => role === "admin" ? "কন্ট্রোল প্যানেল" : "আমার ফিশারি"
+    getName: (role?: string) => {
+      switch (role) {
+        case "admin":
+          return "কন্ট্রোল প্যানেল";
+        case "doctor":
+          return "ডক্টর ড্যাশবোর্ড";
+        case "farmer":
+          return "আমার ফিশারি";
+        default:
+          return "ড্যাশবোর্ড";
+      }
+    }
   },
   logout: {
     name: "বাহির হন", 

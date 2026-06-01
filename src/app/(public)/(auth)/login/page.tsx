@@ -123,6 +123,7 @@ export default function LoginPage() {
                 <Phone size={18} />
               )
             }
+            autoComplete="username"
           />
           <Input
             label="পাসওয়ার্ড"
@@ -133,6 +134,7 @@ export default function LoginPage() {
             placeholder="পাসওয়ার্ড দিন"
             icon={<Lock size={18} />}
             type="password"
+            autoComplete="current-password"
           />
           <Button className="w-full font-hind" disabled={loading}>
             <LogIn size={18} /> {loading ? "প্রবেশ হচ্ছে..." : "প্রবেশ করুন"}
