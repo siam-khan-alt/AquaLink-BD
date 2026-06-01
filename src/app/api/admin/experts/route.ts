@@ -6,6 +6,10 @@ import { connectDB } from "@/shared/lib/db";
 import { DoctorApplication } from "@/models/DoctorApplication";
 import { User } from "@/models/User";
 import mongoose from "mongoose";
+import { requirePermission, forbiddenResponse } from "@/shared/lib/require-permission";
+import { withRateLimit } from "@/shared/lib/rate-limit";
+import { logAuditEvent } from "@/shared/lib/audit-logger";
+import { maskUserPII } from "@/shared/lib/pii-masking";
 
 export async function GET() {
   try {
@@ -24,8 +28,13 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .lean();
 
+    // Mask PII in applications
+    const maskedApplications = applications.map(app => 
+      maskUserPII(app as unknown as Record<string, unknown>, ['email', 'phone'])
+    );
+
     return NextResponse.json(
-      { success: true, applications },
+      { success: true, applications: maskedApplications },
       { status: 200 }
     );
   } catch (error) {
@@ -40,6 +49,15 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
+    // Rate limiting check
+    const rateLimitResult = await withRateLimit(req, 'strict');
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429, headers: rateLimitResult.headers }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session || session.user?.role !== "admin") {
@@ -62,6 +80,19 @@ export async function PATCH(req: NextRequest) {
 
     const application = await DoctorApplication.findById(id);
     if (!application) {
+      await logAuditEvent({
+        userId: session.user?.id as string,
+        userRole: session.user?.role as string,
+        action: 'update_expert_application',
+        resource: 'doctor_application',
+        resourceId: id,
+        method: 'PATCH',
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        userAgent: req.headers.get('user-agent') || 'unknown',
+        status: 'failure',
+        errorMessage: 'Application not found',
+      });
+      
       return NextResponse.json(
         { error: "Application not found" },
         { status: 404 }
@@ -79,6 +110,20 @@ export async function PATCH(req: NextRequest) {
         if (existingUser) {
           await dbSession.abortTransaction();
           dbSession.endSession();
+          
+          await logAuditEvent({
+            userId: session.user?.id as string,
+            userRole: session.user?.role as string,
+            action: 'approve_expert_application',
+            resource: 'doctor_application',
+            resourceId: id,
+            method: 'PATCH',
+            ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+            userAgent: req.headers.get('user-agent') || 'unknown',
+            status: 'failure',
+            errorMessage: 'User with this email already exists',
+          });
+          
           return NextResponse.json(
             { error: "এই ইমেইল দিয়ে ইতিমধ্যে একটি ইউজার অ্যাকাউন্ট রয়েছে" },
             { status: 400 }
@@ -86,7 +131,7 @@ export async function PATCH(req: NextRequest) {
         }
 
         // Create user with the doctor's already-hashed password from application
-        await User.create(
+        const newUser = await User.create(
           [
             {
               name: application.name,
@@ -130,9 +175,40 @@ export async function PATCH(req: NextRequest) {
 
         await dbSession.commitTransaction();
         dbSession.endSession();
+
+        // Log successful approval
+        await logAuditEvent({
+          userId: session.user?.id as string,
+          userRole: session.user?.role as string,
+          action: 'approve_expert_application',
+          resource: 'doctor_application',
+          resourceId: id,
+          method: 'PATCH',
+          ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+          userAgent: req.headers.get('user-agent') || 'unknown',
+          status: 'success',
+          metadata: { 
+            applicantEmail: application.email,
+            newUserId: newUser[0]?._id?.toString(),
+          },
+        });
       } catch (transactionError) {
         await dbSession.abortTransaction();
         dbSession.endSession();
+        
+        await logAuditEvent({
+          userId: session.user?.id as string,
+          userRole: session.user?.role as string,
+          action: 'approve_expert_application',
+          resource: 'doctor_application',
+          resourceId: id,
+          method: 'PATCH',
+          ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+          userAgent: req.headers.get('user-agent') || 'unknown',
+          status: 'failure',
+          errorMessage: transactionError instanceof Error ? transactionError.message : 'Transaction failed',
+        });
+        
         throw transactionError;
       }
     } else if (action === "reject") {
@@ -141,17 +217,51 @@ export async function PATCH(req: NextRequest) {
       application.reviewedBy = session.user?.id as string;
       application.reviewedAt = new Date();
       await application.save();
+
+      // Log successful rejection
+      await logAuditEvent({
+        userId: session.user?.id as string,
+        userRole: session.user?.role as string,
+        action: 'reject_expert_application',
+        resource: 'doctor_application',
+        resourceId: id,
+        method: 'PATCH',
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        userAgent: req.headers.get('user-agent') || 'unknown',
+        status: 'success',
+        metadata: { 
+          applicantEmail: application.email,
+          rejectionReason,
+        },
+      });
     }
 
     return NextResponse.json(
       { success: true, application },
-      { status: 200 }
+      { status: 200, headers: rateLimitResult.headers }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown Error";
-    console.error("Error updating application:", message);
+    const session = await getServerSession(authOptions);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
+    // Log failed audit event
+    if (session?.user?.id) {
+      await logAuditEvent({
+        userId: session.user?.id as string,
+        userRole: session.user?.role as string,
+        action: 'update_expert_application',
+        resource: 'doctor_application',
+        method: 'PATCH',
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        userAgent: req.headers.get('user-agent') || 'unknown',
+        status: 'failure',
+        errorMessage,
+      });
+    }
+    
+    console.error("Error updating application:", errorMessage);
     return NextResponse.json(
-      { error: "Internal server error: " + message },
+      { error: "Internal server error: " + errorMessage },
       { status: 500 }
     );
   }

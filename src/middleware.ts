@@ -2,6 +2,43 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+/**
+ * IP Whitelist Configuration
+ * Add trusted IP addresses for admin dashboard access
+ */
+const ADMIN_IP_WHITELIST = process.env.ADMIN_IP_WHITELIST
+  ? process.env.ADMIN_IP_WHITELIST.split(',').map(ip => ip.trim())
+  : [];
+
+/**
+ * Check if IP is whitelisted
+ */
+const isIPWhitelisted = (ip: string): boolean => {
+  if (ADMIN_IP_WHITELIST.length === 0) {
+    // If whitelist is empty, allow all IPs (for development)
+    return true;
+  }
+  return ADMIN_IP_WHITELIST.includes(ip);
+};
+
+/**
+ * Get client IP address from request
+ */
+const getClientIP = (request: NextRequest): string => {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  
+  if (realIP) {
+    return realIP.trim();
+  }
+  
+  return 'unknown';
+};
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -45,6 +82,13 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith('/dashboard/admin')) {
+    // IP Whitelist check for admin dashboard
+    const clientIP = getClientIP(request);
+    if (!isIPWhitelisted(clientIP)) {
+      console.warn(`Admin access denied from IP: ${clientIP}`);
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+    
     if (userRole !== 'admin') {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }

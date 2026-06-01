@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { User } from "@/models/User";
+import { maskUserPII } from "@/shared/lib/pii-masking";
 
 export async function GET() {
   try {
@@ -19,9 +20,15 @@ export async function GET() {
 
     const farmers = await User.find({ role: "farmer" })
       .select("name email phone isVerified createdAt")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return NextResponse.json({ success: true, farmers }, { status: 200 });
+    // Mask PII in user data
+    const maskedFarmers = farmers.map(farmer => 
+      maskUserPII(farmer as unknown as Record<string, unknown>, ['email', 'phone'])
+    );
+
+    return NextResponse.json({ success: true, farmers: maskedFarmers }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
     console.error("Error fetching farmers:", message);
