@@ -3,11 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Transaction } from "@/models/Transaction";
-import { User } from "@/models/User";
-import { Types } from "mongoose";
+import { Types, PipelineStage } from "mongoose";
 import { maskPhone } from "@/shared/lib/pii-masking";
 import { logAuditEvent } from "@/shared/lib/audit-logger";
-import { ConsultationStatus } from "@/app/dashboard/doctor/lib/consultation-state-machine";
 
 export async function GET(req: NextRequest) {
   try {
@@ -37,22 +35,20 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Use aggregation pipeline to resolve N+1 query problem
-    const pipeline = [
+    const pipeline: PipelineStage[] = [
       {
         $match: {
           doctorId: new Types.ObjectId(doctorId),
           type: "consultation",
         },
       },
-    ] as const;
-
-    const fullPipeline: unknown[] = [...pipeline];
+    ];
 
     if (status) {
-      fullPipeline.push({ $match: { status } });
+      pipeline.push({ $match: { status } });
     }
 
-    fullPipeline.push(
+    pipeline.push(
       { $sort: { createdAt: -1 } },
       { $skip: skip },
       { $limit: limit },
@@ -83,7 +79,7 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    const consultations = await Transaction.aggregate(fullPipeline as any);
+    const consultations = await Transaction.aggregate(pipeline);
 
     // Mask PII in response
     const maskedConsultations = consultations.map((consultation: unknown) => {
@@ -99,7 +95,7 @@ export async function GET(req: NextRequest) {
       ? { doctorId: new Types.ObjectId(doctorId), type: "consultation", status }
       : { doctorId: new Types.ObjectId(doctorId), type: "consultation" };
     
-    const total = await Transaction.countDocuments(matchStage as any);
+    const total = await Transaction.countDocuments(matchStage);
 
     // Log audit event
     await logAuditEvent({

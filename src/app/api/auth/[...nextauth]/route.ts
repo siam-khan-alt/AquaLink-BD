@@ -106,8 +106,19 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return url;
-      if (url) return url;
+      // If the URL is relative, allow it
+      if (url.startsWith("/")) {
+        // If user is trying to access /dashboard, let middleware handle role-based redirect
+        if (url === "/dashboard") {
+          return url;
+        }
+        return url;
+      }
+      // If URL is absolute and belongs to the site, allow it
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      // Default to base URL
       return baseUrl;
     },
   },

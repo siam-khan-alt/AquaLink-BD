@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Transaction } from "@/models/Transaction";
-import { Types } from "mongoose";
+import { Types, PipelineStage } from "mongoose";
 import { maskPhone } from "@/shared/lib/pii-masking";
 import { logAuditEvent } from "@/shared/lib/audit-logger";
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
 
     // Use aggregation pipeline with server-side pagination
-    const pipeline = [
+    const pipeline: PipelineStage[] = [
       {
         $match: {
           doctorId: new Types.ObjectId(doctorId),
@@ -36,13 +36,11 @@ export async function GET(req: NextRequest) {
           status: "paid",
         },
       },
-    ] as const;
-
-    const fullPipeline: unknown[] = [...pipeline];
+    ];
 
     // Add search filter if provided
     if (search) {
-      fullPipeline.push({
+      pipeline.push({
         $lookup: {
           from: "users",
           localField: "userId",
@@ -50,14 +48,14 @@ export async function GET(req: NextRequest) {
           as: "user",
         },
       });
-      fullPipeline.push({
+      pipeline.push({
         $match: {
           "user.name": { $regex: search, $options: "i" },
         },
       });
     }
 
-    fullPipeline.push(
+    pipeline.push(
       {
         $sort: { createdAt: -1 },
       },
@@ -95,7 +93,7 @@ export async function GET(req: NextRequest) {
     );
 
     // Get total count for pagination
-    const countPipeline = [
+    const countPipeline: PipelineStage[] = [
       {
         $match: {
           doctorId: new Types.ObjectId(doctorId),
@@ -111,19 +109,19 @@ export async function GET(req: NextRequest) {
       {
         $count: "total",
       },
-    ] as const;
+    ];
 
-    const countResult = await Transaction.aggregate(countPipeline as any);
+    const countResult = await Transaction.aggregate(countPipeline);
     const total = countResult[0]?.total || 0;
 
     // Add pagination to main pipeline
     const skip = (page - 1) * limit;
-    fullPipeline.push(
+    pipeline.push(
       { $skip: skip },
       { $limit: limit }
     );
 
-    const patients = await Transaction.aggregate(fullPipeline as any);
+    const patients = await Transaction.aggregate(pipeline);
 
     // Mask PII in response
     const maskedPatients = patients.map((patient: unknown) => {

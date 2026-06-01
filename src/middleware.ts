@@ -75,6 +75,20 @@ export async function middleware(request: NextRequest) {
 
   const userRole = token.role as string;
 
+  // Handle base /dashboard redirect based on user role
+  if (pathname === '/dashboard') {
+    switch (userRole) {
+      case 'farmer':
+        return NextResponse.redirect(new URL('/dashboard/farmer', request.url));
+      case 'admin':
+        return NextResponse.redirect(new URL('/dashboard/admin', request.url));
+      case 'doctor':
+        return NextResponse.redirect(new URL('/dashboard/doctor', request.url));
+      default:
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+  }
+
   if (pathname.startsWith('/dashboard/farmer')) {
     if (userRole !== 'farmer') {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
