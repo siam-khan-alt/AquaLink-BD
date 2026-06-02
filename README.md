@@ -2,10 +2,7 @@
 
 ## Project Links
 
-- Live Client Vercel Deployment: [View Live](#)
-- Server Endpoint API: [API Documentation](#)
-- Client Repository: [GitHub](#)
-- Server Repository: [GitHub](#)
+- Live Client Vercel Deployment: [View Live](https://aqualinkbd.vercel.app/)
 
 ---
 
