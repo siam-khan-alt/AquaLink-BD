@@ -9,7 +9,6 @@ import {
   Filter,
   Search,
   MoreVertical,
-  Edit,
   Trash2,
   Clock,
   CheckCircle,
@@ -91,8 +90,6 @@ export default function IncidentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<string>("");
   const [page, setPage] = useState(0);
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
-  const [showStatusModal, setShowStatusModal] = useState(false);
   const limit = 20;
 
   const { data: incidentsData, isLoading, error } = useQuery({
@@ -124,13 +121,10 @@ export default function IncidentsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-incidents"] });
-      setShowStatusModal(false);
-      setSelectedIncident(null);
     },
   });
 
   const handleStatusChange = (incident: Incident, newStatus: string) => {
-    setSelectedIncident(incident);
     updateStatusMutation.mutate({ incidentId: incident._id, newStatus });
   };
 

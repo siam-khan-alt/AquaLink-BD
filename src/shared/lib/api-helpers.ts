@@ -36,11 +36,11 @@ export interface HandlerConfig {
  *   }
  * );
  */
-export const createProtectedHandler = <T = any>(
+export const createProtectedHandler = (
   config: HandlerConfig,
-  handler: (req: NextRequest, context: RequestContext, ...args: any[]) => Promise<NextResponse>
+  handler: (req: NextRequest, context: RequestContext, ...args: unknown[]) => Promise<NextResponse>
 ) => {
-  return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: unknown[]): Promise<NextResponse> => {
     // Permission check
     const permissionCheck = await requirePermission(req, config.permission);
     if (!permissionCheck.success) {
@@ -99,11 +99,11 @@ export const createProtectedHandler = <T = any>(
  * Create a protected handler with resource ID extraction for audit logging
  * Useful for routes with dynamic segments like [id]
  */
-export const createProtectedHandlerWithId = <T = any>(
+export const createProtectedHandlerWithId = (
   config: HandlerConfig,
-  handler: (req: NextRequest, context: RequestContext & { resourceId: string }, ...args: any[]) => Promise<NextResponse>
+  handler: (req: NextRequest, context: RequestContext & { resourceId: string }, ...args: unknown[]) => Promise<NextResponse>
 ) => {
-  return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: unknown[]): Promise<NextResponse> => {
     // Permission check
     const permissionCheck = await requirePermission(req, config.permission);
     if (!permissionCheck.success) {
@@ -116,7 +116,7 @@ export const createProtectedHandlerWithId = <T = any>(
     };
 
     // Extract resource ID from args if available (for dynamic routes)
-    const resourceId = args[0]?.id || '';
+    const resourceId = (args[0] as { id?: string })?.id || '';
 
     try {
       // Execute the handler with resource ID

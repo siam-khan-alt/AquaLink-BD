@@ -7,6 +7,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { connectDB } from '@/shared/lib/db';
 import { getToken } from 'next-auth/jwt';
+import { PipelineStage } from 'mongoose';
 import AuditLog from '@/models/AuditLog';
 import { requirePermission, forbiddenResponse } from '@/shared/lib/require-permission';
 import { maskUserPII } from '@/shared/lib/pii-masking';
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Build aggregation pipeline
-    const pipeline: Record<string, unknown>[] = [];
+    const pipeline: PipelineStage[] = [];
 
     // Match stage for filtering
     const matchStage: Record<string, unknown> = {};
@@ -111,7 +112,7 @@ export async function GET(req: NextRequest) {
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
 
-    const logs = await AuditLog.aggregate(pipeline as any);
+    const logs = await AuditLog.aggregate(pipeline);
 
     // Mask PII in logs before sending to frontend
     const maskedLogs = logs.map((log: AuditLogEntry) => ({
@@ -121,13 +122,13 @@ export async function GET(req: NextRequest) {
     }));
 
     // Get total count for pagination
-    const totalPipeline: Record<string, unknown>[] = [];
+    const totalPipeline: PipelineStage[] = [];
     if (Object.keys(matchStage).length > 0) {
       totalPipeline.push({ $match: matchStage });
     }
     totalPipeline.push({ $count: 'total' });
     
-    const countResult = await AuditLog.aggregate(totalPipeline as any);
+    const countResult = await AuditLog.aggregate(totalPipeline);
     const total = countResult[0]?.total || 0;
 
     return NextResponse.json(

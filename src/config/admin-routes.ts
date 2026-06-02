@@ -186,10 +186,10 @@ export const generateNavigation = (userPermissions: Permission[]): Array<{
   permissions: Permission[];
 }> => {
   return Object.entries(ADMIN_ROUTES)
-    .filter(([_, config]) => 
+    .filter(([, config]) => 
       config.permissions.some(permission => userPermissions.includes(permission))
     )
-    .map(([_, config]) => ({
+    .map(([, config]) => ({
       label: config.label,
       href: config.href,
       icon: config.icon,
