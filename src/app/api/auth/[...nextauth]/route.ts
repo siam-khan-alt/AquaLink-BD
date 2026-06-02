@@ -96,6 +96,10 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
       }
+      // Ensure role is always set, fallback to farmer if missing
+      if (!token.role) {
+        token.role = "farmer";
+      }
       return token;
     },
     async session({ session, token }) {

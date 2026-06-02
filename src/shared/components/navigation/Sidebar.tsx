@@ -4,7 +4,8 @@ import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { DASHBOARD_NAV } from "@/config/dashboard-nav";
+import { getNavigationByRole } from "@/config/dashboard-nav";
+import { useUserRole } from "@/shared/hooks/useUserRole";
 import { Waves, User, LogOut, Home, ChevronLeft, Menu, X } from "lucide-react";
 
 export default function Sidebar() {
@@ -12,10 +13,15 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  
-  const role = session?.user?.role || "farmer";
-  const navItems = DASHBOARD_NAV[role as keyof typeof DASHBOARD_NAV] || DASHBOARD_NAV.farmer;
-  const profileHref = `/dashboard/${role}/profile`;
+
+  const role = useUserRole();
+  const navItems = role ? getNavigationByRole(role) : [];
+  const profileHref = role ? `/dashboard/${role}/profile` : "/dashboard/farmer/profile";
+
+  // Trace logging for debugging
+  React.useEffect(() => {
+    console.log("[Sidebar] Current role:", role, "Session role:", session?.user?.role);
+  }, [role, session?.user?.role]);
 
   return (
     <>

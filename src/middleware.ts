@@ -75,16 +75,23 @@ export async function middleware(request: NextRequest) {
 
   const userRole = token.role as string;
 
+  // Trace logging for debugging
+  console.log(`[Middleware] Path: ${pathname}, User Role: ${userRole}, Token ID: ${token.id}`);
+
   // Handle base /dashboard redirect based on user role
   if (pathname === '/dashboard') {
     switch (userRole) {
       case 'farmer':
+        console.log('[Middleware] Redirecting farmer to /dashboard/farmer');
         return NextResponse.redirect(new URL('/dashboard/farmer', request.url));
       case 'admin':
+        console.log('[Middleware] Redirecting admin to /dashboard/admin');
         return NextResponse.redirect(new URL('/dashboard/admin', request.url));
       case 'doctor':
+        console.log('[Middleware] Redirecting doctor to /dashboard/doctor');
         return NextResponse.redirect(new URL('/dashboard/doctor', request.url));
       default:
+        console.warn('[Middleware] Unknown role, redirecting to /unauthorized');
         return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
   }
