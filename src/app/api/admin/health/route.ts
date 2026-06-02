@@ -3,10 +3,11 @@
  * Provides system metrics for monitoring and observability
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { connectDB } from '@/shared/lib/db';
 import mongoose from 'mongoose';
 import os from 'os';
+import { requirePermission, forbiddenResponse } from '@/shared/lib/require-permission';
 
 export interface HealthMetrics {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -33,12 +34,23 @@ export interface HealthMetrics {
     averageLatency: number;
     requestCount: number;
   };
+  backgroundJobs: {
+    queueDepth: number;
+    failedCount: number;
+    processingCount: number;
+  };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const startTime = Date.now();
 
   try {
+    // Permission check
+    const permissionCheck = await requirePermission(req, 'system:health');
+    if (!permissionCheck.success) {
+      return forbiddenResponse(permissionCheck.error || 'Forbidden');
+    }
+
     // Database health check
     let dbStatus: 'connected' | 'disconnected' = 'disconnected';
     let dbLatency = 0;
@@ -48,7 +60,7 @@ export async function GET() {
       const dbStart = Date.now();
       await connectDB();
       dbLatency = Date.now() - dbStart;
-      
+
       if (mongoose.connection.readyState === 1) {
         dbStatus = 'connected';
         connectionCount = 1; // Single connection pool for this application
@@ -102,6 +114,11 @@ export async function GET() {
       api: {
         averageLatency: apiLatency,
         requestCount: 0, // This would be tracked in production
+      },
+      backgroundJobs: {
+        queueDepth: 0, // Mocked - integrate with job queue in production
+        failedCount: 0, // Mocked - integrate with job queue in production
+        processingCount: 0, // Mocked - integrate with job queue in production
       },
     };
 

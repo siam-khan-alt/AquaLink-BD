@@ -10,19 +10,17 @@ import Incident from '@/models/Incident';
 import { requirePermission, forbiddenResponse } from '@/shared/lib/require-permission';
 import { withRateLimit } from '@/shared/lib/rate-limit';
 import { logAuditEvent } from '@/shared/lib/audit-logger';
+import { maskUserPII } from '@/shared/lib/pii-masking';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
-    if (!token || !token.id || token.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Permission check
+    const permissionCheck = await requirePermission(req, 'incidents:read');
+    if (!permissionCheck.success) {
+      return forbiddenResponse(permissionCheck.error || 'Forbidden');
     }
 
     await connectDB();
@@ -35,7 +33,10 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ incident }, { status: 200 });
+    // Mask PII in incident before sending to frontend
+    const maskedIncident = maskUserPII(incident as Record<string, unknown>, ['reportedBy']);
+
+    return NextResponse.json({ incident: maskedIncident }, { status: 200 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error fetching incident:', errorMessage);
@@ -73,7 +74,7 @@ export async function PATCH(
     await connectDB();
     const body = await req.json();
 
-    const incident = await Incident.findById(incidentId);
+    const incident = await Incident.findById(incidentId).lean();
     if (!incident) {
       await logAuditEvent({
         userId,

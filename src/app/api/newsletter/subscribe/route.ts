@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    const existingSubscriber = await Subscriber.findOne({ email });
+    const existingSubscriber = await Subscriber.findOne({ email }).lean();
     if (existingSubscriber) {
       return NextResponse.json(
         { message: "Email already subscribed" },

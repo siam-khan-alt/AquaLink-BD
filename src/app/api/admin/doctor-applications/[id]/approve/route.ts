@@ -31,7 +31,7 @@ export async function POST(
     await connectDB();
 
     const { id } = await params;
-    const application = await DoctorApplication.findById(id);
+    const application = await DoctorApplication.findById(id).lean();
 
     if (!application) {
       return NextResponse.json({ error: "আবেদন পাওয়া যায়নি" }, { status: 404 });
@@ -75,7 +75,7 @@ export async function POST(
       application.reviewedAt = new Date();
       await application.save({ session: mongoSession });
 
-      const existingUser = await User.findOne({ email: application.email }).session(mongoSession);
+      const existingUser = await User.findOne({ email: application.email }).session(mongoSession).lean();
       if (existingUser) {
         await mongoSession.abortTransaction();
         mongoSession.endSession();

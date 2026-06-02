@@ -23,7 +23,7 @@ async function sendConsultationNotification(farmerId: string, doctorId: string, 
       isGroup: false,
       isAdminSupport: false,
       participants: { $all: [farmerId, doctorId], $size: 2 },
-    });
+    }).lean();
 
     // Create chat if it doesn't exist
     if (!chat) {

@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     const pond = await Pond.findOne({
       _id: new Types.ObjectId(parsedData.pondId),
       owner: new Types.ObjectId(farmerId),
-    });
+    }).lean();
 
     if (!pond) {
       return NextResponse.json(

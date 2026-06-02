@@ -1,9 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
-import { getToken } from "next-auth/jwt";
 import Subscriber from "@/models/Subscriber";
 import { pusherServer } from "@/shared/lib/pusher";
 import { z } from "zod";
+import { logAuditEvent } from "@/shared/lib/audit-logger";
+import { requirePermission, forbiddenResponse } from "@/shared/lib/require-permission";
 
 const broadcastSchema = z.object({
   message: z.string().min(1, "Message is required"),
@@ -11,13 +12,10 @@ const broadcastSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
-    if (!token || !token.id || token.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    // Permission check using requirePermission
+    const permissionCheck = await requirePermission(req, 'newsletter:write');
+    if (!permissionCheck.success) {
+      return forbiddenResponse(permissionCheck.error || 'Forbidden');
     }
 
     const body = await req.json();
@@ -55,6 +53,19 @@ export async function POST(req: NextRequest) {
       }
     );
 
+    // Log audit event for broadcast
+    await logAuditEvent({
+      userId: permissionCheck.user!.id,
+      userRole: permissionCheck.user!.role,
+      action: 'broadcast_newsletter',
+      resource: 'newsletter',
+      method: 'POST',
+      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+      userAgent: req.headers.get('user-agent') || 'unknown',
+      status: 'success',
+      metadata: { recipientCount: subscriberEmails.length },
+    });
+
     return NextResponse.json(
       {
         message: "Broadcast sent successfully",
@@ -64,6 +75,23 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("Error broadcasting message:", error);
+    
+    // Log failed audit event
+    const permissionCheck = await requirePermission(req, 'newsletter:write');
+    if (permissionCheck.success && permissionCheck.user?.id) {
+      await logAuditEvent({
+        userId: permissionCheck.user.id,
+        userRole: permissionCheck.user.role,
+        action: 'broadcast_newsletter',
+        resource: 'newsletter',
+        method: 'POST',
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        userAgent: req.headers.get('user-agent') || 'unknown',
+        status: 'failure',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+
     return NextResponse.json(
       { error: "Failed to broadcast message" },
       { status: 500 }

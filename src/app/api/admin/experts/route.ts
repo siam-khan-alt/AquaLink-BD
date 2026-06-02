@@ -77,7 +77,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const application = await DoctorApplication.findById(id);
+    const application = await DoctorApplication.findById(id).lean();
     if (!application) {
       await logAuditEvent({
         userId: session.user?.id as string,
@@ -105,7 +105,7 @@ export async function PATCH(req: NextRequest) {
 
       try {
         // Check if user already exists with this email
-        const existingUser = await User.findOne({ email: application.email }).session(dbSession);
+        const existingUser = await User.findOne({ email: application.email }).session(dbSession).lean();
         if (existingUser) {
           await dbSession.abortTransaction();
           dbSession.endSession();

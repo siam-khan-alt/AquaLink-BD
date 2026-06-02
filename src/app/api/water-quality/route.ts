@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Verify pond ownership before fetching logs
-    const pond = await Pond.findById(pondId);
+    const pond = await Pond.findById(pondId).lean();
     if (!pond) {
       return NextResponse.json(
         { error: "Pond not found" },
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     // Verify pond exists and user owns it
-    const pond = await Pond.findById(new Types.ObjectId(data.pondId));
+    const pond = await Pond.findById(new Types.ObjectId(data.pondId)).lean();
     if (!pond) {
       return NextResponse.json(
         { error: "Pond not found" },

@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     // Verify user is a participant in the chat before fetching messages
-    const chat = await Chat.findById(chatId);
+    const chat = await Chat.findById(chatId).lean();
     if (!chat) {
       return NextResponse.json(
         { error: "Chat not found" },

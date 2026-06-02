@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsedData = initiatePaymentSchema.parse(body);
 
-    const course = await Course.findById(parsedData.courseId);
+    const course = await Course.findById(parsedData.courseId).lean();
     if (!course) {
       return NextResponse.json(
         { error: "কোর্স পাওয়া যায়নি" },
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       userId: new Types.ObjectId(userId),
       courseId: new Types.ObjectId(parsedData.courseId),
       paymentStatus: "paid",
-    });
+    }).lean();
 
     if (existingEnrollment) {
       return NextResponse.json(

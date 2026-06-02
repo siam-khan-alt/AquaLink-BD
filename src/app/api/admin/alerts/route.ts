@@ -5,6 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { EmergencyDiseaseAlert } from "@/models/EmergencyDiseaseAlert";
 import { z } from "zod";
+import { logAuditEvent } from "@/shared/lib/audit-logger";
 
 const createAlertSchema = z.object({
   region: z.string().min(2, "অঞ্চল অবশ্যই দিতে হবে"),
@@ -68,6 +69,20 @@ export async function POST(req: NextRequest) {
       isActive: parsedData.isActive,
     });
 
+    // Log audit event
+    await logAuditEvent({
+      userId: session.user.id as string,
+      userRole: session.user.role as string,
+      action: 'create_alert',
+      resource: 'disease_alert',
+      resourceId: newAlert._id.toString(),
+      method: 'POST',
+      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+      userAgent: req.headers.get('user-agent') || 'unknown',
+      status: 'success',
+      metadata: { region: parsedData.region, level: parsedData.level },
+    });
+
     return NextResponse.json(
       { success: true, alert: newAlert },
       { status: 201 }
@@ -82,6 +97,23 @@ export async function POST(req: NextRequest) {
 
     const message = error instanceof Error ? error.message : "Unknown Error";
     console.error("Error creating alert:", message);
+    
+    // Log failed audit event
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+      await logAuditEvent({
+        userId: session.user.id as string,
+        userRole: session.user.role as string,
+        action: 'create_alert',
+        resource: 'disease_alert',
+        method: 'POST',
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        userAgent: req.headers.get('user-agent') || 'unknown',
+        status: 'failure',
+        errorMessage: message,
+      });
+    }
+
     return NextResponse.json(
       { error: "Internal server error: " + message },
       { status: 500 }
@@ -124,6 +156,20 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Log audit event
+    await logAuditEvent({
+      userId: session.user.id as string,
+      userRole: session.user.role as string,
+      action: 'update_alert',
+      resource: 'disease_alert',
+      resourceId: id,
+      method: 'PATCH',
+      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+      userAgent: req.headers.get('user-agent') || 'unknown',
+      status: 'success',
+      metadata: { isActive },
+    });
+
     return NextResponse.json(
       { success: true, alert: updatedAlert },
       { status: 200 }
@@ -131,6 +177,23 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
     console.error("Error updating alert:", message);
+    
+    // Log failed audit event
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+      await logAuditEvent({
+        userId: session.user.id as string,
+        userRole: session.user.role as string,
+        action: 'update_alert',
+        resource: 'disease_alert',
+        method: 'PATCH',
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        userAgent: req.headers.get('user-agent') || 'unknown',
+        status: 'failure',
+        errorMessage: message,
+      });
+    }
+
     return NextResponse.json(
       { error: "Internal server error: " + message },
       { status: 500 }

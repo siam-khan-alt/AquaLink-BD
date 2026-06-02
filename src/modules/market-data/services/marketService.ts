@@ -9,7 +9,7 @@ export async function getMarketPrices() {
 // Logic for ISR Revalidation (Automation Placeholder)
 export async function updateMarketPrice(fishId: string, newPrice: number) {
   await connectDB();
-  const fish = await MarketPrice.findById(fishId);
+  const fish = await MarketPrice.findById(fishId).lean();
   if (!fish) return null;
 
   const trend = newPrice > fish.currentPrice ? "up" : newPrice < fish.currentPrice ? "down" : "stable";

@@ -10,16 +10,30 @@ import Incident from '@/models/Incident';
 import { requirePermission, forbiddenResponse } from '@/shared/lib/require-permission';
 import { withRateLimit } from '@/shared/lib/rate-limit';
 import { logAuditEvent } from '@/shared/lib/audit-logger';
+import { maskUserPII } from '@/shared/lib/pii-masking';
+import { z } from 'zod';
+
+// Input validation schema for incident creation
+const incidentCreateSchema = z.object({
+  title: z.string().min(1).max(200).transform(val => val.trim()),
+  description: z.string().min(1).max(5000).transform(val => val.trim()),
+  severity: z.enum(['low', 'medium', 'high', 'critical']),
+  status: z.enum(['open', 'investigating', 'resolved', 'closed']).optional(),
+  category: z.enum(['system', 'database', 'api', 'security', 'performance', 'user-reported']),
+  affectedServices: z.array(z.string()).optional(),
+  rootCause: z.string().optional(),
+  resolution: z.string().optional(),
+  assignedTo: z.string().optional(),
+  estimatedResolution: z.string().optional(),
+  metadata: z.any().optional(),
+});
 
 export async function GET(req: NextRequest) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    
-    if (!token || !token.id || token.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Permission check
+    const permissionCheck = await requirePermission(req, 'incidents:read');
+    if (!permissionCheck.success) {
+      return forbiddenResponse(permissionCheck.error || 'Forbidden');
     }
 
     await connectDB();
@@ -44,8 +58,13 @@ export async function GET(req: NextRequest) {
 
     const total = await Incident.countDocuments(query);
 
+    // Mask PII in incidents before sending to frontend
+    const maskedIncidents = incidents.map((incident: Record<string, unknown>) => 
+      maskUserPII(incident, ['reportedBy'])
+    );
+
     return NextResponse.json(
-      { incidents, total, limit, skip },
+      { incidents: maskedIncidents, total, limit, skip },
       { status: 200 }
     );
   } catch (error) {
@@ -81,8 +100,11 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const body = await req.json();
 
+    // Validate and sanitize input
+    const validatedData = incidentCreateSchema.parse(body);
+
     const incident = await Incident.create({
-      ...body,
+      ...validatedData,
       reportedBy: userId,
     });
 

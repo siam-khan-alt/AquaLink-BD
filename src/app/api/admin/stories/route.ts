@@ -5,6 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { FarmerStory } from "@/models/FarmerStory";
 import { z } from "zod";
+import { logAuditEvent } from "@/shared/lib/audit-logger";
 
 const createStorySchema = z.object({
   farmerName: z.string().min(2, "চাষির নাম অবশ্যই দিতে হবে"),
@@ -80,12 +81,44 @@ export async function POST(req: NextRequest) {
       thumbnail: parsedData.thumbnail || (parsedData.contentType === "video" ? `https://img.youtube.com/vi/${finalVideoUrl}/maxresdefault.jpg` : "/images/stories/default.jpg"),
     });
 
+    // Log audit event for story creation
+    await logAuditEvent({
+      userId: session.user.id as string,
+      userRole: session.user.role as string,
+      action: 'create_story',
+      resource: 'farmer_story',
+      resourceId: newStory._id.toString(),
+      method: 'POST',
+      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+      userAgent: req.headers.get('user-agent') || 'unknown',
+      status: 'success',
+      metadata: { contentType: parsedData.contentType, isFeatured: parsedData.isFeatured },
+    });
+
     return NextResponse.json({ success: true, story: newStory }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
     }
     const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error creating story:", message);
+    
+    // Log failed audit event
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+      await logAuditEvent({
+        userId: session.user.id as string,
+        userRole: session.user.role as string,
+        action: 'create_story',
+        resource: 'farmer_story',
+        method: 'POST',
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        userAgent: req.headers.get('user-agent') || 'unknown',
+        status: 'failure',
+        errorMessage: message,
+      });
+    }
+
     return NextResponse.json({ error: "Internal server error: " + message }, { status: 500 });
   }
 }

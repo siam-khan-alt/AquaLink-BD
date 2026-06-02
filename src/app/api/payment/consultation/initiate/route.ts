@@ -41,11 +41,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsedData = initiateConsultationPaymentSchema.parse(body);
 
-    const doctor = await User.findOne({ 
-      _id: parsedData.doctorId, 
+    const doctor = await User.findOne({
+      _id: parsedData.doctorId,
       role: "doctor",
-      isVerified: true 
-    });
+      isVerified: true
+    }).lean();
 
     if (!doctor) {
       return NextResponse.json(

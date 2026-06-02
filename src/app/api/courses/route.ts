@@ -22,7 +22,7 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     await connectDB();
 
-    const courses = await Course.find().sort({ createdAt: -1 });
+    const courses = await Course.find().sort({ createdAt: -1 }).lean();
 
     let coursesWithEnrollmentStatus = courses.map((course) => ({
       ...course.toObject(),

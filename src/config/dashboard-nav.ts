@@ -1,5 +1,6 @@
 import { LayoutDashboard, Users, FileText, UserCheck, AlertTriangle, BookOpen, MessageSquare, DollarSign, Calculator, Calendar, Stethoscope, Waves, Mail, Activity, ShieldCheck, TrendingUp, LucideIcon } from "lucide-react";
 import { Permission, UserRole } from "@/shared/lib/rbac";
+import { generateNavigation as generateAdminNavigation } from "./admin-routes";
 
 export interface NavItem {
   label: string;
@@ -14,7 +15,7 @@ export interface NavItem {
 export const DASHBOARD_NAV = {
   farmer: [
     { label: "ওভারভিউ", href: "/dashboard/farmer", icon: LayoutDashboard },
-    { label: "পুকুর ও পানির গুণমান", href: "/dashboard/farmer/ponds", icon: Waves },
+    { label: "পুকুর ও পানির গুনমান", href: "/dashboard/farmer/ponds", icon: Waves },
     { label: "খরচ ট্র্যাকার", href: "/dashboard/farmer/expenses", icon: DollarSign },
     { label: "স্মার্ট ফিড ক্যালকুলেটর", href: "/dashboard/farmer/feed-calculator", icon: Calculator },
     { label: "মাছ চাষের পাঠশালা", href: "/dashboard/farmer/courses", icon: BookOpen },
@@ -22,7 +23,7 @@ export const DASHBOARD_NAV = {
   ],
   doctor: [
     { label: "ওভারভিউ", href: "/dashboard/doctor", icon: LayoutDashboard },
-    { label: "কনসালটেশন রিকোয়েস্ট", href: "/dashboard/doctor/consultations", icon: Stethoscope },
+    { label: "কনসাল্টেশন রিকোয়েস্ট", href: "/dashboard/doctor/consultations", icon: Stethoscope },
     { label: "রোগী ইতিহাস", href: "/dashboard/doctor/patients", icon: Users },
     {label: "সময়সূচি", href: "/dashboard/doctor/schedule", icon: Calendar },
     { label: "মেসেজ", href: "/dashboard/chat", icon: MessageSquare },
@@ -31,6 +32,7 @@ export const DASHBOARD_NAV = {
 
 /**
  * Dynamic Admin Navigation Configuration
+ * Now uses declarative admin-routes.ts configuration
  * Supports nested items, permission filtering, and badge counts
  */
 export const ADMIN_NAV_CONFIG: NavItem[] = [
@@ -109,32 +111,26 @@ export const ADMIN_NAV_CONFIG: NavItem[] = [
 
 /**
  * Get filtered navigation items based on user permissions
+ * Now uses declarative generateNavigation from admin-routes.ts
  */
 export const getAdminNavigation = (
   userPermissions: Permission[],
   badgeCounts?: Record<string, number>
 ): NavItem[] => {
-  return ADMIN_NAV_CONFIG
-    .filter(item => {
-      // If no permissions required, show to all
-      if (!item.permissions || item.permissions.length === 0) {
-        return true;
-      }
-      
-      // Check if user has any of the required permissions
-      return item.permissions.some(permission => userPermissions.includes(permission));
-    })
-    .map(item => {
-      // Add badge counts if provided
-      if (badgeCounts && item.href in badgeCounts) {
-        return {
-          ...item,
-          badge: badgeCounts[item.href],
-          badgeColor: 'bg-red-500',
-        };
-      }
-      return item;
-    });
+  // Use the new declarative navigation generator
+  const navItems = generateAdminNavigation(userPermissions);
+  
+  // Add badge counts if provided
+  return navItems.map(item => {
+    if (badgeCounts && item.href in badgeCounts) {
+      return {
+        ...item,
+        badge: badgeCounts[item.href],
+        badgeColor: 'bg-red-500',
+      };
+    }
+    return item;
+  });
 };
 
 /**

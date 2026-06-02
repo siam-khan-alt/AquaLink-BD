@@ -34,8 +34,8 @@ if (parsedData.email) {
 }
 
     // Check if user already exists with phone or email
-  const existingUser = queryConditions.$or.length > 0 
-  ? await User.findOne(queryConditions) 
+  const existingUser = queryConditions.$or.length > 0
+  ? await User.findOne(queryConditions).lean()
   : null;
 
     if (existingUser) {

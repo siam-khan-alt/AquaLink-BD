@@ -78,7 +78,7 @@ export const authOptions: NextAuthOptions = {
         await connectDB();
         if (!user.email)
           throw new Error("গুগল অ্যাকাউন্ট থেকে ইমেইল পাওয়া যায়নি");
-        const existingUser = await User.findOne({ email: user.email });
+        const existingUser = await User.findOne({ email: user.email }).lean();
         if (!existingUser) {
           await User.create({
             name: user.name ?? user.email.split("@")[0],

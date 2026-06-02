@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       const existingSupportChat = await Chat.findOne({
         isAdminSupport: true,
         participants: userId,
-      });
+      }).lean();
 
       if (existingSupportChat) {
         return NextResponse.json(
