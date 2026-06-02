@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { BookOpen, CheckCircle, XCircle, ArrowLeft, Award } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import Card from "@/components/ui/Card";

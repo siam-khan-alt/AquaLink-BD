@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import type { IMarketPrice, FishCategory } from "@/shared/types/market";
+import type { IMarketPrice } from "@/shared/types/market";
 import MarketList from "./MarketList";
 import MarketDetails from "./MarketDetails";
 

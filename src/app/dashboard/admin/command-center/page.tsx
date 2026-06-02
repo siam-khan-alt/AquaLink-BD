@@ -8,7 +8,6 @@ import {
   Cpu,
   Database,
   HardDrive,
-  Server,
   ShieldCheck,
   AlertTriangle,
   CheckCircle,
@@ -16,11 +15,8 @@ import {
   Clock,
   Users,
   TrendingUp,
-  DollarSign,
-  Zap,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
-import { QUERY_CONFIG } from "@/shared/lib/constants";
 import type { HealthMetrics } from "@/app/api/admin/health/route";
 
 const formatBytes = (bytes: number): string => {

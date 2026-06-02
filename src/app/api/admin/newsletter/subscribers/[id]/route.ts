@@ -2,7 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/shared/lib/db";
 import { getToken } from "next-auth/jwt";
 import Subscriber from "@/models/Subscriber";
-import { Types } from "mongoose";
 import { requirePermission, forbiddenResponse } from "@/shared/lib/require-permission";
 import { withRateLimit } from "@/shared/lib/rate-limit";
 import { logAuditEvent } from "@/shared/lib/audit-logger";

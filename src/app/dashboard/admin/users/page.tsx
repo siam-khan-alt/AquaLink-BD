@@ -19,7 +19,6 @@ import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import type { User, UsersResponse } from "@/shared/types/api-interfaces";
-import { userRoleChangeSchema, userVerificationSchema } from "@/shared/lib/validation-schemas";
 import { AdminTableSkeleton } from "@/shared/components/AdminSkeleton";
 import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";
 

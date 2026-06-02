@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
@@ -268,9 +269,11 @@ export default function AdminExpertsManagement() {
               <div className="space-y-6">
                 <div className="flex items-start gap-6">
                   <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--border)]">
-                    <img
+                    <Image
                       src={selectedApplication.avatarUrl}
                       alt={selectedApplication.name}
+                      width={96}
+                      height={96}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -317,9 +320,11 @@ export default function AdminExpertsManagement() {
                 <div>
                   <p className="text-xs text-[var(--text)]/60 font-hind mb-2">সার্টিফিকেট</p>
                   <div className="border border-[var(--border)] rounded-lg overflow-hidden">
-                    <img
+                    <Image
                       src={selectedApplication.certificateUrl}
                       alt="Certificate"
+                      width={400}
+                      height={300}
                       className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={() => window.open(selectedApplication.certificateUrl, '_blank')}
                     />

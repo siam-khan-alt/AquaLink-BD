@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueries } from "@tanstack/react-query";
+import { useMutation, useQueries } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
   Users,
@@ -29,14 +29,11 @@ import Input from "@/components/ui/Input";
 import { AdminStatsCardSkeleton } from "@/shared/components/AdminSkeleton";
 import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";
 import type {
-  AdminStats,
   AdminStatsResponse,
-  Farmer,
   FarmersResponse,
-  DoctorApplication,
   DoctorApplicationsResponse,
 } from "@/shared/types/api-interfaces";
-import { priceUpdateSchema, type PriceUpdateInput } from "@/shared/lib/validation-schemas";
+import { priceUpdateSchema } from "@/shared/lib/validation-schemas";
 
 const fishTypes = ["Ruhi", "Pangas", "Tilapia", "Katla", "Mrigel", "Koi", "Other"] as const;
 

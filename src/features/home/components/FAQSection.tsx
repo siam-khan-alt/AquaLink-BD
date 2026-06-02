@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Plus, Minus, HelpCircle, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@heroui/react";
+import Image from "next/image";
 
 export const FAQSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -23,10 +24,12 @@ export const FAQSection = () => {
           
           {/* Left Side */}
           <div className="lg:col-span-4 relative flex flex-col justify-end p-8 min-h-[400px] bg-black/20">
-            <img 
-              src="/images/faq-farmer-consult.jpg" 
-              alt="কৃষক পরামর্শ" 
-              className="absolute inset-0 w-full h-full object-cover z-0"
+            <Image
+              src="/images/faq-farmer-consult.jpg"
+              alt="কৃষক পরামর্শ"
+              fill
+              className="object-cover z-0"
+              priority
             />
             {/* Dark Overlay for text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--hero-bg-start)] to-transparent z-10" />

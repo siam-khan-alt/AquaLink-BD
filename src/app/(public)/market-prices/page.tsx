@@ -1,7 +1,6 @@
 import MarketUI from "@/modules/market-data/components/MarketUI";
 import { MarketPrice } from "@/models/MarketPrice";
 import { connectDB } from "@/shared/lib/db";
-import { Fish, TrendingUp } from "lucide-react";
 import { IMarketPrice } from "@/shared/types/market";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 

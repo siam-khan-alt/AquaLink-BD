@@ -8,9 +8,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Transaction } from "@/models/Transaction";
-import { Types } from "mongoose";
 import { logAuditEvent } from "@/shared/lib/audit-logger";
-import { ConsultationStatus } from "@/app/dashboard/doctor/lib/consultation-state-machine";
 
 export async function PATCH(req: NextRequest) {
   try {

@@ -43,6 +43,15 @@ export default function VoiceNoteRecorder({
     };
   }, [isRecording, audioUrl]);
 
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
+  }, [isRecording]);
+
   const startRecording = useCallback(async () => {
     setError(null);
     
@@ -92,16 +101,7 @@ export default function VoiceNoteRecorder({
       setError("মাইক্রোফোন অ্যাক্সেস প্রত্যাখ্যাত করা হয়েছে। দয়া করে অনুমতি দিন।");
       console.error("Error accessing microphone:", errorMessage);
     }
-  }, [maxDuration]);
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    }
-  }, [isRecording]);
+  }, [maxDuration, stopRecording]);
 
   const playRecording = useCallback(() => {
     if (audioRef.current && audioUrl) {

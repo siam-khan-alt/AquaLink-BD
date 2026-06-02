@@ -3,7 +3,7 @@
  * Automated cleanup of old records based on retention policies
  */
 
-import mongoose from 'mongoose';
+import { Document, Model } from 'mongoose';
 
 export interface RetentionPolicy {
   documentType: string;
@@ -71,7 +71,7 @@ export const isEligibleForRetentionAction = (
  * Execute retention action on a document
  */
 export const executeRetentionAction = async (
-  Model: mongoose.Model<any>,
+  Model: Model<Document>,
   documentId: string,
   policy: RetentionPolicy
 ): Promise<void> => {
@@ -82,23 +82,24 @@ export const executeRetentionAction = async (
     case 'delete':
       await Model.findByIdAndDelete(documentId);
       break;
-    
+
     case 'archive':
-      document.archived = true;
-      document.archivedAt = new Date();
+      (document as Document & { archived?: boolean; archivedAt?: Date }).archived = true;
+      (document as Document & { archived?: boolean; archivedAt?: Date }).archivedAt = new Date();
       await document.save();
       break;
-    
+
     case 'anonymize':
       if (policy.fieldsToAnonymize) {
         policy.fieldsToAnonymize.forEach(field => {
-          if (document[field]) {
-            document[field] = anonymizeField(document[field]);
+          const fieldValue = document.get(field);
+          if (fieldValue) {
+            document.set(field, anonymizeField(fieldValue as string));
           }
         });
       }
-      document.anonymized = true;
-      document.anonymizedAt = new Date();
+      (document as Document & { anonymized?: boolean; anonymizedAt?: Date }).anonymized = true;
+      (document as Document & { anonymized?: boolean; anonymizedAt?: Date }).anonymizedAt = new Date();
       await document.save();
       break;
   }
@@ -122,7 +123,7 @@ const anonymizeField = (value: string): string => {
  * Cleanup old documents based on retention policies
  */
 export const cleanupOldDocuments = async (
-  Model: mongoose.Model<any>,
+  Model: Model<Document>,
   documentType: string,
   dateField: string = 'createdAt'
 ): Promise<number> => {

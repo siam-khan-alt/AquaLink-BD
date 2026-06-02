@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
@@ -11,7 +12,6 @@ import {
   Trash2,
   Video,
   FileText,
-  Image as ImageIcon,
 } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { SkeletonTable } from "@/components/ui/SkeletonTable";
@@ -266,9 +266,9 @@ export default function AdminStoriesManagement() {
                       <td className="py-4 px-6">
                         <div className="w-14 h-10 rounded-md overflow-hidden bg-[var(--background)] border border-[var(--border)] flex items-center justify-center">
                           {story.thumbnail ? (
-                            <img src={story.thumbnail} alt={story.farmerName} className="w-full h-full object-cover" />
+                            <Image src={story.thumbnail} alt={story.farmerName} width={56} height={40} className="w-full h-full object-cover" />
                           ) : (
-                            <ImageIcon size={16} className="text-[var(--text)]/30" />
+                            <FileText size={16} className="text-[var(--text)]/30" />
                           )}
                         </div>
                       </td>

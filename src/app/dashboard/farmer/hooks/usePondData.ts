@@ -9,7 +9,7 @@ import { ApiResponse } from "@/shared/types/api-responses";
 import { IPond } from "@/models/Pond";
 
 export const usePondData = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   return useQuery<ApiResponse<IPond[]>>({
     queryKey: ["ponds-list"],

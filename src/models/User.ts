@@ -1,5 +1,5 @@
 import { Schema, model, models, Document, Model } from "mongoose";
-import { encryptPatientData, decryptPatientData, isEncrypted } from "@/app/dashboard/doctor/lib/encryption";
+import { encryptPatientData, decryptPatientData } from "@/app/dashboard/doctor/lib/encryption";
 
 
 export interface IUser extends Document {

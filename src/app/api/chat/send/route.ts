@@ -5,15 +5,8 @@ import { Chat } from "@/models/Chat";
 import { getToken } from "next-auth/jwt";
 import { pusherServer } from "@/shared/lib/pusher";
 import type { NextRequest } from "next/server";
-import { Types, Document } from "mongoose";
+import { Types } from "mongoose";
 import { messageSchemaValidation } from "@/shared/lib/chatValidation";
-
-interface IChatSchema extends Document {
-  isGroup: boolean;
-  isAdminSupport: boolean;
-  participants: Types.ObjectId[];
-  groupAdmin?: Types.ObjectId;
-}
 
 interface IMessageSchema {
   chatId: Types.ObjectId | string;

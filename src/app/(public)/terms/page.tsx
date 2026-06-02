@@ -1,5 +1,5 @@
 import React from "react";
-import { FileText, Shield, AlertTriangle, Users, Gavel, CheckCircle, Clock, CreditCard, Stethoscope } from "lucide-react";
+import { FileText, Shield, AlertTriangle, Users, Gavel, CheckCircle, Clock, Stethoscope } from "lucide-react";
 import Card from "@/components/ui/Card";
 
 export default function TermsPage() {

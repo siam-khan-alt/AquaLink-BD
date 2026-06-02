@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/shared/lib/db";
 import { Transaction } from "@/models/Transaction";
-import type { ITransaction } from "@/models/Transaction";
 import { Stethoscope, Clock, DollarSign, TrendingUp } from "lucide-react";
 import Card from "@/components/ui/Card";
 

@@ -56,7 +56,7 @@ export const requirePermission = async (
         role: userRole,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'Internal server error during permission check',
@@ -91,7 +91,7 @@ export const withPermission = (
   requiredPermission: Permission,
   handler: (req: NextRequest, context: { userId: string; userRole: UserRole }) => Promise<NextResponse>
 ) => {
-  return async (req: NextRequest, context: unknown): Promise<NextResponse> => {
+  return async (req: NextRequest): Promise<NextResponse> => {
     const permissionCheck = await requirePermission(req, requiredPermission);
 
     if (!permissionCheck.success) {

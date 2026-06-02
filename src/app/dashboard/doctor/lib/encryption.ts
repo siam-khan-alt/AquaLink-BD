@@ -6,7 +6,6 @@
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
-const KEY_LENGTH = 32; // 256 bits
 const IV_LENGTH = 16; // 128 bits
 const SALT_LENGTH = 64;
 const TAG_LENGTH = 16;
@@ -32,7 +31,7 @@ export const encryptPatientData = (plaintext: string): string => {
     const key = getEncryptionKey();
     const iv = crypto.randomBytes(IV_LENGTH);
     const salt = crypto.randomBytes(SALT_LENGTH);
-    
+
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
     
     let encrypted = cipher.update(plaintext, 'utf8', 'hex');
@@ -62,18 +61,17 @@ export const decryptPatientData = (ciphertext: string): string => {
   try {
     const key = getEncryptionKey();
     const combined = Buffer.from(ciphertext, 'base64');
-    
-    const salt = combined.slice(0, SALT_LENGTH);
+
     const iv = combined.slice(SALT_LENGTH, TAG_POSITION);
     const tag = combined.slice(TAG_POSITION, ENCRYPTED_POSITION);
     const encrypted = combined.slice(ENCRYPTED_POSITION);
-    
+
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(tag);
-    
+
     let decrypted = decipher.update(encrypted);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
-    
+
     return decrypted.toString('utf8');
   } catch (error) {
     console.error('Decryption error:', error);

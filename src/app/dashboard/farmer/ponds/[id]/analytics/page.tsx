@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import {
   LineChart,
   Line,
@@ -24,7 +24,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import { SkeletonTable } from "@/components/ui/SkeletonTable";
 import { QUERY_CONFIG } from "@/shared/lib/constants";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";

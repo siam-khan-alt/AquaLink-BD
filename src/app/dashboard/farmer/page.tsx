@@ -18,7 +18,7 @@ import { AddPondModal } from "./components/AddPondModal";
 import { SkeletonStats, SkeletonCard } from "@/components/ui/SkeletonCard";
 
 export default function FarmerDashboard() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -110,8 +110,4 @@ export default function FarmerDashboard() {
       </div>
     </div>
   );
-}
-
-function TriangleDataCounter({ value }: { value: number }) {
-  return <>{new Intl.NumberFormat("bn-BD").format(value)}</>;
 }

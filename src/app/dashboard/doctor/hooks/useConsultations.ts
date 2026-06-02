@@ -36,7 +36,6 @@ const QUERY_CONFIG = {
 
 export const useConsultations = (consultationStatus?: ConsultationStatus, page: number = 1, limit: number = 20) => {
   const { data: session, status: sessionStatus } = useSession();
-  const queryClient = useQueryClient();
 
   const queryParams = new URLSearchParams();
   if (consultationStatus) queryParams.append('status', consultationStatus);

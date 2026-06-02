@@ -3,10 +3,9 @@
  * Allows doctors to select and perform bulk actions on consultations
  */
 
-import React, { useState, useCallback } from "react";
-import { Check, X, ChevronDown } from "lucide-react";
+import React, { useCallback } from "react";
+import { Check, X } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { ConsultationStatus } from "../lib/consultation-state-machine";
 
 interface BulkActionToolbarProps {
   selectedCount: number;
@@ -23,8 +22,6 @@ export default function BulkActionToolbar({
   onClearSelection,
   isProcessing,
 }: BulkActionToolbarProps) {
-  const [showDropdown, setShowDropdown] = useState(false);
-
   const handleBulkAction = useCallback(
     (action: "approve" | "reject") => {
       if (action === "approve") {
@@ -32,7 +29,6 @@ export default function BulkActionToolbar({
       } else {
         onBulkReject();
       }
-      setShowDropdown(false);
     },
     [onBulkApprove, onBulkReject]
   );

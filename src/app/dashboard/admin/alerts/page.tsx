@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import type { AdminAlert, AdminAlertsResponse } from "@/shared/types/api-interfaces";
+import type { AdminAlertsResponse } from "@/shared/types/api-interfaces";
 import { alertSchema, type AlertInput } from "@/shared/lib/validation-schemas";
 import { AdminTableSkeleton } from "@/shared/components/AdminSkeleton";
 import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";

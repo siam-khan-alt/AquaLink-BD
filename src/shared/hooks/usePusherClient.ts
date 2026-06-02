@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import Pusher from "pusher-js";
 import { ChatMessage } from "@/shared/types/chat";
 
 export function usePusherClient(chatId: string, onMessage: (message: ChatMessage) => void) {
+  const handleMessage = useCallback((data: ChatMessage) => {
+    onMessage(data);
+  }, [onMessage]);
+
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_PUSHER_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
       console.warn("Pusher configuration missing");
@@ -16,14 +20,12 @@ export function usePusherClient(chatId: string, onMessage: (message: ChatMessage
     });
 
     const channel = pusherClient.subscribe(`chat-${chatId}`);
-    channel.bind("new-message", (data: ChatMessage) => {
-      onMessage(data);
-    });
+    channel.bind("new-message", handleMessage);
 
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
       pusherClient.disconnect();
     };
-  }, [chatId]);
+  }, [chatId, handleMessage]);
 }

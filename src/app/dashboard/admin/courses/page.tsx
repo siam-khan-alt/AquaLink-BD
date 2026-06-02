@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_CONFIG } from "@/shared/lib/constants";
 import { useSession } from "next-auth/react";
@@ -12,7 +13,6 @@ import {
   Tag,
   Trash2,
   Edit,
-  Image as ImageIcon,
 } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { toast } from "sonner";
@@ -21,7 +21,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import ImageUpload from "@/components/ui/ImageUpload";
 import type { AdminCourse, AdminCoursesResponse } from "@/shared/types/api-interfaces";
-import { courseSchema, type CourseInput } from "@/shared/lib/validation-schemas";
+import type { CourseInput } from "@/shared/lib/validation-schemas";
 import { AdminGridSkeleton } from "@/shared/components/AdminSkeleton";
 import { AdminErrorBoundary } from "@/shared/components/AdminErrorBoundary";
 
@@ -205,14 +205,16 @@ export default function AdminCoursesPage() {
                 {/* Course Card Thumbnail Image */}
                 <div className="relative w-full h-44 bg-gradient-to-br from-[var(--border)] to-[var(--background)] flex items-center justify-center overflow-hidden border-b border-[var(--border)]/40">
                   {course.image ? (
-                    <img 
-                      src={course.image} 
+                    <Image
+                      src={course.image}
                       alt={course.title}
+                      width={400}
+                      height={176}
                       className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-[var(--text)]/30">
-                      <ImageIcon size={36} />
+                      <Video size={36} />
                       <span className="text-xs font-semibold font-hind">থাম্বনেইল ইমেজ নেই</span>
                     </div>
                   )}

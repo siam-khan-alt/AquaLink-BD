@@ -17,7 +17,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import ImageUpload from "@/components/ui/ImageUpload";
-import type { Pond, PondsResponse } from "@/shared/types/api-interfaces";
+import type { PondsResponse } from "@/shared/types/api-interfaces";
 
 const formatDate = (dateStr: string): string => {
   return new Date(dateStr).toLocaleDateString("bn-BD", {

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import type { FeedCalculationResult, FishTypeConfig } from "@/shared/types/api-interfaces";
+import type { FishTypeConfig } from "@/shared/types/api-interfaces";
 
 const fishTypes: FishTypeConfig[] = [
   { name: "রুই", feedRate: 3.0, feedPricePerKg: 45 },
@@ -51,7 +51,7 @@ export default function FeedCalculatorPage() {
       }
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("হিসাব সফলভাবে সম্পন্ন হয়েছে");
     },
     onError: (error: Error) => {

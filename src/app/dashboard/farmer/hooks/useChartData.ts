@@ -15,7 +15,7 @@ export interface ChartDataPoint {
 }
 
 export const useChartData = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   return useQuery<ApiResponse<{ data: ChartDataPoint[] }>>({
     queryKey: ["chart-data"],

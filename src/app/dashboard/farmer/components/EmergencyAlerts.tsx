@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import Card from "@/components/ui/Card";
 import { EmergencyAlert } from "../hooks/useAlerts";
 

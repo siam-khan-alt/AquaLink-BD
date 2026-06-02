@@ -7,6 +7,7 @@ import { Button, ScrollShadow } from "@heroui/react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useExperts, Expert } from "@/shared/hooks/useExperts";
+import Image from "next/image";
 
 const ExpertConsultantPanel = memo(() => {
   const { data: session } = useSession();
@@ -87,10 +88,11 @@ const ExpertConsultantPanel = memo(() => {
                 
                 <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--primary)]/30 bg-zinc-800 flex items-center justify-center relative group shadow-lg">
                   {expert.image ? (
-                    /* eslint-disable-next-img-element */
-                    <img
+                    <Image
                       src={expert.image}
                       alt={expert.name}
+                      width={96}
+                      height={96}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
@@ -100,7 +102,7 @@ const ExpertConsultantPanel = memo(() => {
                       }}
                     />
                   ) : null}
-                  <div 
+                  <div
                     className="absolute inset-0 flex items-center justify-center bg-zinc-800 text-[var(--text)] font-bold text-xl"
                     style={{ display: expert.image ? "none" : "flex" }}
                   >

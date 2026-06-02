@@ -15,7 +15,7 @@ export interface DashboardStats {
 }
 
 export const useDashboardStats = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   return useQuery<ApiResponse<DashboardStats>>({
     queryKey: ["ponds-stats"],

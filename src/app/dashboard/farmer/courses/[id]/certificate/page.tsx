@@ -3,7 +3,7 @@
 import React, { useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { Award, ArrowLeft, Download, Share2 } from "lucide-react";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import Card from "@/components/ui/Card";

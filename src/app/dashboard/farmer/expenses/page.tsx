@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import {
   DollarSign,
@@ -18,9 +18,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import type {
-  ExpenseTrackerItem,
   ExpenseTrackerResponse,
-  PondListItem,
   PondListResponse,
 } from "@/shared/types/api-interfaces";
 

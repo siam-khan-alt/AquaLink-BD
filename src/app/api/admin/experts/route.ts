@@ -6,7 +6,6 @@ import { connectDB } from "@/shared/lib/db";
 import { DoctorApplication } from "@/models/DoctorApplication";
 import { User } from "@/models/User";
 import mongoose from "mongoose";
-import { requirePermission, forbiddenResponse } from "@/shared/lib/require-permission";
 import { withRateLimit } from "@/shared/lib/rate-limit";
 import { logAuditEvent } from "@/shared/lib/audit-logger";
 import { maskUserPII } from "@/shared/lib/pii-masking";
