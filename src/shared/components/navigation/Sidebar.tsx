@@ -67,9 +67,9 @@ export default function Sidebar() {
           <Link href="/" onClick={() => setMobileOpen(false)} className={cn("flex items-center gap-4 px-4 py-3 text-[var(--text)] hover:bg-[var(--border)] rounded-xl", (sidebarOpen || mobileOpen) ? "justify-start" : "justify-center")}>
              <Home size={24} /> {(sidebarOpen || mobileOpen) && "মূল ওয়েবসাইট"}
           </Link>
-          <Link href={profileHref} onClick={() => setMobileOpen(false)} className={cn("flex items-center gap-4 px-4 py-3 rounded-xl transition-all", (sidebarOpen || mobileOpen) ? "justify-start" : "justify-center", pathname === profileHref ? "bg-[var(--primary)] text-white" : "text-[var(--text)] hover:bg-[var(--border)]")}>
+          {/* <Link href={profileHref} onClick={() => setMobileOpen(false)} className={cn("flex items-center gap-4 px-4 py-3 rounded-xl transition-all", (sidebarOpen || mobileOpen) ? "justify-start" : "justify-center", pathname === profileHref ? "bg-[var(--primary)] text-white" : "text-[var(--text)] hover:bg-[var(--border)]")}>
              <User size={24} /> {(sidebarOpen || mobileOpen) && "প্রোফাইল"}
-          </Link>
+          </Link> */}
           <button onClick={() => signOut({ callbackUrl: "/login" })} className={cn("w-full flex items-center gap-4 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl", (sidebarOpen || mobileOpen) ? "justify-start" : "justify-center")}>
             <LogOut size={24} /> {(sidebarOpen || mobileOpen) && "লগআউট"}
           </button>
